@@ -1,0 +1,89 @@
+import org.apache.tools.ant.filters.*
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'war'
+apply plugin: 'eclipse-wtp'
+
+sourceCompatibility = 1.8
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+ camelVersion = "2.16.0"
+ bsBackendUrl = 'default_url' 
+ //env = DevMode.DEV
+}
+
+//sdfs
+Properties props = new Properties();
+    if (project.hasProperty('configFile') && new File(configFile).exists()) {
+    	if (project.hasProperty('env')) {
+ 			ext.env=project.property('env');
+ 		} else {
+ 			ext.env="test"; 		
+ 		}
+ 		props.load(new FileInputStream(file(".bsconfig/" +env+".properties")));
+ 		ext.bsBackendUrl=props.get('BS_BACKEND_URL');
+ 		print bsBackendUrl;
+ 	
+    }
+ 
+processResources {
+    filter ReplaceTokens, tokens: [
+        "BS_SERVER_URL": bsBackendUrl
+    ]
+}
+
+task printEnv << {
+    println bsBackendUrl;
+    println env;
+}
+
+
+dependencies {
+    compile group: 'org.apache.camel', version: camelVersion, name: 'camel-core'
+  	compile group: 'org.apache.camel', version: camelVersion, name: 'camel-servletlistener'
+  	compile group: 'org.apache.camel', version: camelVersion, name: 'camel-servlet'
+  	compile group: 'org.apache.camel', version: camelVersion, name: 'camel-http'
+  	
+  	compile group: 'log4j', version: '1.2.17' , name: 'log4j'
+  	compile group: 'org.slf4j', version: '1.7.13', name: 'slf4j-log4j12'
+  	compile group: 'org.json', version: '20140107', name: 'json'
+  	compile group: 'org.mapdb', version: '2.0-beta12', name: 'mapdb'
+
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '2.0.2-beta'
+    
+    providedCompile "javax.servlet:javax.servlet-api:3.0.1"
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+war {
+	webAppDirName= 'WebContent'
+	baseName='biostudies#submissions'
+	version=''
+	from  'src/main/webapp/'
+}
+
+eclipse {
+	wtp {
+	component {
+ 		contextPath = '/biostudies/submissions'
+ 		}
+ 		
+ 	facet {
+	 	facet name: 'jst.web', version: '3.0'
+    	}
+ 				
+	}
+	
+}
+
+
