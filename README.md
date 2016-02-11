@@ -6,12 +6,14 @@ BioStudy Submission Proxy is a tool
 
 Create the configuration directory and file  where you can write sensitive information like: backedn url, tokens, passwords etc. 
 
-	`mkdir .bsconfig`
-	`mkdir WebContent`
-	`touch .bsconfig/prod.properties`
-	`touch .bsconfig/test.properties`
+```
+mkdir .bsconfig
+mkdir WebContent
+touch .bsconfig/prod.properties
+touch .bsconfig/test.properties
+```
 
-The template configuration file can be found in the example directory.
+The template configuration files can be found in the example directory.
 
 ##### Prebuild the client app (JS, CSS, HTML etc)
 Copy the client part to WebContent directory. 
