@@ -23,6 +23,7 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.*;
 import org.slf4j.Logger;
@@ -34,8 +35,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +46,7 @@ import java.util.stream.Collectors;
  *
  * @author Olga Melnichuk
  */
-@WebServlet("/proxy/api/fileUpload")
+@WebServlet("/api/fileUpload")
 public class FileUploadProxyServlet extends HttpServlet {
 
     private static class Pair<K, V> {
@@ -106,15 +109,35 @@ public class FileUploadProxyServlet extends HttpServlet {
 
     private static final Logger logger = LoggerFactory.getLogger(FileUploadProxyServlet.class);
 
-    private String proxyHost; // e.g. server.com
-    private int proxyPort; // e.g. 8080
-    private String proxyContext; // e.g. /
+    private String remoteHost = "10.0.15.10"; // e.g. server.com
+    private int remotePort = 8089; // e.g. 8080
+    private String remoteContext = ""; // e.g. /backend
+    private String remoteProtocol = "http";
 
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        try {
+            Properties props = new Properties();
+            InputStream input = getClass().getClassLoader().getResourceAsStream("/config.properties");
+            if (input == null) {
+                throw new IOException("Config file 'config.properties' not found");
+            }
+            props.load(input);
+            URL serverUrl = new URL(props.getProperty("BS_SERVER_URL"));
+            remoteProtocol = serverUrl.getProtocol();
+            remoteHost = serverUrl.getHost();
+            remotePort = serverUrl.getPort();
+            remoteContext = serverUrl.getPath();
+        } catch (IOException e) {
+            throw new ServletException("Problem to load properties", e);
+        }
+    }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String url = this.getProxyURL(req);
-        logger.debug("proxy URL: " + url);
+        String url = this.getRemoteURL(req);
+        logger.debug("remote server url: " + url);
 
         PostMethod postMethod = new PostMethod(url);
         forwardRequestHeaders(req, postMethod);
@@ -122,11 +145,10 @@ public class FileUploadProxyServlet extends HttpServlet {
         if (ServletFileUpload.isMultipartContent(req)) {
             handleMultipartPost(postMethod, req);
         } else {
-            // TODO: processPostBody(postMethod, req);
+            postMethod.setRequestEntity(new InputStreamRequestEntity(req.getInputStream()));
         }
         executeProxyRequest(postMethod, req, resp);
     }
-
 
     private void handleMultipartPost(PostMethod postMethod, HttpServletRequest req) throws ServletException {
         DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
@@ -181,7 +203,7 @@ public class FileUploadProxyServlet extends HttpServlet {
                 .filter(name -> !name.equalsIgnoreCase(STRING_CONTENT_LENGTH_HEADER_NAME))
                 .map(name ->
                         Collections.list(req.getHeaders(name)).stream()
-                                .map(v -> name.equalsIgnoreCase(STRING_HOST_HEADER_NAME) ? getProxyHostAndPort() : v)
+                                .map(v -> name.equalsIgnoreCase(STRING_HOST_HEADER_NAME) ? getRemoteHostAndPort() : v)
                                 .map(v -> new Pair<>(name, v)))
                 .flatMap(l -> l)
                 .collect(Collectors.toList());
@@ -241,9 +263,8 @@ public class FileUploadProxyServlet extends HttpServlet {
     }
 
     private void redirect(HttpServletRequest req, HttpServletResponse resp, String location) throws IOException {
-        resp.sendRedirect(location.replace(getProxyPath(), getMyPath(req)));
+        resp.sendRedirect(location.replace(getRemoteUrlBase(), getLocalUrlBase(req)));
     }
-
 
     private String getLocationOrFail(HttpMethod httpMethod) throws ServletException {
         String location = httpMethod.getResponseHeader(STRING_LOCATION_HEADER).getValue();
@@ -253,29 +274,28 @@ public class FileUploadProxyServlet extends HttpServlet {
         return location;
     }
 
-    private String getMyPath(HttpServletRequest req) {
-        return getPath(req.getServerName(), req.getServerPort(), req.getContextPath());
+    private String getLocalUrlBase(HttpServletRequest req) {
+        return getContextURL(req.getProtocol(), req.getServerName(), req.getServerPort(), req.getContextPath());
     }
 
-
-    private String getProxyPath() {
-        return getPath(proxyHost, proxyPort, proxyContext);
+    private String getRemoteUrlBase() {
+        return getContextURL(remoteProtocol, remoteHost, remotePort, remoteContext);
     }
 
-    private String getProxyHostAndPort() {
-        return getHostAndPort(proxyHost, proxyPort);
+    private String getRemoteHostAndPort() {
+        return getHostAndPort(remoteHost, remotePort);
     }
 
-    private String getPath(String host, int port, String context) {
-        return getHostAndPort(host, port) + context;
+    private String getContextURL(String protocol, String host, int port, String context) {
+        return protocol.toLowerCase() + "://" + getHostAndPort(host, port) + context;
     }
 
     private String getHostAndPort(String host, int port) {
         return host + (port == 80 ? "" : ":" + port);
     }
 
-    private String getProxyURL(HttpServletRequest req) {
-        StringBuilder url = new StringBuilder(getProxyPath());
+    private String getRemoteURL(HttpServletRequest req) {
+        StringBuilder url = new StringBuilder(getRemoteUrlBase());
         url.append(req.getServletPath());
 
         if (req.getPathInfo() != null)
