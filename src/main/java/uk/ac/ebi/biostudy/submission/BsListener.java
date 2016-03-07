@@ -45,7 +45,7 @@ public class BsListener implements ServletContextListener {
 		File file = new File(path + "/submissiondb");
 		// Change this to logger
 		System.out.println(file.getAbsolutePath());
-		this.db = DBMaker.fileDB(file).closeOnJvmShutdown().cacheSize(128).make();
+		this.db = DBMaker.fileDB(file).closeOnJvmShutdown().cacheSize(128).transactionDisable().make();
 		sce.getServletContext().setAttribute("db", this.db);
 		System.out.println("listener" + db.toString());
 	}

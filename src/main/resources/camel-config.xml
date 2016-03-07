@@ -24,11 +24,7 @@
     <!-- incoming requests from the servlet is routed -->
     <from uri="servlet:///?matchOnUriPrefix=true"/>
     <!--  <log message="Route message from inbox to outbox queue with data ${body}" />-->    
-    <!--  <to uri="http://biostudy-dev.ebi.ac.uk:9080/biostd-beta/?bridgeEndpoint=true&amp;throwExceptionOnFailure=false"></to>-->
     <to uri="@BS_SERVER_URL@?bridgeEndpoint=true&amp;throwExceptionOnFailure=false"></to>
-    
-    
-      <!--  <process ref="submProcessor"></process>-->
   </route>
 
 </routes>

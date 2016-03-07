@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 apply plugin: 'war'
 apply plugin: 'eclipse-wtp'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 1.7
 version = '1.0'
 
 repositories {
@@ -20,7 +20,7 @@ ext {
 
 //sdfs
 Properties props = new Properties();
-    if (project.hasProperty('configFile') && new File(configFile).exists()) {
+    
     	if (project.hasProperty('env')) {
  			ext.env=project.property('env');
  		} else {
@@ -30,13 +30,21 @@ Properties props = new Properties();
  		ext.bsBackendUrl=props.get('BS_BACKEND_URL');
  		print bsBackendUrl;
  	
-    }
  
 processResources {
     filter ReplaceTokens, tokens: [
         "BS_SERVER_URL": bsBackendUrl
     ]
 }
+
+//This step is needed for eclipse to be able to debug application
+task filterEclipseResources(type: Copy) {
+    from 'src/main/resources'
+    into 'bin'
+    filter(ReplaceTokens, tokens: ["BS_SERVER_URL": bsBackendUrl])
+}
+processResources.finalizedBy filterEclipseResources
+
 
 task printEnv << {
     println bsBackendUrl;
@@ -53,7 +61,7 @@ dependencies {
   	compile group: 'log4j', version: '1.2.17' , name: 'log4j'
   	compile group: 'org.slf4j', version: '1.7.13', name: 'slf4j-log4j12'
   	compile group: 'org.json', version: '20140107', name: 'json'
-  	compile group: 'org.mapdb', version: '2.0-beta12', name: 'mapdb'
+  	compile group: 'org.mapdb', version: '2.0-beta13', name: 'mapdb'
 
     testCompile group: 'junit', name: 'junit', version: '4.+'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '2.0.2-beta'
@@ -64,6 +72,7 @@ dependencies {
 test {
     systemProperties 'property': 'value'
 }
+
 
 war {
 	webAppDirName= 'WebContent'
@@ -76,14 +85,21 @@ eclipse {
 	wtp {
 	component {
  		contextPath = '/biostudies/submissions'
+ 		resource sourcePath: 'src/main/webapp', deployPath: '/'
+ 		resource sourcePath: 'WebContent', deployPath: '/'
+ 		resource sourcePath: 'build/resources/main', deployPath: '/WEB-INF/classes' 
  		}
  		
  	facet {
 	 	facet name: 'jst.web', version: '3.0'
+	 	facet name: 'java', version: '1.7'
     	}
  				
 	}
 	
 }
+
+
+defaultTasks 'clean', 'build'
 
 

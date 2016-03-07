@@ -4,10 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Enumeration;
-import java.util.Iterator;
+import java.text.ParseException;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,17 +16,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
-import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.mapdb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import uk.ac.ebi.biostudy.submission.services.AuthService;
+import uk.ac.ebi.biostudy.submission.services.ServiceException;
+import uk.ac.ebi.biostudy.submission.services.SubmissionService;
 
 /**
  * Servlet implementation class ProxyDataServlet
@@ -37,7 +33,6 @@ import org.slf4j.LoggerFactory;
 public class ProxyDataServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
-	private static final String SESSION_PARAM = "BIOSTDSESS";
 	private String BS_SERVER_URL;
 	private Properties properties = new Properties();
 	private static final Logger logger = LoggerFactory.getLogger(ProxyDataServlet.class);
@@ -67,77 +62,13 @@ public class ProxyDataServlet extends HttpServlet {
 		super.destroy();
 	}
 
-	private DB getDb() {
+	public DB getDb() {
 		DB db = (DB) getServletContext().getAttribute("db");
 		return db;
 	}
 
-	private void saveSubmission(String username, JSONObject obj) {
-		DB db = getDb();
-		ConcurrentNavigableMap<String, String> map = getDb().treeMap("submissions" + username);
-
-		map.size();
-		String acc = obj.getString("accno");
-		if (acc.equals("!{S-STA}")) {
-			acc = "TEMP-" + map.size() + 1;
-			obj.put("accno", acc);
-			System.out.println(obj);
-			// new one
-		}
-		map.remove(acc);
-		map.put(acc, obj.toString());
-		db.commit();
-
-	}
-
-	private void deleteSubmission(final String username, final String acc, final UserSession userSession)
-			throws HttpException, IOException {
-		DB db = getDb();
-		ConcurrentNavigableMap<String, String> map = getDb().treeMap("submissions" + username);
-		map.remove(acc);
-		db.commit();
-
-	}
-
-	private void deleteSubmittedSubmission(final String username, final String acc, final UserSession userSession)
-			throws HttpException, IOException {
-
-		HttpMethod httpmethod = new GetMethod(BS_SERVER_URL + "/submit/delete");
-		httpmethod.setQueryString(SESSION_PARAM + "=" + userSession.getSessid() + "&id=" + acc);
-		HttpClient client = new HttpClient();
-		client.executeMethod(httpmethod);
-		byte[] body = httpmethod.getResponseBody();
-		httpmethod.releaseConnection();
-
-	}
-
-	private JSONArray listSubmissions(UserSession userSession) throws HttpException, IOException {
-		HttpMethod httpmethod = new GetMethod(BS_SERVER_URL + "/sbmlist");
-		httpmethod.setQueryString(SESSION_PARAM + "=" + userSession.getSessid());
-		HttpClient client = new HttpClient();
-		client.executeMethod(httpmethod);
-		byte[] body = httpmethod.getResponseBody();
-		httpmethod.releaseConnection();
-		JSONArray array = new JSONArray();
-
-		if (httpmethod.getStatusCode() == 200) {
-			System.out.println("httpmethod.getStatusCode()" + httpmethod.getStatusCode());
-			JSONObject object = new JSONObject(new String(body));
-			if (object.getString("status").equals("OK")) {
-				array = object.getJSONArray("submissions");
-			}
-		}
-
-		DB db = getDb();
-		ConcurrentNavigableMap<String, String> map = getDb().treeMap("submissions" + userSession.getUsername());
-		Iterator<String> it = map.values().iterator();
-		while (it.hasNext()) {
-			JSONObject o = new JSONObject(it.next());
-			array.put(o);
-		}
-		System.out.println("Returned array" + array.toString());
-
-		return array;
+	public SubmissionService createSubmissionService() {
+		return new SubmissionService(BS_SERVER_URL, getDb());
 	}
 
 	/**
@@ -146,38 +77,75 @@ public class ProxyDataServlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		System.out.println("save 1");
+
 		JSONObject result = new JSONObject();
 		PrintWriter out = response.getWriter();
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
-		Enumeration<String> str = getServletContext().getAttributeNames();
-		if (request.getPathInfo().equals("/submissions")) {
+		SubmissionService service = new SubmissionService(this.BS_SERVER_URL, getDb());
+		String path = request.getPathInfo();
+		if (path.equals("/submissions")) {
 			HttpSession session = request.getSession(false);
 			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			} else {
 				UserSession userSession = (UserSession) session.getAttribute("userSession");
 				if (userSession == null) {
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				} else {
 					String username = userSession.getUsername();
-					result.put("submissions", listSubmissions(userSession));
+					try {
+						result.put("submissions", service.listSubmissions(userSession));
+					} catch (JSONException | ParseException e) {
+						e.printStackTrace();
+						response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					}
 				}
 			}
 
-		} else if (request.getPathInfo().contains("/get")) {
-			System.out.println("get");
+		} else if (request.getPathInfo().contains("/submission")) {
 			HttpSession session = request.getSession(false);
 			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			} else {
 				UserSession userSession = (UserSession) session.getAttribute("userSession");
 				if (userSession == null) {
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				} else {
-					String username = userSession.getUsername();
-					result.put("submissions", listSubmissions(userSession));
+					Pattern regExp = Pattern.compile("/submission/([A-Z0-9-]*)");
+
+					Matcher matcherExp = regExp.matcher(request.getPathInfo());
+					if (matcherExp.matches()) {
+						String acc = matcherExp.group(1);
+						try {
+							result = service.getSubmission(userSession, acc);
+						} catch (ServiceException e) {
+							response.setStatus(e.getCode());
+							result = e.getResult();
+						}
+					} else {
+						response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+					}
+				}
+			}
+
+		} else if (request.getPathInfo().contains("/files/dir")) {
+			System.out.println("API DIR");
+			HttpSession session = request.getSession(false);
+			if (session == null) {
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			} else {
+				UserSession userSession = (UserSession) session.getAttribute("userSession");
+				if (userSession == null) {
+					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				} else {
+
+					try {
+						result = service.getFilesDir(userSession);
+					} catch (ServiceException e) {
+						response.setStatus(e.getCode());
+						result = e.getResult();
+					}
 				}
 			}
 
@@ -191,48 +159,70 @@ public class ProxyDataServlet extends HttpServlet {
 	@Override
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		System.out.println("Delete" + request.getPathInfo());
 		String path = request.getPathInfo();
 
 		PrintWriter out = response.getWriter();
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
 		JSONObject result = new JSONObject();
+		SubmissionService service = this.createSubmissionService();
 
-		Enumeration<String> str = getServletContext().getAttributeNames();
-		if (request.getPathInfo().startsWith("/submission")) {
+		// Enumeration<String> str = getServletContext().getAttributeNames();
+		if (path.startsWith("/submission")) {
+
 			HttpSession session = request.getSession(false);
 			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			} else {
+				System.out.println("asdsada 1");
+
 				UserSession userSession = (UserSession) session.getAttribute("userSession");
 				if (userSession == null) {
+					System.out.println("Delete" + request.getPathInfo());
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				} else {
 					String username = userSession.getUsername();
 					Pattern regExp = Pattern.compile("/submission/([A-Z0-9-]*)");
-					Pattern regExpSubmited = Pattern.compile("/submission/submitted/([A-Z0-9-]*)");
+					Pattern regExpSubmited = Pattern.compile("/submission/submited/([A-Z0-9-]*)");
 
 					Matcher matcherExp = regExp.matcher(request.getPathInfo());
 					Matcher matcherExpSubm = regExpSubmited.matcher(request.getPathInfo());
-
+					System.out.println("asdsada 2" + request.getPathInfo());
 					if (matcherExp.matches()) {
 						String acc = matcherExp.group(1);
-						System.out.println("ACC" + acc);
-						deleteSubmission(username, acc, userSession);
+						service.deleteSubmission(acc, userSession);
 					} else if (matcherExpSubm.matches()) {
-						String acc = matcherExp.group(1);
-						System.out.println("ACC" + acc);
-						deleteSubmittedSubmission(username, acc, userSession);
+						String acc = matcherExpSubm.group(1);
+						service.deleteSubmittedSubmission(acc, userSession);
 					} else {
-						System.out.println("Data: ");
 						response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 					}
 				}
 			}
 
-		} else {
-			System.out.println("Data: " + path);
+		} else if (path.startsWith("/files/delete")) {
+
+			HttpSession session = request.getSession(false);
+			if (session == null) {
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			} else {
+				System.out.println("files delete" + request.getQueryString());
+
+				UserSession userSession = (UserSession) session.getAttribute("userSession");
+				if (userSession == null) {
+					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				} else {
+					try {
+						result = service.deleteFile(userSession, request.getQueryString());
+					} catch (ServiceException e) {
+					}
+					response.setStatus(HttpServletResponse.SC_OK);
+				}
+			}
+		}
+
+		else {
+			System.out.println("Data: delete" + path);
 			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		}
 		out.print(result);
@@ -249,7 +239,7 @@ public class ProxyDataServlet extends HttpServlet {
 		PrintWriter out = response.getWriter();
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
-		System.out.println("Data: " + request.getPathInfo());
+		SubmissionService service = new SubmissionService(this.BS_SERVER_URL, getDb());
 
 		logger.info("Call post method", request.getPathInfo());
 
@@ -270,10 +260,26 @@ public class ProxyDataServlet extends HttpServlet {
 			result.put("token", "token");
 
 			// obj.get("userid");
-		} else if (request.getPathInfo().equals("/set")) {
+		} else if (request.getPathInfo().equals("/auth/signup")) {
+			HttpSession session = request.getSession(false);
+			AuthService authService = new AuthService(BS_SERVER_URL);
+			JSONObject body = readRequestBodyAsJson(request);
+			String activationUrl = generateActivationUrl(request);
+			JSONObject obj = authService.singUp(body, activationUrl);
+			session.invalidate();
+			// api/auth/signout
+		} else if (request.getPathInfo().equals("/auth/signout")) {
+			HttpSession session = request.getSession(false);
+			UserSession userSession = (UserSession) session.getAttribute(Res.Session.userSession);
+			AuthService authService = new AuthService(BS_SERVER_URL);
+			JSONObject obj = authService.singOut(userSession);
+			logger.debug("Sign out" + obj.toString());
+			session.invalidate();
+			// api/auth/signout
+		} else if (request.getPathInfo().equals("/set")) { // Delete this
 			HttpSession session = request.getSession(false);
 			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			} else {
 				UserSession userSession = (UserSession) session.getAttribute("userSession");
 				if (userSession == null) {
@@ -283,7 +289,25 @@ public class ProxyDataServlet extends HttpServlet {
 					String jsonStr = readRequestBody(request);
 					System.out.println(username + jsonStr);
 					JSONObject obj = new JSONObject(jsonStr);
-					saveSubmission(username, obj);
+					service.saveSubmission(username, obj);
+					result = obj;
+				}
+			}
+
+		} else if (request.getPathInfo().startsWith("/submission/save")) {
+			HttpSession session = request.getSession(false);
+			if (session == null) {
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			} else {
+				UserSession userSession = (UserSession) session.getAttribute("userSession");
+				if (userSession == null) {
+					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				} else {
+					String username = userSession.getUsername();
+					String jsonStr = readRequestBody(request);
+					System.out.println(username + jsonStr);
+					JSONObject obj = new JSONObject(jsonStr);
+					service.saveSubmission(username, obj);
 					result = obj;
 				}
 			}
@@ -291,16 +315,21 @@ public class ProxyDataServlet extends HttpServlet {
 		} else if (request.getPathInfo().equals("/submission/create")) {
 			HttpSession session = request.getSession(false);
 			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			} else {
 				UserSession userSession = (UserSession) session.getAttribute("userSession");
 				if (userSession == null) {
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				} else {
 					String jsonStr = readRequestBody(request);
+					System.out.println(jsonStr);
 					JSONObject obj = new JSONObject(jsonStr);
-					createSubmission(userSession, obj);
-					result = obj;
+					try {
+						result = service.createSubmission(userSession, obj);
+					} catch (ServiceException e) {
+						response.setStatus(e.getCode());
+						result = e.getResult();
+					}
 				}
 			}
 
@@ -311,28 +340,45 @@ public class ProxyDataServlet extends HttpServlet {
 		out.print(result);
 	}
 
-	private void createSubmission(UserSession userSession, JSONObject obj) throws HttpException, IOException {
-		System.out.println(obj.toString());
-		PostMethod httpmethod = new PostMethod(BS_SERVER_URL + "/submit/create");
-		httpmethod.setQueryString(SESSION_PARAM + "=" + userSession.getSessid());
-		StringRequestEntity requestEntity = new StringRequestEntity(obj.toString(), "application/json", "UTF-8");
-		httpmethod.setRequestEntity(requestEntity);
-		HttpClient client = new HttpClient();
-		client.executeMethod(httpmethod);
-		byte[] body = httpmethod.getResponseBody();
-		httpmethod.releaseConnection();
-		JSONArray array = new JSONArray();
+	private String generateActivationUrl(HttpServletRequest request) {
+		String url = request.getServerName() + "/biostudies/submissions/activate?key={ACTIVATION:KEY}";
+		return url;
+	}
 
-		if (httpmethod.getStatusCode() == 200) {
-			System.out.println("httpmethod.getStatusCode()" + httpmethod.getStatusCode());
-			JSONObject object = new JSONObject(new String(body));
-			System.out.println("httpmethod.getStatusCode()" + object.toString());
+	@Override
+	protected void doPut(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		// super.doPut(req, resp);
+		JSONObject result = new JSONObject();
+		PrintWriter out = response.getWriter();
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
+		SubmissionService service = new SubmissionService(this.BS_SERVER_URL, getDb());
 
-			if (object.getString("status").equals("OK")) {
-				// array=object.getJSONArray("submissions");
+		logger.info("Call put method", request.getPathInfo());
+
+		// update submission
+		if (request.getPathInfo().startsWith("/submission/update")) {
+			HttpSession session = request.getSession(false);
+			if (session == null) {
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			} else {
+				UserSession userSession = (UserSession) session.getAttribute("userSession");
+				if (userSession == null) {
+					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				} else {
+					String jsonStr = readRequestBody(request);
+					System.out.println(jsonStr);
+					JSONObject obj = new JSONObject(jsonStr);
+					try {
+						result = service.updateSubmission(userSession, obj);
+					} catch (ServiceException e) {
+						response.setStatus(e.getCode());
+						result = e.getResult();
+					}
+				}
 			}
 		}
-
 	}
 
 	private String readRequestBody(HttpServletRequest request) throws IOException {
@@ -343,6 +389,12 @@ public class ProxyDataServlet extends HttpServlet {
 			sb.append(str);
 		}
 		return sb.toString();
+	}
+
+	private JSONObject readRequestBodyAsJson(HttpServletRequest request) throws IOException {
+		String body = readRequestBody(request);
+		JSONObject result = new JSONObject(body);
+		return result;
 	}
 
 }
