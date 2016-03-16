@@ -11,10 +11,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpMethod;
+import org.apache.commons.httpclient.methods.GetMethod;
+
 /**
  * Servlet implementation class ActivateServlet
  */
-@WebServlet("/activate")
+@WebServlet("/activate/*")
 public class ActivateServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private String BS_SERVER_URL;
@@ -57,12 +61,20 @@ public class ActivateServlet extends HttpServlet {
 		}
 		String value = map.get("key");
 		System.out.println(value);
-		String urlServer = request.getServerName() + "/biostudies/submissions";
-		String urlSucces = urlServer + "/registered.html";
-		String urlFailure = urlServer + "/registeredError.html";
+		String urlBackend = BS_SERVER_URL + "/auth/activate/" + value;
+		// "?activationSuccessURL=" + urlSuccess.toString()
+		// + "&activationFailURL=" + urlFailure.toString();
+		System.out.println("Server url" + urlBackend);
+		HttpMethod httpmethod = new GetMethod(urlBackend);
+		HttpClient client = new HttpClient();
+		client.executeMethod(httpmethod);
+		byte[] body = httpmethod.getResponseBody();
+		if (httpmethod.getStatusCode() == 200) {
+		} else {
+		}
+		String bodyStr = new String(body);
+		httpmethod.releaseConnection();
 
-		String urlBackend = BS_SERVER_URL + "/auth/activate/" + value + "?activationSuccessURL=" + urlSucces
-				+ "&activationFailURL=" + urlFailure;
 	}
 
 	/**

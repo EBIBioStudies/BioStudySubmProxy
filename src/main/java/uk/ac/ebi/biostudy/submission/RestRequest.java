@@ -1,11 +1,16 @@
 package uk.ac.ebi.biostudy.submission;
 
 import java.util.regex.Matcher;
-
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
+/**
+ * * @deprecated
+ * 
+ * @author mdylag
+ *
+ */
 public final class RestRequest {
 	// Accommodate two requests, one for all resources, another for a specific
 	// resource

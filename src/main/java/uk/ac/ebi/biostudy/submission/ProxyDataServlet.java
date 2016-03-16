@@ -266,7 +266,7 @@ public class ProxyDataServlet extends HttpServlet {
 			JSONObject body = readRequestBodyAsJson(request);
 			String activationUrl = generateActivationUrl(request);
 			JSONObject obj = authService.singUp(body, activationUrl);
-			session.invalidate();
+			result = obj;
 			// api/auth/signout
 		} else if (request.getPathInfo().equals("/auth/signout")) {
 			HttpSession session = request.getSession(false);

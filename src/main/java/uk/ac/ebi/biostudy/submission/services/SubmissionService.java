@@ -129,6 +129,7 @@ public class SubmissionService {
 
 	public JSONObject getSubmission(final UserSession userSession, final String acc)
 			throws HttpException, IOException, ServiceException {
+
 		HttpMethod httpmethod = new GetMethod(this.bsServerUrl + "/submission/" + acc);
 		httpmethod.setQueryString(Res.BsServer.SESSION_PARAM + "=" + userSession.getSessid());
 		HttpClient client = new HttpClient();
