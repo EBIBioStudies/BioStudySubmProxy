@@ -1,8 +1,6 @@
 package uk.ac.ebi.biostudy.submission;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.ServletException;
@@ -14,12 +12,13 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.json.JSONObject;
 
 /**
  * Servlet implementation class ActivateServlet
  */
-@WebServlet("/activate/*")
-public class ActivateServlet extends HttpServlet {
+@WebServlet("/activate")
+public class ActivateServlet extends AbstractServletImpl {
 	private static final long serialVersionUID = 1L;
 	private String BS_SERVER_URL;
 	private Properties properties = new Properties();
@@ -32,48 +31,28 @@ public class ActivateServlet extends HttpServlet {
 		// TODO Auto-generated constructor stub
 	}
 
-	@Override
-	public void init() throws ServletException {
-		System.out.println("Servlet started");
-		super.init();
-		try {
-			properties.load(getServletContext().getResourceAsStream("/WEB-INF/classes/config.properties"));
-			BS_SERVER_URL = properties.getProperty("BS_SERVER_URL");
-
-		} catch (IOException e) {
-			throw new ServletException("Problem to load properties from ");
-		}
-	}
-
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
 	 *      response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String query = request.getQueryString();
-		String[] params = query.split("&");
-		Map<String, String> map = new HashMap<String, String>();
-		for (String param : params) {
-			String name = param.split("=")[0];
-			String value = param.split("=")[1];
-			map.put(name, value);
-		}
-		String value = map.get("key");
-		System.out.println(value);
-		String urlBackend = BS_SERVER_URL + "/auth/activate/" + value;
-		// "?activationSuccessURL=" + urlSuccess.toString()
-		// + "&activationFailURL=" + urlFailure.toString();
-		System.out.println("Server url" + urlBackend);
-		HttpMethod httpmethod = new GetMethod(urlBackend);
-		HttpClient client = new HttpClient();
-		client.executeMethod(httpmethod);
-		byte[] body = httpmethod.getResponseBody();
-		if (httpmethod.getStatusCode() == 200) {
+		JSONObject obj = new JSONObject(readRequestBody(request));
+		if (obj.has("key")) {
+			String key = obj.getString("key");
+			String urlBackend = BS_SERVER_URL + "/auth/activate/" + key;
+			HttpMethod httpmethod = new GetMethod(urlBackend);
+			HttpClient client = new HttpClient();
+			client.executeMethod(httpmethod);
+			byte[] body = httpmethod.getResponseBody();
+			if (httpmethod.getStatusCode() == 200) {
+			} else {
+			}
+			String bodyStr = new String(body);
+			httpmethod.releaseConnection();
 		} else {
+
 		}
-		String bodyStr = new String(body);
-		httpmethod.releaseConnection();
 
 	}
 

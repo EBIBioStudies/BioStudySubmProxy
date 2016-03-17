@@ -1,11 +1,9 @@
 package uk.ac.ebi.biostudy.submission;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.text.ParseException;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,11 +28,9 @@ import uk.ac.ebi.biostudy.submission.services.SubmissionService;
  * Servlet implementation class ProxyDataServlet
  */
 @WebServlet("/proxy/api/*")
-public class ProxyDataServlet extends HttpServlet {
+public final class ProxyDataServlet extends AbstractServletImpl {
 
 	private static final long serialVersionUID = 1L;
-	private String BS_SERVER_URL;
-	private Properties properties = new Properties();
 	private static final Logger logger = LoggerFactory.getLogger(ProxyDataServlet.class);
 
 	/**
@@ -42,24 +38,6 @@ public class ProxyDataServlet extends HttpServlet {
 	 */
 	public ProxyDataServlet() {
 		super();
-	}
-
-	@Override
-	public void init() throws ServletException {
-		System.out.println("Servlet started");
-		super.init();
-		try {
-			properties.load(getServletContext().getResourceAsStream("/WEB-INF/classes/config.properties"));
-			BS_SERVER_URL = properties.getProperty("BS_SERVER_URL");
-
-		} catch (IOException e) {
-			throw new ServletException("Problem to load properties from ");
-		}
-	}
-
-	@Override
-	public void destroy() {
-		super.destroy();
 	}
 
 	public DB getDb() {
@@ -341,7 +319,7 @@ public class ProxyDataServlet extends HttpServlet {
 	}
 
 	private String generateActivationUrl(HttpServletRequest request) {
-		String url = request.getServerName() + "/biostudies/submissions/activate?key={ACTIVATION:KEY}";
+		String url = request.getServerName() + "/biostudies/submissions/index.html#activate/{ACTIVATION:KEY}";
 		return url;
 	}
 
@@ -379,16 +357,6 @@ public class ProxyDataServlet extends HttpServlet {
 				}
 			}
 		}
-	}
-
-	private String readRequestBody(HttpServletRequest request) throws IOException {
-		StringBuilder sb = new StringBuilder();
-		BufferedReader br = request.getReader();
-		String str;
-		while ((str = br.readLine()) != null) {
-			sb.append(str);
-		}
-		return sb.toString();
 	}
 
 	private JSONObject readRequestBodyAsJson(HttpServletRequest request) throws IOException {
