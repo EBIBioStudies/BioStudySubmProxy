@@ -1,7 +1,6 @@
 package uk.ac.ebi.biostudy.submission;
 
 import java.io.IOException;
-import java.util.Properties;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -20,8 +19,6 @@ import org.json.JSONObject;
 @WebServlet("/activate")
 public class ActivateServlet extends AbstractServletImpl {
 	private static final long serialVersionUID = 1L;
-	private String BS_SERVER_URL;
-	private Properties properties = new Properties();
 
 	/**
 	 * @see HttpServlet#HttpServlet()
@@ -46,12 +43,14 @@ public class ActivateServlet extends AbstractServletImpl {
 			client.executeMethod(httpmethod);
 			byte[] body = httpmethod.getResponseBody();
 			if (httpmethod.getStatusCode() == 200) {
+				response.setStatus(HttpServletResponse.SC_OK);
 			} else {
+				response.setStatus(httpmethod.getStatusCode());
 			}
 			String bodyStr = new String(body);
 			httpmethod.releaseConnection();
 		} else {
-
+			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 		}
 
 	}
