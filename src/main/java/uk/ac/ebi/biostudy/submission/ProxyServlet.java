@@ -115,7 +115,7 @@ public class ProxyServlet extends HttpServlet {
         super.init();
 
         try {
-            URL serverUrl = BSConfig.get().getServerUrl();
+            URL serverUrl = MyConfig.get().getServerUrl();
             destProtocol = serverUrl.getProtocol();
             destHost = serverUrl.getHost();
             destPort = serverUrl.getPort();

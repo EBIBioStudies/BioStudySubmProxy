@@ -27,28 +27,28 @@ import java.util.Properties;
 /**
  * @author Olga Melnichuk
  */
-public class BSConfig {
+public class MyConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(ProxyServlet.class);
 
-    public static BSConfig get(InputStream input) throws IOException {
+    public static MyConfig get(InputStream input) throws IOException {
         Properties props = new Properties();
         if (input != null) {
             props.load(input);
             URL serverUrl = new URL(props.getProperty("BS_SERVER_URL"));
-            return new BSConfig(serverUrl);
+            return new MyConfig(serverUrl);
         }
         throw new IOException("Property file was not found");
     }
 
-    public static BSConfig get() throws IOException {
+    public static MyConfig get() throws IOException {
         logger.info("Loading config.properties from a classpath");
-        return get(BSConfig.class.getClassLoader().getResourceAsStream("/config.properties"));
+        return get(MyConfig.class.getClassLoader().getResourceAsStream("/config.properties"));
     }
 
     private final URL serverUrl;
 
-    private BSConfig(URL serverUrl) {
+    private MyConfig(URL serverUrl) {
         this.serverUrl = serverUrl;
     }
 
