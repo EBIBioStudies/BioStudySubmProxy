@@ -17,7 +17,7 @@ public class ActivateServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        MyProxy proxy = MyContext.getProxy(request.getServletContext());
+        MyProxy proxy = MyContext.getProxy(getServletContext());
         proxy.executeMethod(transformActivationReq(), request, response);
     }
 

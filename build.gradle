@@ -58,6 +58,8 @@ dependencies {
   	compile group: 'org.apache.camel', version: camelVersion, name: 'camel-servlet'
   	compile group: 'org.apache.camel', version: camelVersion, name: 'camel-http'
 	compile group: 'commons-fileupload', version: '1.3.1', name: 'commons-fileupload'
+	compile group: 'javax.ws.rs', version: '2.0.1', name: 'javax.ws.rs-api'
+	compile group: 'org.glassfish.jersey.containers', version: '2.19', name: 'jersey-container-servlet'
 
 	compile group: 'log4j', version: '1.2.17' , name: 'log4j'
   	compile group: 'org.slf4j', version: '1.7.13', name: 'slf4j-log4j12'

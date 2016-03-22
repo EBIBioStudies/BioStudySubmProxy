@@ -42,7 +42,6 @@ public class Transformers {
         };
     }
 
-
     private static JSONObject toJson(String str) {
         return new JSONObject(str);
     }

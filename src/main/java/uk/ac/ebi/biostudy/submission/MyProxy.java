@@ -55,7 +55,6 @@ public class MyProxy {
 
     public void executeMethod(RequestTransform transform, HttpServletRequest req,
                               HttpServletResponse resp) throws ServletException, IOException {
-
         HttpMethod httpMethod;
         try {
             httpMethod = transform.apply(req);
@@ -101,6 +100,7 @@ public class MyProxy {
 
         // Send the content to the client
         copyResponseContent(resp, httpMethod);
+        httpMethod.releaseConnection();
     }
 
     private static void copyResponseContent(HttpServletResponse resp, HttpMethod httpMethod) throws IOException {

@@ -40,35 +40,15 @@ import uk.ac.ebi.biostudy.submission.services.AuthService;
 import uk.ac.ebi.biostudy.submission.services.ServiceException;
 import uk.ac.ebi.biostudy.submission.services.SubmissionService;
 
-/**
- * Servlet implementation class ProxyDataServlet
- */
-@WebServlet("/proxy/api/*")
+
+@Deprecated
+//@WebServlet("/proxy/api/*")
 public final class ProxyDataServlet extends HttpServlet {
 
 	private static final long serialVersionUID = 1L;
 	private static final Logger logger = LoggerFactory.getLogger(ProxyDataServlet.class);
 
-	/**
-	 * @see HttpServlet#HttpServlet()
-	 */
-	public ProxyDataServlet() {
-		super();
-	}
-
-	public DB getDb() {
-		DB db = (DB) getServletContext().getAttribute("db");
-		return db;
-	}
-
-	public SubmissionService createSubmissionService() {
-		return new SubmissionService(BS_SERVER_URL, getDb());
-	}
-
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
-	 *      response)
-	 */
+    @Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
@@ -223,10 +203,7 @@ public final class ProxyDataServlet extends HttpServlet {
 
 	}
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
-	 *      response)
-	 */
+	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		JSONObject result = new JSONObject();
@@ -334,11 +311,6 @@ public final class ProxyDataServlet extends HttpServlet {
 		out.print(result);
 	}
 
-	private String generateActivationUrl(HttpServletRequest request) {
-		String url = request.getServerName() + "/biostudies/submissions/index.html#activate/{ACTIVATION:KEY}";
-		return url;
-	}
-
 	@Override
 	protected void doPut(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -375,10 +347,8 @@ public final class ProxyDataServlet extends HttpServlet {
 		}
 	}
 
-	private JSONObject readRequestBodyAsJson(HttpServletRequest request) throws IOException {
-		String body = readRequestBody(request);
-		JSONObject result = new JSONObject(body);
-		return result;
+	private String generateActivationUrl(HttpServletRequest request) {
+		String url = request.getServerName() + "/biostudies/submissions/index.html#activate/{ACTIVATION:KEY}";
+		return url;
 	}
-
 }
