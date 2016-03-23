@@ -17,7 +17,6 @@ package uk.ac.ebi.biostudy.submission.services;
 
 import java.io.IOException;
 import java.text.DateFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentNavigableMap;
@@ -34,6 +33,7 @@ import org.mapdb.DB;
 
 import uk.ac.ebi.biostudy.submission.Res;
 import uk.ac.ebi.biostudy.submission.UserSession;
+import uk.ac.ebi.biostudy.submission.exceptions.ServiceException;
 
 public class SubmissionService {
 	private final String bsServerUrl;
@@ -93,7 +93,7 @@ public class SubmissionService {
 
 	}
 
-	public JSONArray listSubmissions(UserSession userSession) throws HttpException, IOException, ParseException {
+	public JSONArray listSubmissions(UserSession userSession) throws HttpException, IOException {
 		HttpMethod httpmethod = new GetMethod(this.bsServerUrl + "/sbmlist");
 		httpmethod.setQueryString(Res.BsServer.SESSION_PARAM + "=" + userSession.getSessid());
 		HttpClient client = new HttpClient();
@@ -202,9 +202,6 @@ public class SubmissionService {
 		byte[] body = httpmethod.getResponseBody();
 		httpmethod.releaseConnection();
 		JSONObject result = new JSONObject(new String(body));
-
-		System.out.println("httpmethod.getStatusCode()" + httpmethod.getStatusCode());
-		System.out.println("httpmethod.getStatusCode()" + result.toString());
 
 		if (httpmethod.getStatusCode() != 200) {
 			throw new ServiceException(httpmethod.getStatusCode(), result);

@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.services;
+package uk.ac.ebi.biostudy.submission.exceptions;
 
 import org.json.JSONObject;
 
-public class ServiceException extends Exception {
-	private int code;
-	private JSONObject result;
+public class ServiceException extends BaseException {
+	private static final long serialVersionUID = 1L;
 
 	public ServiceException(int code, JSONObject result) {
-		this.code = code;
-		this.result = result;
-
+		super(code, result);
 	}
 
-	public int getCode() {
-		return code;
-	}
-
-	public JSONObject getResult() {
-		return result;
-	}
 }

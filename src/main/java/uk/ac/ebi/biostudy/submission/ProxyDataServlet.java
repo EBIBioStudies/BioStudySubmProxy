@@ -1,25 +1,9 @@
-/*
- * Copyright (c) 2016 European Molecular Biology Laboratory
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or impl
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package uk.ac.ebi.biostudy.submission;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.ParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,8 +20,11 @@ import org.mapdb.DB;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import uk.ac.ebi.biostudy.submission.exceptions.AuthException;
+import uk.ac.ebi.biostudy.submission.exceptions.BadRequestException;
+import uk.ac.ebi.biostudy.submission.exceptions.InternalServerError;
+import uk.ac.ebi.biostudy.submission.exceptions.ServiceException;
 import uk.ac.ebi.biostudy.submission.services.AuthService;
-import uk.ac.ebi.biostudy.submission.services.ServiceException;
 import uk.ac.ebi.biostudy.submission.services.SubmissionService;
 
 /**
@@ -71,155 +58,137 @@ public final class ProxyDataServlet extends AbstractServletImpl {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
+		HttpSession session = request.getSession(false);
+		UserSession userSession = this.getUserSession(session);
+		response.setStatus(HttpServletResponse.SC_OK);
+		response.setContentType("application/json");
 
 		JSONObject result = new JSONObject();
 		PrintWriter out = response.getWriter();
-		response.setStatus(HttpServletResponse.SC_OK);
-		response.setContentType("application/json");
-		SubmissionService service = new SubmissionService(this.BS_SERVER_URL, getDb());
+
+		try {
+			this.isSignedIn(session);
+		} catch (AuthException e1) {
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			return;
+		}
+
 		String path = request.getPathInfo();
+		try {
+			this.processGet(path, userSession, result);
+		} catch (InternalServerError | ServiceException | BadRequestException e) {
+			response.setStatus(e.getCode());
+			result = e.getResult();
+		}
+		out.print(result);
+
+	}
+
+	private void processGet(String path, UserSession userSession, JSONObject result)
+			throws InternalServerError, ServiceException, BadRequestException {
+		SubmissionService service = new SubmissionService(this.BS_SERVER_URL, getDb());
+
 		if (path.equals("/submissions")) {
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-					String username = userSession.getUsername();
-					try {
-						result.put("submissions", service.listSubmissions(userSession));
-					} catch (JSONException | ParseException e) {
-						e.printStackTrace();
-						response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-					}
-				}
+			try {
+				result.put("submissions", service.listSubmissions(userSession));
+			} catch (JSONException | IOException e) {
+				throw new InternalServerError("Parse error");
 			}
 
-		} else if (request.getPathInfo().contains("/submission")) {
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-					Pattern regExp = Pattern.compile("/submission/([A-Z0-9-]*)");
-
-					Matcher matcherExp = regExp.matcher(request.getPathInfo());
-					if (matcherExp.matches()) {
-						String acc = matcherExp.group(1);
-						try {
-							result = service.getSubmission(userSession, acc);
-						} catch (ServiceException e) {
-							response.setStatus(e.getCode());
-							result = e.getResult();
-						}
-					} else {
-						response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-					}
+		} else if (path.contains("/submission")) {
+			Pattern regExp = Pattern.compile("/submission/([A-Z0-9-]*)");
+			Matcher matcherExp = regExp.matcher(path);
+			if (matcherExp.matches()) {
+				String acc = matcherExp.group(1);
+				try {
+					result = service.getSubmission(userSession, acc);
+				} catch (IOException e) {
+					InternalServerError error = new InternalServerError("Internal Error");
 				}
+			} else {
+				throw new BadRequestException();
 			}
 
-		} else if (request.getPathInfo().contains("/files/dir")) {
-			System.out.println("API DIR");
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-
-					try {
-						result = service.getFilesDir(userSession);
-					} catch (ServiceException e) {
-						response.setStatus(e.getCode());
-						result = e.getResult();
-					}
-				}
+		} else if (path.contains("/files/dir")) {
+			try {
+				result = service.getFilesDir(userSession);
+			} catch (IOException e) {
+				throw new InternalServerError("Internal Error");
 			}
 
 		} else {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			throw new BadRequestException();
 		}
-		out.print(result);
 
 	}
 
 	@Override
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		String path = request.getPathInfo();
 
 		PrintWriter out = response.getWriter();
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
 		JSONObject result = new JSONObject();
-		SubmissionService service = this.createSubmissionService();
+		HttpSession session = request.getSession(false);
+		UserSession userSession = this.getUserSession(session);
+		try {
+			this.isSignedIn(session);
+		} catch (AuthException e1) {
+			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			return;
+		}
 
-		// Enumeration<String> str = getServletContext().getAttributeNames();
+		String path = request.getPathInfo();
+		String queryString = request.getQueryString();
+		try {
+			processDelete(path, queryString, userSession, result);
+		} catch (InternalServerError | ServiceException | BadRequestException e) {
+			response.setStatus(e.getCode());
+			result = e.getResult();
+		}
+		out.print(result);
+
+	}
+
+	private void processDelete(String path, String queryString, UserSession userSession, JSONObject result)
+			throws InternalServerError, ServiceException, BadRequestException {
+		SubmissionService service = new SubmissionService(this.BS_SERVER_URL, getDb());
+
 		if (path.startsWith("/submission")) {
+			String username = userSession.getUsername();
+			Pattern regExp = Pattern.compile("/submission/([A-Z0-9-]*)");
+			Pattern regExpSubmited = Pattern.compile("/submission/submited/([A-Z0-9-]*)");
 
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				System.out.println("asdsada 1");
-
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					System.out.println("Delete" + request.getPathInfo());
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-					String username = userSession.getUsername();
-					Pattern regExp = Pattern.compile("/submission/([A-Z0-9-]*)");
-					Pattern regExpSubmited = Pattern.compile("/submission/submited/([A-Z0-9-]*)");
-
-					Matcher matcherExp = regExp.matcher(request.getPathInfo());
-					Matcher matcherExpSubm = regExpSubmited.matcher(request.getPathInfo());
-					System.out.println("asdsada 2" + request.getPathInfo());
-					if (matcherExp.matches()) {
-						String acc = matcherExp.group(1);
-						service.deleteSubmission(acc, userSession);
-					} else if (matcherExpSubm.matches()) {
-						String acc = matcherExpSubm.group(1);
-						service.deleteSubmittedSubmission(acc, userSession);
-					} else {
-						response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-					}
+			Matcher matcherExp = regExp.matcher(path);
+			Matcher matcherExpSubm = regExpSubmited.matcher(path);
+			if (matcherExp.matches()) {
+				String acc = matcherExp.group(1);
+				try {
+					service.deleteSubmission(acc, userSession);
+				} catch (IOException e) {
+					throw new InternalServerError();
 				}
+			} else if (matcherExpSubm.matches()) {
+				String acc = matcherExpSubm.group(1);
+				try {
+					service.deleteSubmittedSubmission(acc, userSession);
+				} catch (IOException e) {
+					throw new InternalServerError();
+				}
+			} else {
+				throw new BadRequestException();
 			}
 
 		} else if (path.startsWith("/files/delete")) {
-
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				System.out.println("files delete" + request.getQueryString());
-
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-					try {
-						result = service.deleteFile(userSession, request.getQueryString());
-					} catch (ServiceException e) {
-					}
-					response.setStatus(HttpServletResponse.SC_OK);
-				}
+			try {
+				result = service.deleteFile(userSession, queryString);
+			} catch (IOException e) {
+				throw new InternalServerError();
 			}
+		} else {
+			throw new BadRequestException();
 		}
-
-		else {
-			System.out.println("Data: delete" + path);
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-		}
-		out.print(result);
 
 	}
 
@@ -233,12 +202,82 @@ public final class ProxyDataServlet extends AbstractServletImpl {
 		PrintWriter out = response.getWriter();
 		response.setStatus(HttpServletResponse.SC_OK);
 		response.setContentType("application/json");
+		String path = request.getPathInfo();
+		if (path.contains("/auth")) {
+			try {
+				processAuthPost(request, result);
+			} catch (InternalServerError | ServiceException | BadRequestException e) {
+
+			}
+		} else {
+			HttpSession session = request.getSession(false);
+			UserSession userSession = this.getUserSession(session);
+			try {
+				this.isSignedIn(session);
+			} catch (AuthException e) {
+				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+				response.setStatus(e.getCode());
+				result = e.getResult();
+				return;
+			}
+			try {
+				processPost(request, userSession, result);
+			} catch (InternalServerError | ServiceException | BadRequestException e) {
+				response.setStatus(e.getCode());
+				result = e.getResult();
+
+			}
+		}
+
+		out.print(result);
+
+	}
+
+	private void processPost(HttpServletRequest request, UserSession userSession, JSONObject result)
+			throws InternalServerError, ServiceException, BadRequestException {
+		String path = request.getPathInfo();
 		SubmissionService service = new SubmissionService(this.BS_SERVER_URL, getDb());
 
-		logger.info("Call post method", request.getPathInfo());
+		if (path.startsWith("/submission/save")) {
+			String username = userSession.getUsername();
+			String jsonStr = "";
+			try {
+				jsonStr = readRequestBody(request);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			JSONObject obj = new JSONObject(jsonStr);
+			service.saveSubmission(username, obj);
+			result = obj;
+		} else if (path.equals("/submission/create")) {
+			String jsonStr = "";
+			try {
+				jsonStr = readRequestBody(request);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			JSONObject obj = new JSONObject(jsonStr);
+			try {
+				result = service.createSubmission(userSession, obj);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			throw new BadRequestException();
+		}
+	}
 
-		if (request.getPathInfo().equals("/auth/register")) {
-			String jsonStr = readRequestBody(request);
+	private void processAuthPost(HttpServletRequest request, JSONObject result)
+			throws InternalServerError, ServiceException, BadRequestException {
+		String path = request.getPathInfo();
+
+		if (path.equals("/auth/register")) {
+			String jsonStr;
+			try {
+				jsonStr = readRequestBody(request);
+			} catch (IOException e) {
+				throw new InternalServerError();
+			}
 			JSONObject obj = new JSONObject(jsonStr);
 			UserSession userSession = new UserSession();
 			if (obj.has("username")) {
@@ -252,90 +291,45 @@ public final class ProxyDataServlet extends AbstractServletImpl {
 			HttpSession session = request.getSession(true);
 			session.setAttribute("userSession", userSession);
 			result.put("token", "token");
-
-			// obj.get("userid");
-		} else if (request.getPathInfo().equals("/auth/signup")) {
+		} else if (path.equals("/auth/signup")) {
 			HttpSession session = request.getSession(false);
 			AuthService authService = new AuthService(BS_SERVER_URL);
-			JSONObject body = readRequestBodyAsJson(request);
+			JSONObject body;
+			try {
+				body = readRequestBodyAsJson(request);
+			} catch (IOException e1) {
+				throw new InternalServerError();
+			}
 			String activationUrl = generateActivationUrl(request);
-			JSONObject obj = authService.singUp(body, activationUrl);
+			JSONObject obj;
+			try {
+				obj = authService.singUp(body, activationUrl);
+			} catch (IOException e) {
+				throw new InternalServerError();
+			}
 			result = obj;
 			// api/auth/signout
-		} else if (request.getPathInfo().equals("/auth/signout")) {
+		} else if (path.equals("/auth/signout")) {
 			HttpSession session = request.getSession(false);
 			UserSession userSession = (UserSession) session.getAttribute(Res.Session.userSession);
 			AuthService authService = new AuthService(BS_SERVER_URL);
-			JSONObject obj = authService.singOut(userSession);
+			JSONObject obj;
+			try {
+				obj = authService.singOut(userSession);
+			} catch (IOException e) {
+				throw new InternalServerError();
+			}
 			logger.debug("Sign out" + obj.toString());
 			session.invalidate();
-			// api/auth/signout
-		} else if (request.getPathInfo().equals("/set")) { // Delete this
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-					String username = userSession.getUsername();
-					String jsonStr = readRequestBody(request);
-					System.out.println(username + jsonStr);
-					JSONObject obj = new JSONObject(jsonStr);
-					service.saveSubmission(username, obj);
-					result = obj;
-				}
-			}
-
-		} else if (request.getPathInfo().startsWith("/submission/save")) {
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-					String username = userSession.getUsername();
-					String jsonStr = readRequestBody(request);
-					System.out.println(username + jsonStr);
-					JSONObject obj = new JSONObject(jsonStr);
-					service.saveSubmission(username, obj);
-					result = obj;
-				}
-			}
-
-		} else if (request.getPathInfo().equals("/submission/create")) {
-			HttpSession session = request.getSession(false);
-			if (session == null) {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			} else {
-				UserSession userSession = (UserSession) session.getAttribute("userSession");
-				if (userSession == null) {
-					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				} else {
-					String jsonStr = readRequestBody(request);
-					System.out.println(jsonStr);
-					JSONObject obj = new JSONObject(jsonStr);
-					try {
-						result = service.createSubmission(userSession, obj);
-					} catch (ServiceException e) {
-						response.setStatus(e.getCode());
-						result = e.getResult();
-					}
-				}
-			}
-
 		} else {
-			response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+			throw new BadRequestException();
 		}
 
-		out.print(result);
 	}
 
 	private String generateActivationUrl(HttpServletRequest request) {
-		String url = request.getServerName() + "/biostudies/submissions/index.html#activate/{ACTIVATION:KEY}";
+		String url = "http://" + request.getServerName()
+				+ "/biostudies/submissions/index.html#activate/{ACTIVATION:KEY}";
 		return url;
 	}
 

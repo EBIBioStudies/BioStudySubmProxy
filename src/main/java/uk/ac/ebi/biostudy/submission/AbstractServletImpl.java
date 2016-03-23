@@ -23,6 +23,9 @@ import java.util.Properties;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import uk.ac.ebi.biostudy.submission.exceptions.AuthException;
 
 public class AbstractServletImpl extends HttpServlet {
 
@@ -56,5 +59,21 @@ public class AbstractServletImpl extends HttpServlet {
 			sb.append(str);
 		}
 		return sb.toString();
+	}
+
+	protected void isSignedIn(HttpSession session) throws AuthException {
+		if (session == null) {
+			throw new AuthException("Auth error");
+		} else {
+			UserSession userSession = getUserSession(session);
+			if (userSession == null) {
+				throw new AuthException("Auth error");
+			}
+		}
+	}
+
+	protected UserSession getUserSession(HttpSession session) {
+		return (UserSession) session.getAttribute("userSession");
+
 	}
 }

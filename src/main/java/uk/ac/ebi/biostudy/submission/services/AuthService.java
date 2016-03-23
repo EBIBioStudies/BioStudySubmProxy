@@ -66,6 +66,8 @@ public class AuthService {
 		JSONObject array = new JSONObject();
 		System.out.println("httpmethod.getStatusCode()" + httpmethod.getStatusCode());
 		JSONObject object = new JSONObject(new String(body));
+		object.put("serverStatus", httpmethod.getStatusCode());
 		return object;
+
 	}
 }
