@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.proxy;
 
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -32,9 +32,9 @@ import java.net.URL;
 /**
  * @author Olga Melnichuk
  */
-public class MyProxy {
+public class Proxy {
 
-    private static final Logger logger = LoggerFactory.getLogger(MyProxy.class);
+    private static final Logger logger = LoggerFactory.getLogger(Proxy.class);
 
     private static final String STRING_LOCATION_HEADER = "Location";
 
@@ -46,7 +46,7 @@ public class MyProxy {
     private final String context;
     private final String protocol;
 
-    public MyProxy(URL serverUrl) {
+    public Proxy(URL serverUrl) {
         protocol = serverUrl.getProtocol();
         host = serverUrl.getHost();
         port = serverUrl.getPort();

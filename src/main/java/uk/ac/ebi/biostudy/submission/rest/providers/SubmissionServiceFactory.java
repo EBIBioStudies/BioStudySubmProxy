@@ -18,7 +18,7 @@ package uk.ac.ebi.biostudy.submission.rest.providers;
 
 import org.glassfish.hk2.api.Factory;
 import uk.ac.ebi.biostudy.submission.MyContext;
-import uk.ac.ebi.biostudy.submission.services.SubmissionService;
+import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 
 import javax.inject.Inject;
 import javax.servlet.ServletContext;

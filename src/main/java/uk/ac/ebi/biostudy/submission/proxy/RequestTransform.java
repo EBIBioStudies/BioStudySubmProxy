@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.proxy;
+
+import org.apache.commons.httpclient.HttpMethod;
+
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 /**
  * @author Olga Melnichuk
  */
-public class BadRequestException extends Exception {
-    public BadRequestException(String message) {
-        super(message);
-    }
+@FunctionalInterface
+public interface RequestTransform {
+    HttpMethod apply(HttpServletRequest req) throws BadRequestException, IOException;
 }
+

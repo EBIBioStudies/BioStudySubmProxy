@@ -16,7 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
-import uk.ac.ebi.biostudy.submission.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;

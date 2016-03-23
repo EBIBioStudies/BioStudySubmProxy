@@ -18,8 +18,9 @@ package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import uk.ac.ebi.biostudy.submission.UserSession;
-import uk.ac.ebi.biostudy.submission.services.SubmissionService;
+import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
+import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -29,6 +30,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * @author Olga Melnichuk
@@ -47,7 +49,7 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONArray getSubmissions(@Context UserSession userSession) {
+    public JSONArray getSubmissions(@Context UserSession userSession) throws BioStudiesClientException, IOException {
         return service.listSubmissions(userSession);
     }
 
@@ -55,7 +57,8 @@ public class RESTService {
     @GET
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject getSubmission(@Context UserSession userSession, @PathParam("acc") String acc) {
+    public JSONObject getSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+            throws BioStudiesClientException, IOException {
         return service.getSubmission(userSession, acc);
     }
 
@@ -63,7 +66,7 @@ public class RESTService {
     @GET
     @Path("/files/dir")
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject getFileDir(@Context UserSession userSession) {
+    public JSONObject getFileDir(@Context UserSession userSession) throws BioStudiesClientException, IOException {
         return service.getFilesDir(userSession);
     }
 
@@ -94,21 +97,21 @@ public class RESTService {
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject signup(JSONObject obj) {
+    public JSONObject signup(JSONObject obj) throws BioStudiesClientException, IOException {
         String activationUrl = request.getServerName() + "/biostudies/submissions/index.html#activate/{ACTIVATION:KEY}";
-        return service.singUp(obj, activationUrl);
+        obj.put("activationURL", activationUrl);
+        return service.singUp(obj);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @POST
     @Path("/auth/signout")
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject signout(@Context UserSession userSession) {
+    public JSONObject signout(@Context UserSession userSession) throws BioStudiesClientException, IOException {
         JSONObject obj = service.singOut(userSession);
         request.getSession(false).invalidate();
         return obj;
     }
-
 
     @RolesAllowed("AUTHENTICATED")
     @POST
@@ -124,7 +127,8 @@ public class RESTService {
     @Path("/submission/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject createSubmission(@Context UserSession userSession, JSONObject obj) {
+    public JSONObject createSubmission(@Context UserSession userSession, JSONObject obj)
+            throws IOException, BioStudiesClientException {
         return service.createSubmission(userSession, obj);
     }
 
@@ -133,7 +137,8 @@ public class RESTService {
     @Path("/submission/update")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject updateSubmission(@Context UserSession userSession, JSONObject obj) {
+    public JSONObject updateSubmission(@Context UserSession userSession, JSONObject obj)
+            throws BioStudiesClientException, IOException {
         return service.updateSubmission(userSession, obj);
     }
 
@@ -149,7 +154,8 @@ public class RESTService {
     @DELETE
     @Path("/submission/submitted/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc) {
+    public void deleteSubmittedSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+            throws BioStudiesClientException, IOException {
         service.deleteSubmittedSubmission(acc, userSession);
     }
 
@@ -157,7 +163,8 @@ public class RESTService {
     @DELETE
     @Path("/files/delete")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteFile(@Context UserSession userSession) {
-        service.deleteFile(userSession, request.getQueryString());
+    public void deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
+            throws BioStudiesClientException, IOException {
+        service.deleteFile(userSession, file);
     }
 }

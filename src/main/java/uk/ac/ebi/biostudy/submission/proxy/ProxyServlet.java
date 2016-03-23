@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.proxy;
 
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -28,6 +28,7 @@ import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.multipart.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.biostudy.submission.MyConfig;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;

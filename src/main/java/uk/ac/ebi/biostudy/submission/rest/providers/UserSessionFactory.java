@@ -17,7 +17,7 @@
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
 import org.glassfish.hk2.api.Factory;
-import uk.ac.ebi.biostudy.submission.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.proxy;
 
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.json.JSONObject;

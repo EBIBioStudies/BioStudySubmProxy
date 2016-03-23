@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.rest;
 
-import org.apache.commons.httpclient.HttpMethod;
+import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 /**
  * @author Olga Melnichuk
  */
-@FunctionalInterface
-public interface RequestTransform {
-    HttpMethod apply(HttpServletRequest req) throws BadRequestException, IOException;
-}
+public class BioStudiesClientExceptionMapper implements ExceptionMapper<BioStudiesClientException> {
 
+    public Response toResponse(BioStudiesClientException ex) {
+        return Response.status(ex.getStatusCode())
+                .entity(ex.getMessage())
+                .type(MediaType.APPLICATION_JSON).build();
+    }
+}

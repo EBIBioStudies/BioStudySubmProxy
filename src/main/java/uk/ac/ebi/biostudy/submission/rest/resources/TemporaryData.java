@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.services;
+package uk.ac.ebi.biostudy.submission.rest.resources;
 
-import org.apache.commons.httpclient.HttpException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mapdb.DB;
-import uk.ac.ebi.biostudy.submission.UserSession;
 
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
@@ -106,6 +103,7 @@ public class TemporaryData {
                 array.put(o);
             }
         }
+        return array;
     }
 
 

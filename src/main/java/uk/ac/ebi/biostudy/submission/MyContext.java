@@ -18,6 +18,7 @@ package uk.ac.ebi.biostudy.submission;
 
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
+import uk.ac.ebi.biostudy.submission.proxy.Proxy;
 
 import javax.servlet.ServletContext;
 import java.io.File;
@@ -56,8 +57,8 @@ public class MyContext {
         return (MyConfig) context.getAttribute(CONFIG);
     }
 
-    public static MyProxy getProxy(ServletContext context) {
-        return new MyProxy(getConfig(context).getServerUrl());
+    public static Proxy getProxy(ServletContext context) {
+        return new Proxy(getConfig(context).getServerUrl());
 
     }
 

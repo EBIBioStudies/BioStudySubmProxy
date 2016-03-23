@@ -1,4 +1,6 @@
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.proxy;
+
+import uk.ac.ebi.biostudy.submission.MyContext;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -8,8 +10,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
-import static uk.ac.ebi.biostudy.submission.Transformers.transformActivationReq;
-
 
 @WebServlet("/activate")
 public class ActivateServlet extends HttpServlet {
@@ -17,8 +17,8 @@ public class ActivateServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        MyProxy proxy = MyContext.getProxy(getServletContext());
-        proxy.executeMethod(transformActivationReq(), request, response);
+        Proxy proxy = MyContext.getProxy(getServletContext());
+        proxy.executeMethod(Transformers.transformActivationReq(), request, response);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)

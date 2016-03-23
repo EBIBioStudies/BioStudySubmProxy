@@ -14,43 +14,32 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.bsclient;
 
-import java.io.File;
+import org.json.JSONObject;
 
-/**
- * @author mdylag
- */
-public final class UserSession {
+public class BioStudiesClientException extends Exception {
 
-    private String username;
+    private final int statusCode;
 
-    private String sessid;
+    private final String contentType;
 
-    private File submissionFile;
+    private final String result;
 
-    public String getUsername() {
-        return username;
+    public BioStudiesClientException(int statusCode, String result) {
+        this.statusCode = statusCode;
+        this.result = result;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public int getStatusCode() {
+        return statusCode;
     }
 
-    public String getSessid() {
-        return sessid;
+    @Override
+    public String getMessage() {
+        JSONObject obj = new JSONObject();
+        obj.append("statusCode", statusCode);
+        obj.append("result", result);
+        return obj.toString();
     }
-
-    public void setSessid(String sessid) {
-        this.sessid = sessid;
-    }
-
-    public void setSubmissionFile(File f) {
-        this.submissionFile = f;
-    }
-
-    public File getSubmissionFile() {
-        return submissionFile;
-    }
-
 }

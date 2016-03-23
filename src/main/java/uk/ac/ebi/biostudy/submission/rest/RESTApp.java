@@ -20,11 +20,11 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
-import uk.ac.ebi.biostudy.submission.UserSession;
 import uk.ac.ebi.biostudy.submission.rest.providers.AuthenticationFilter;
 import uk.ac.ebi.biostudy.submission.rest.providers.SubmissionServiceFactory;
 import uk.ac.ebi.biostudy.submission.rest.providers.UserSessionFactory;
-import uk.ac.ebi.biostudy.submission.services.SubmissionService;
+import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
+import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.inject.Singleton;
 
@@ -35,8 +35,8 @@ public class RESTApp extends ResourceConfig {
     public RESTApp() {
         packages("uk.ac.ebi.biostudy.submission.rest");
         register(LoggingFilter.class);
-        //register(GsonMessageBodyHandler.class);
         register(AuthenticationFilter.class);
+        register(BioStudiesClientExceptionMapper.class);
         register(new AbstractBinder() {
             @Override
             protected void configure() {
