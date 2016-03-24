@@ -16,30 +16,30 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
-import org.json.JSONObject;
-
 public class BioStudiesClientException extends Exception {
 
     private final int statusCode;
 
     private final String contentType;
 
-    private final String result;
+    private final String content;
 
-    public BioStudiesClientException(int statusCode, String result) {
+    public BioStudiesClientException(int statusCode, String contentType, String content) {
+        super(statusCode + "::" + contentType + "::" + content);
         this.statusCode = statusCode;
-        this.result = result;
+        this.content = content;
+        this.contentType = contentType;
     }
 
     public int getStatusCode() {
         return statusCode;
     }
 
-    @Override
-    public String getMessage() {
-        JSONObject obj = new JSONObject();
-        obj.append("statusCode", statusCode);
-        obj.append("result", result);
-        return obj.toString();
+    public String getContentType() {
+        return contentType;
+    }
+
+    public String getContent() {
+        return content;
     }
 }

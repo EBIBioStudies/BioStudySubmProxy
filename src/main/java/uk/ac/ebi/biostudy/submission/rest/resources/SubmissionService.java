@@ -18,19 +18,19 @@ package uk.ac.ebi.biostudy.submission.rest.resources;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.mapdb.DB;
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
 
 public class SubmissionService {
 
     private final TemporaryData temporary;
     private final BioStudiesClient bsclient;
 
-    public SubmissionService(URL bsServerUrl, DB db) {
+    public SubmissionService(URI bsServerUrl, DB db) {
         this.bsclient = new BioStudiesClient(bsServerUrl);
         this.temporary = new TemporaryData(db);
     }

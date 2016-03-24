@@ -16,8 +16,9 @@
 
 package uk.ac.ebi.biostudy.submission.proxy;
 
-import org.apache.commons.httpclient.HttpMethod;
+import org.apache.http.client.methods.HttpRequestBase;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
@@ -25,7 +26,7 @@ import java.io.IOException;
  * @author Olga Melnichuk
  */
 @FunctionalInterface
-public interface RequestTransform {
-    HttpMethod apply(HttpServletRequest req) throws BadRequestException, IOException;
+public interface RequestTransform<T extends HttpRequestBase> {
+    T apply(HttpServletRequest req) throws BadRequestException, ServletException, IOException;
 }
 

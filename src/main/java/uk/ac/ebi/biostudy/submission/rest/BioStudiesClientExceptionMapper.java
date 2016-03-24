@@ -28,8 +28,13 @@ import javax.ws.rs.ext.ExceptionMapper;
 public class BioStudiesClientExceptionMapper implements ExceptionMapper<BioStudiesClientException> {
 
     public Response toResponse(BioStudiesClientException ex) {
+        if (ex.getContentType().contains(MediaType.APPLICATION_JSON))
+            return Response.status(ex.getStatusCode())
+                    .entity(ex.getContent())
+                    .type(MediaType.APPLICATION_JSON).build();
+
         return Response.status(ex.getStatusCode())
-                .entity(ex.getMessage())
-                .type(MediaType.APPLICATION_JSON).build();
+                .entity(ex.getContent())
+                .type(MediaType.TEXT_PLAIN_TYPE).build();
     }
 }

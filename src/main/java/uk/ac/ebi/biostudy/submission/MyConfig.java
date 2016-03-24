@@ -22,6 +22,8 @@ import uk.ac.ebi.biostudy.submission.proxy.ProxyServlet;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
 
@@ -34,12 +36,16 @@ public class MyConfig {
 
     public static MyConfig get(InputStream input) throws IOException {
         Properties props = new Properties();
-        if (input != null) {
-            props.load(input);
-            URL serverUrl = new URL(props.getProperty("BS_SERVER_URL"));
-            return new MyConfig(serverUrl);
+        if (input == null) {
+            throw new IOException("Property file was not found");
         }
-        throw new IOException("Property file was not found");
+        props.load(input);
+        try {
+            URI serverUrl = new URL(props.getProperty("BS_SERVER_URL")).toURI();
+            return new MyConfig(serverUrl);
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
     public static MyConfig get() throws IOException {
@@ -47,13 +53,13 @@ public class MyConfig {
         return get(MyConfig.class.getClassLoader().getResourceAsStream("/config.properties"));
     }
 
-    private final URL serverUrl;
+    private final URI serverUrl;
 
-    private MyConfig(URL serverUrl) {
+    private MyConfig(URI serverUrl) {
         this.serverUrl = serverUrl;
     }
 
-    public URL getServerUrl() {
+    public URI getServerUrl() {
         return serverUrl;
     }
 }

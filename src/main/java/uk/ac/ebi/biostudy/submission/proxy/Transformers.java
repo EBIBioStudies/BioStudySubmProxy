@@ -16,11 +16,12 @@
 
 package uk.ac.ebi.biostudy.submission.proxy;
 
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.client.methods.HttpGet;
 import org.json.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.URL;
 
 /**
  * @author Olga Melnichuk
@@ -30,13 +31,13 @@ public class Transformers {
     private Transformers() {
     }
 
-    public static RequestTransform transformActivationReq() {
+    public static RequestTransform<HttpGet> transformActivationReq() {
         return req -> {
             JSONObject obj = toJson(readRequestBody(req));
             if (obj.has("key")) {
                 String key = obj.getString("key");
                 String urlBackend = "/auth/activate/" + key;
-                return new GetMethod(urlBackend);
+                return new HttpGet(urlBackend);
             }
             throw new BadRequestException("Bad activation request");
         };

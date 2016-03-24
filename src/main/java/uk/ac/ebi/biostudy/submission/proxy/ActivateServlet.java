@@ -10,6 +10,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 
+import static uk.ac.ebi.biostudy.submission.MyContext.getProxy;
+import static uk.ac.ebi.biostudy.submission.proxy.Transformers.transformActivationReq;
+
 
 @WebServlet("/activate")
 public class ActivateServlet extends HttpServlet {
@@ -17,8 +20,8 @@ public class ActivateServlet extends HttpServlet {
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Proxy proxy = MyContext.getProxy(getServletContext());
-        proxy.executeMethod(Transformers.transformActivationReq(), request, response);
+        Proxy proxy = getProxy(getServletContext());
+        proxy.executeMethod(transformActivationReq(), request, response);
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
