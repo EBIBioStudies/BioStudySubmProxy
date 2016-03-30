@@ -47,6 +47,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static java.util.Arrays.stream;
+
 /**
  * @author Olga Melnichuk
  */
@@ -127,11 +129,11 @@ public class Proxy {
     }
 
     private HttpGet createProxyGetReq(HttpServletRequest req) throws ServletException, IOException {
-        return new HttpGet(getRequestUrl(req));
+        return new HttpGet(getRequestUri(req));
     }
 
     private HttpPost createProxyPostReq(HttpServletRequest req) throws ServletException, IOException {
-        HttpPost post = new HttpPost(getRequestUrl(req));
+        HttpPost post = new HttpPost(getRequestUri(req));
 
         if (ServletFileUpload.isMultipartContent(req)) {
             handleMultipartPost(post, req);
@@ -291,15 +293,12 @@ public class Proxy {
     }
 
 
-    private URI getRequestUrl(HttpServletRequest req) throws IOException {
+    private URI getRequestUri(HttpServletRequest req) throws IOException {
         String pathInfo = req.getPathInfo();
         pathInfo = pathInfo == null ? "" : pathInfo;
 
         try {
             return new URIBuilder()
-                    .setScheme(req.getScheme())
-                    .setHost(req.getServerName())
-                    .setPort(req.getServerPort())
                     .setPath(req.getServletPath() + pathInfo)
                     .setCustomQuery(req.getQueryString())
                     .build();
@@ -314,12 +313,16 @@ public class Proxy {
                     .setScheme(dest.getScheme())
                     .setHost(dest.getHost())
                     .setPort(dest.getPort())
-                    .setPath(uri.getPath())
+                    .setPath(joinPath(dest.getPath(), uri.getPath()))
                     .setCustomQuery(uri.getQuery())
                     .setFragment(uri.getFragment())
                     .build();
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
+    }
+
+    private static String joinPath(String... parts) {
+        return stream(parts).flatMap(p -> stream(p.split("/"))).filter(string -> !string.isEmpty()).collect(Collectors.joining("/"));
     }
 }
