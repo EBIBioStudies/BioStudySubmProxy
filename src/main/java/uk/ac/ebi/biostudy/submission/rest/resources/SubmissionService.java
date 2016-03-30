@@ -85,8 +85,12 @@ public class SubmissionService {
         return bsclient.signOut(userSession.getSessid(), userSession.getUsername());
     }
 
-    public JSONObject singUp(JSONObject signUpReq) throws BioStudiesClientException, IOException {
-        return bsclient.signUp(signUpReq);
+    public JSONObject singUp(JSONObject obj) throws BioStudiesClientException, IOException {
+        return bsclient.signUp(obj);
+    }
+
+    public JSONObject singIn(JSONObject obj) throws BioStudiesClientException, IOException {
+        return bsclient.signIn(obj);
     }
 
     private static JSONArray join(JSONArray... arrs) {

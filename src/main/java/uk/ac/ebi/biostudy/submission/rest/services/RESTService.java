@@ -103,6 +103,14 @@ public class RESTService {
         return service.singUp(obj);
     }
 
+    @POST
+    @Path("/auth/signin")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public JSONObject signin(JSONObject obj) throws BioStudiesClientException, IOException {
+        return service.singIn(obj);
+    }
+
     @RolesAllowed("AUTHENTICATED")
     @POST
     @Path("/auth/signout")

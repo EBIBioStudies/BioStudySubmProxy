@@ -75,12 +75,12 @@ public class BioStudiesClient {
         JSONObject obj = parseJSON(get(composeUrl("/sbmlist", SESSION_PARAM, sessionId)));
         if (obj.has("status")) {
             String status = obj.getString("status");
-            logger.debug("in response status: " + status);
+            logger.debug("in-json status: " + status);
             if (status.equals("OK")) {
                 return obj.getJSONArray("submissions");
             }
         }
-        logger.warn("not getting status in getSubmissions(..) response");
+        logger.warn("not getting status in response");
         return new JSONArray();
     }
 
@@ -111,6 +111,10 @@ public class BioStudiesClient {
         JSONObject obj = new JSONObject();
         obj.put("login", username);
         obj.put("password", password);
+        return signIn(obj);
+    }
+
+    public JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException {
         return parseJSON(post(composeUrl("/auth/signin"), obj));
     }
 
@@ -153,9 +157,8 @@ public class BioStudiesClient {
 
             IntStream.range(0, params.length)
                     .filter(n -> n % 2 == 0)
-                    .forEach(n -> {
-                        builder.setParameter(params[n], params[n + 1]);
-                    });
+                    .forEach(n -> builder.setParameter(params[n], params[n + 1]));
+
             return builder.build();
         } catch (URISyntaxException e) {
             throw new IOException(e);
