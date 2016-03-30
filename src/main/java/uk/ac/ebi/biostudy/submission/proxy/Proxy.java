@@ -313,7 +313,7 @@ public class Proxy {
                     .setScheme(dest.getScheme())
                     .setHost(dest.getHost())
                     .setPort(dest.getPort())
-                    .setPath(joinPath(dest.getPath(), uri.getPath()))
+                    .setPath(asPath(dest.getPath(), uri.getPath()))
                     .setCustomQuery(uri.getQuery())
                     .setFragment(uri.getFragment())
                     .build();
@@ -322,7 +322,7 @@ public class Proxy {
         }
     }
 
-    private static String joinPath(String... parts) {
-        return stream(parts).flatMap(p -> stream(p.split("/"))).filter(string -> !string.isEmpty()).collect(Collectors.joining("/"));
+    private static String asPath(String... parts) {
+        return "/" + stream(parts).flatMap(p -> stream(p.split("/"))).filter(string -> !string.isEmpty()).collect(Collectors.joining("/"));
     }
 }
