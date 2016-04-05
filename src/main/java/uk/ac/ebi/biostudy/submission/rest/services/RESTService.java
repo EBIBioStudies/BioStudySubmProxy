@@ -107,8 +107,8 @@ public class RESTService {
     @Path("/auth/signin")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public JSONObject signin(JSONObject obj) throws BioStudiesClientException, IOException {
-        return service.singIn(obj);
+    public JSONObject signin(String str) throws BioStudiesClientException, IOException {
+        return service.singIn(new JSONObject(str));
     }
 
     @RolesAllowed("AUTHENTICATED")
