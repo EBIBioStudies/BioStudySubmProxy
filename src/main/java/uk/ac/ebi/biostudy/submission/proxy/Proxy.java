@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.proxy;
 
+import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -36,6 +37,8 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.biostudy.submission.MyRequest;
+import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -45,6 +48,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -115,9 +119,16 @@ public class Proxy {
     private static final File FILE_UPLOAD_TEMP_DIRECTORY = new File(System.getProperty("java.io.tmpdir"));
 
     private final URI dest;
+    private final Function<String, String> pathFilter;
 
     public Proxy(URI dest) {
         this.dest = dest;
+        this.pathFilter = s -> s;
+    }
+
+    public Proxy(URI dest, Function<String, String> pathFilter) {
+        this.dest = dest;
+        this.pathFilter = pathFilter;
     }
 
     public void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -129,11 +140,14 @@ public class Proxy {
     }
 
     private HttpGet createProxyGetReq(HttpServletRequest req) throws ServletException, IOException {
-        return new HttpGet(getRequestUri(req));
+        HttpGet get =  new HttpGet(getRequestUri(req));
+        forwardRequestHeaders(req, get);
+        return get;
     }
 
     private HttpPost createProxyPostReq(HttpServletRequest req) throws ServletException, IOException {
         HttpPost post = new HttpPost(getRequestUri(req));
+        forwardRequestHeaders(req, post);
 
         if (ServletFileUpload.isMultipartContent(req)) {
             handleMultipartPost(post, req);
@@ -151,18 +165,25 @@ public class Proxy {
         ServletFileUpload servletFileUpload = new ServletFileUpload(diskFileItemFactory);
         try {
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
-            servletFileUpload.parseRequest(req).stream().forEach(
+            List<FileItem> items = servletFileUpload.parseRequest(req);
+            items.stream().forEach(
                     fileItem -> {
                         if (fileItem.isFormField()) {
-                            builder.addPart(
+                            builder.addTextBody(
                                     fileItem.getFieldName(),
-                                    new StringBody(fileItem.getString(), ContentType.create(fileItem.getContentType()))
+                                    fileItem.getString(),
+                                    ContentType.create(fileItem.getContentType())
                             );
                         } else {
-                            builder.addPart(
-                                    fileItem.getFieldName(),
-                                    new ByteArrayBody(fileItem.get(), fileItem.getName())
-                            );
+                            try {
+                                builder.addBinaryBody(
+                                        fileItem.getFieldName(),
+                                        fileItem.getInputStream(),
+                                        ContentType.create(fileItem.getContentType()),
+                                        fileItem.getName());
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
                         }
                     }
             );
@@ -196,7 +217,7 @@ public class Proxy {
         reqBase.setURI(proxyUrl(reqBase.getURI()));
         logger.debug("proxied url: " + reqBase.getURI());
 
-        forwardRequestHeaders(req, reqBase);
+        forwardBioStdSession(req, reqBase);
 
         CloseableHttpClient client = HttpClients.createDefault();
         try (CloseableHttpResponse response = client.execute(reqBase)) {
@@ -263,6 +284,14 @@ public class Proxy {
         return list;
     }
 
+    // TODO: get rid of this in the future
+    private void forwardBioStdSession(HttpServletRequest req, HttpRequestBase reqBase) {
+        UserSession userSession = MyRequest.getUserSession(req);
+        if (userSession != null) {
+            reqBase.setHeader("Cookie", "BIOSTDSESS=" + userSession.getSessid());
+        }
+    }
+
     private void redirect(HttpServletRequest req, HttpServletResponse resp, String location) throws IOException {
         resp.sendRedirect(location.replace(dest.toString(), getContextUrl(req).toString()));
     }
@@ -313,7 +342,7 @@ public class Proxy {
                     .setScheme(dest.getScheme())
                     .setHost(dest.getHost())
                     .setPort(dest.getPort())
-                    .setPath(asPath(dest.getPath(), uri.getPath()))
+                    .setPath(asPath(dest.getPath(), pathFilter.apply(uri.getPath())))
                     .setCustomQuery(uri.getQuery())
                     .setFragment(uri.getFragment())
                     .build();

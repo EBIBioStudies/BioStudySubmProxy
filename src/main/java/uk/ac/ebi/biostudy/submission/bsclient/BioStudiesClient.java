@@ -153,7 +153,7 @@ public class BioStudiesClient {
                     .setScheme(baseUrl.getScheme())
                     .setHost(baseUrl.getHost())
                     .setPort(baseUrl.getPort())
-                    .setPath(joinPath(baseUrl.getPath(), relativePath));
+                    .setPath(asPath(baseUrl.getPath(), relativePath));
 
             IntStream.range(0, params.length)
                     .filter(n -> n % 2 == 0)
@@ -165,7 +165,7 @@ public class BioStudiesClient {
         }
     }
 
-    private static String joinPath(String... parts) {
-        return stream(parts).flatMap(p -> stream(p.split("/"))).collect(Collectors.joining("/"));
+    private static String asPath(String... parts) {
+        return "/" + stream(parts).flatMap(p -> stream(p.split("/"))).filter(string -> !string.isEmpty()).collect(Collectors.joining("/"));
     }
 }

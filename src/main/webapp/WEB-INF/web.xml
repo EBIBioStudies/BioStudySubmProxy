@@ -19,6 +19,6 @@
     </servlet>
     <servlet-mapping>
         <servlet-name>jersey-servlet</servlet-name>
-        <url-pattern>/proxy/api/*</url-pattern>
+        <url-pattern>/cooked/*</url-pattern>
     </servlet-mapping>
 </web-app>

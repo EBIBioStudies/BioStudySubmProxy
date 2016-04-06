@@ -44,18 +44,14 @@ public class MyContextListener implements ServletContextListener {
     }
 
     private void initDb(ServletContext context) {
-        String classpath = getClass().getResource("/").getFile();
-        File file = new File(new File(classpath) + "/submissiondb");
-
-        logger.info("DB file storage: " + file.getAbsolutePath());
-        MyContext.createDb(context, file);
+        MyContext.createDb(context);
         logger.info("DB initialized");
     }
 
     private void initConfig(ServletContext context) {
         try {
             MyContext.createConfig(context);
-            logger.info("DB initialized");
+            logger.info("Config found");
         } catch (IOException e) {
             e.printStackTrace();
         }

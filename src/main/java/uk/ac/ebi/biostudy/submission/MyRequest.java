@@ -14,36 +14,26 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.rest.providers;
+package uk.ac.ebi.biostudy.submission;
 
-import org.glassfish.hk2.api.Factory;
-import uk.ac.ebi.biostudy.submission.MyRequest;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.ext.Provider;
+import javax.servlet.http.HttpSession;
 
 /**
  * @author Olga Melnichuk
  */
-@Provider
-public class UserSessionFactory implements Factory<UserSession> {
+public class MyRequest {
 
-    private final HttpServletRequest request;
+    public static final String USER_SESSION = "userSession";
 
-    @Inject
-    public UserSessionFactory(HttpServletRequest request) {
-        this.request = request;
+    public static UserSession getUserSession(HttpServletRequest req) {
+        return (UserSession) req.getSession().getAttribute(USER_SESSION);
     }
 
-    @Override
-    public UserSession provide() {
-        return MyRequest.getUserSession(request);
-    }
-
-    @Override
-    public void dispose(UserSession instance) {
-
+    public static void setUserSession(HttpServletRequest req, UserSession userSession) {
+        HttpSession session = req.getSession(true);
+        session.setAttribute("userSession", userSession);
     }
 }

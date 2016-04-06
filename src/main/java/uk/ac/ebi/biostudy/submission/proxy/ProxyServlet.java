@@ -25,8 +25,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.util.function.Function;
 
-@WebServlet("/api/*")
+@WebServlet("/raw/*")
 public class ProxyServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
@@ -37,7 +38,7 @@ public class ProxyServlet extends HttpServlet {
     public void init() throws ServletException {
         try {
             URI serverUrl = MyConfig.get().getServerUrl();
-            proxy = new Proxy(serverUrl);
+            proxy = new Proxy(serverUrl, source -> source.replace("/raw", ""));
         } catch (IOException e) {
             throw new ServletException(e);
         }

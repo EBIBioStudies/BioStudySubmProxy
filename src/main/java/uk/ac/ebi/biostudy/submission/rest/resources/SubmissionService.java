@@ -48,10 +48,12 @@ public class SubmissionService {
         bsclient.deleteSubmission(acc, userSession.getSessid());
     }
 
-    public JSONArray listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
+    public JSONObject listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
         JSONArray submitted = bsclient.getSubmissions(userSession.getSessid());
         JSONArray temporary = this.temporary.listSubmissions(userSession.getUsername());
-        return join(submitted, temporary);
+        JSONObject obj = new JSONObject();
+        obj.put("submissions", join(submitted, temporary));
+        return obj;
     }
 
     public JSONObject getSubmission(final UserSession userSession, final String acc)

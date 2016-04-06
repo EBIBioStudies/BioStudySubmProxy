@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.rest.user;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 
 /**

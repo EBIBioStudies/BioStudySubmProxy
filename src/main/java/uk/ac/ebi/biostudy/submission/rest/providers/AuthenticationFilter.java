@@ -61,7 +61,6 @@ public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequ
 
             if (!isUserAllowed(user, rolesSet)) {
                 requestContext.abortWith(ACCESS_DENIED);
-                return;
             }
         }
     }

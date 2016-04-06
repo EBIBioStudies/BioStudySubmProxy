@@ -33,7 +33,8 @@ public class MyContext {
     private static final String CONFIG = "config";
 
 
-    public static void createDb(ServletContext context, File file) {
+    public static void createDb(ServletContext context) {
+        File file = getConfig(context).getDbPath();
         DB db = DBMaker.fileDB(file).closeOnJvmShutdown().cacheSize(128).transactionDisable().make();
         context.setAttribute(DB, db);
     }
@@ -56,10 +57,4 @@ public class MyContext {
     public static MyConfig getConfig(ServletContext context) {
         return (MyConfig) context.getAttribute(CONFIG);
     }
-
-    public static Proxy getProxy(ServletContext context) {
-        return new Proxy(getConfig(context).getServerUrl());
-
-    }
-
 }

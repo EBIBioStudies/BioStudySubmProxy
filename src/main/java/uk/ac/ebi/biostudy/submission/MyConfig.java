@@ -18,7 +18,6 @@ package uk.ac.ebi.biostudy.submission;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.ebi.biostudy.submission.proxy.ProxyServlet;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,40 +25,54 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
+import java.io.File;
 
 /**
  * @author Olga Melnichuk
  */
 public class MyConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(ProxyServlet.class);
+    private static final Logger logger = LoggerFactory.getLogger(MyConfig.class);
 
     public static MyConfig get(InputStream input) throws IOException {
         Properties props = new Properties();
         if (input == null) {
-            throw new IOException("Property file was not found");
+            throw new IOException("Config file not found");
         }
         props.load(input);
         try {
             URI serverUrl = new URL(props.getProperty("BS_SERVER_URL")).toURI();
-            return new MyConfig(serverUrl);
+            logger.info("serverUrl: " + serverUrl);
+
+            File dbPath = new File(props.getProperty("BS_TMP_DB_PATH"));
+            logger.info("dbPath: " + dbPath);
+
+            return new MyConfig(serverUrl, dbPath);
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
     }
 
     public static MyConfig get() throws IOException {
-        logger.info("Loading config.properties from a classpath");
-        return get(MyConfig.class.getClassLoader().getResourceAsStream("/config.properties"));
+        URL configURL = MyConfig.class.getClassLoader().getResource("/config.properties");
+        logger.info("Config URL: " + configURL);
+        return get(configURL == null ? null : configURL.openStream());
     }
 
     private final URI serverUrl;
+    private final File dbPath;
 
-    private MyConfig(URI serverUrl) {
+
+    private MyConfig(URI serverUrl, File dbPath) {
         this.serverUrl = serverUrl;
+        this.dbPath = dbPath;
     }
 
     public URI getServerUrl() {
         return serverUrl;
+    }
+
+    public File getDbPath() {
+        return dbPath;
     }
 }
