@@ -70,6 +70,6 @@ gradle-app.setting
 # Cache of project
 .gradletasknamecache
 
-.iml
+*.iml
 
 gradle.properties
