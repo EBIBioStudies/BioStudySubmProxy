@@ -17,43 +17,74 @@ package uk.ac.ebi.biostudy.submission.rest.resources;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.mapdb.DB;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Date;
 
 public class SubmissionService {
 
-    private final TemporaryData temporary;
     private final BioStudiesClient bsclient;
 
-    public SubmissionService(URI bsServerUrl, DB db) {
+    public SubmissionService(URI bsServerUrl) {
         this.bsclient = new BioStudiesClient(bsServerUrl);
-        this.temporary = new TemporaryData(db);
     }
 
-    public void saveSubmission(UserSession userSession, JSONObject obj) {
-        temporary.saveSubmission(userSession.getUsername(), obj);
+    public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
+        String accno = "";
+        if (obj.has("accno")) {
+            accno = obj.getString("accno");
+        }
+        if (accno.equals("!{S-STA}") || accno.isEmpty()) {
+            accno = "TEMP-" + (new Date().getTime());
+            obj.put("accno", accno);
+        }
+        bsclient.saveTmpSubmission(obj, accno, userSession.getSessid());
     }
 
-    public void deleteSubmission(final String acc, final UserSession userSession) {
-        temporary.deleteSubmission(acc, userSession.getUsername());
+    public void deleteTmpSubmission(final String acc, final UserSession userSession) throws IOException, BioStudiesClientException {
+        bsclient.deleteTmpSubmission(acc, userSession.getSessid());
     }
 
-    public void deleteSubmittedSubmission(final String acc, final UserSession userSession)
+    public void deleteSubmission(final String acc, final UserSession userSession)
             throws BioStudiesClientException, IOException {
         bsclient.deleteSubmission(acc, userSession.getSessid());
     }
 
     public JSONObject listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
         JSONArray submitted = bsclient.getSubmissions(userSession.getSessid());
-        JSONArray temporary = this.temporary.listSubmissions(userSession.getUsername());
+        JSONArray temporary = listTmpSubmissions(userSession);
         JSONObject obj = new JSONObject();
         obj.put("submissions", join(submitted, temporary));
         return obj;
+    }
+
+    private JSONArray listTmpSubmissions(UserSession userSession) throws IOException, BioStudiesClientException {
+        JSONArray submissions = bsclient.listTmpSubmissions(userSession.getSessid());
+        JSONArray array = new JSONArray();
+        for (int j = 0; j < submissions.length(); j++) {
+            JSONObject o = (JSONObject) submissions.get(j);
+            JSONArray attrs = o.getJSONArray("attributes");
+            for (int i = 0; i < attrs.length(); i++) {
+                JSONObject attr = attrs.getJSONObject(i);
+                if (attr.getString("name").equals("Title")) {
+                    o.put("title", attr.getString("value"));
+                }
+                if (attr.getString("name").equals("ReleaseDate")) {
+                    String sdate = attr.getString("value");
+
+                    // formatDate.parse(sdate).getTime();
+                    // Date drdate = new Date(new Long(sdate));
+
+                    // o.put("rtime", attr.getString("value"));
+                }
+            }
+            array.put(o);
+        }
+        return array;
     }
 
     public JSONObject getSubmission(final UserSession userSession, final String acc)
@@ -65,7 +96,7 @@ public class SubmissionService {
             throws IOException, BioStudiesClientException {
         String acc = obj.getJSONArray("submissions").getJSONObject(0).getString("accno");
         JSONObject result = bsclient.createSubmission(obj, userSession.getSessid());
-        temporary.deleteSubmission(acc, userSession.getUsername());
+        deleteTmpSubmission(acc, userSession);
         return result;
     }
 
@@ -75,12 +106,12 @@ public class SubmissionService {
     }
 
     public JSONObject getFilesDir(UserSession userSession) throws BioStudiesClientException, IOException {
-       return bsclient.getFilesDir(userSession.getSessid());
+        return bsclient.getFilesDir(userSession.getSessid());
     }
 
     public JSONObject deleteFile(UserSession userSession, String file)
             throws BioStudiesClientException, IOException {
-       return bsclient.deleteFile(file, userSession.getSessid());
+        return bsclient.deleteFile(file, userSession.getSessid());
     }
 
     public JSONObject singOut(UserSession userSession) throws BioStudiesClientException, IOException {

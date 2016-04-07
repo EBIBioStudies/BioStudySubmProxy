@@ -25,15 +25,13 @@ repositories {
 
 processResources {
 	filter ReplaceTokens, tokens: [
-			"BS_SERVER_URL" : bsBackendUrl,
-			"BS_TMP_DB_PATH": kvStorePath
+			"BS_SERVER_URL" : bsBackendUrl
 	]
 }
 
 processTestResources {
 	filter ReplaceTokens, tokens: [
-			"BS_SERVER_URL_4TESTS" : bsBackendUrl_4tests,
-			"BS_TMP_DB_PATH_4TESTS": kvStorePath_4tests
+			"BS_SERVER_URL_4TESTS" : bsBackendUrl_4tests
 	]
 }
 
@@ -42,8 +40,7 @@ task filterEclipseResources(type: Copy) {
     from 'src/main/resources'
     into 'bin'
     filter(ReplaceTokens, tokens: [
-			"BS_SERVER_URL": bsBackendUrl,
-			"BS_TMP_DB_PATH": kvStorePath
+			"BS_SERVER_URL": bsBackendUrl
 	])
 }
 processResources.finalizedBy filterEclipseResources

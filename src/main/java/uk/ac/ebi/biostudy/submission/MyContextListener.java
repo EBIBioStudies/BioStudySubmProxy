@@ -23,7 +23,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
-import java.io.File;
 import java.io.IOException;
 
 @WebListener
@@ -32,20 +31,13 @@ public class MyContextListener implements ServletContextListener {
     private static final Logger logger = LoggerFactory.getLogger(MyContextListener.class);
 
     @Override
-    public void contextDestroyed(ServletContextEvent contextEvent) {
-        MyContext.closeDb(contextEvent.getServletContext());
-    }
-
-    @Override
     public void contextInitialized(ServletContextEvent contextEvent) {
         ServletContext context = contextEvent.getServletContext();
         initConfig(context);
-        initDb(context);
     }
 
-    private void initDb(ServletContext context) {
-        MyContext.createDb(context);
-        logger.info("DB initialized");
+    @Override
+    public void contextDestroyed(ServletContextEvent sce) {
     }
 
     private void initConfig(ServletContext context) {

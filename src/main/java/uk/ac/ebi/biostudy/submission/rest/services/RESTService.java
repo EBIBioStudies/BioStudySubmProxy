@@ -16,17 +16,15 @@
 
 package uk.ac.ebi.biostudy.submission.rest.services;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.MyRequest;
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
+import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -131,7 +129,7 @@ public class RESTService {
     @Path("/submission/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void saveSubmission(@Context UserSession userSession, String str) {
+    public void saveSubmission(@Context UserSession userSession, String str) throws IOException, BioStudiesClientException {
         service.saveSubmission(userSession, toJson(str));
     }
 
@@ -159,8 +157,9 @@ public class RESTService {
     @DELETE
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc) {
-        service.deleteSubmission(acc, userSession);
+    public void deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+            throws IOException, BioStudiesClientException {
+        service.deleteTmpSubmission(acc, userSession);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -169,7 +168,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubmittedSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws BioStudiesClientException, IOException {
-        service.deleteSubmittedSubmission(acc, userSession);
+        service.deleteSubmission(acc, userSession);
     }
 
     @RolesAllowed("AUTHENTICATED")

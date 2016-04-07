@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentNavigableMap;
 /**
  * @author Olga Melnichuk
  */
+@Deprecated
 public class TemporaryData {
 
     private final DB db;

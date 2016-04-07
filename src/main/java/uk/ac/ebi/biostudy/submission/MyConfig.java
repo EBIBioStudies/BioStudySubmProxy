@@ -25,7 +25,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
-import java.io.File;
 
 /**
  * @author Olga Melnichuk
@@ -44,10 +43,7 @@ public class MyConfig {
             URI serverUrl = new URL(props.getProperty("BS_SERVER_URL")).toURI();
             logger.info("serverUrl: " + serverUrl);
 
-            File dbPath = new File(props.getProperty("BS_TMP_DB_PATH"));
-            logger.info("dbPath: " + dbPath);
-
-            return new MyConfig(serverUrl, dbPath);
+            return new MyConfig(serverUrl);
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
@@ -60,19 +56,12 @@ public class MyConfig {
     }
 
     private final URI serverUrl;
-    private final File dbPath;
 
-
-    private MyConfig(URI serverUrl, File dbPath) {
+    private MyConfig(URI serverUrl) {
         this.serverUrl = serverUrl;
-        this.dbPath = dbPath;
     }
 
     public URI getServerUrl() {
         return serverUrl;
-    }
-
-    public File getDbPath() {
-        return dbPath;
     }
 }

@@ -34,9 +34,7 @@ public class SubmissionServiceFactory implements Factory<SubmissionService> {
 
     @Inject
     public SubmissionServiceFactory(ServletContext context) {
-        this.service = new SubmissionService(
-                MyContext.getConfig(context).getServerUrl(),
-                MyContext.getDb(context));
+        this.service = new SubmissionService(MyContext.getConfig(context).getServerUrl());
     }
 
     @Override

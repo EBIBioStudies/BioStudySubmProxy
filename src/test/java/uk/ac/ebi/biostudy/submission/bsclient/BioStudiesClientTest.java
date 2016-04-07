@@ -18,13 +18,9 @@ package uk.ac.ebi.biostudy.submission.bsclient;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.junit.Test;
-
 import org.junit.Assume;
-
-import uk.ac.ebi.biostudy.submission.MyConfig;
+import org.junit.Test;
 import uk.ac.ebi.biostudy.submission.TestEnvironment;
-
 
 import java.io.IOException;
 import java.net.URI;

@@ -17,10 +17,10 @@
 package uk.ac.ebi.biostudy.submission.bsclient;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -34,9 +34,12 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 
 /**
@@ -48,6 +51,10 @@ public class BioStudiesClient {
 
     private static final String SESSION_PARAM = "BIOSTDSESS";
 
+    private static final String TMP_KEY_PARAM = "key";
+
+    private static final String TMP_VALUE_PARAM = "value";
+
     private final URI baseUrl;
 
     public BioStudiesClient(URI baseUrl) {
@@ -58,21 +65,21 @@ public class BioStudiesClient {
             throws BioStudiesClientException, IOException {
         JSONObject copy = new JSONObject(obj.toString());
         copy.getJSONArray("submissions").getJSONObject(0).put("accno", "!{S-STA}");
-        return parseJSON(post(composeUrl("/submit/create", SESSION_PARAM, sessionId), copy));
+        return parseJSON(post(composeUrl("/submit/create"), copy, SESSION_PARAM, sessionId));
     }
 
     public JSONObject updateSubmission(JSONObject obj, String sessionId)
             throws BioStudiesClientException, IOException {
-        return parseJSON(post(composeUrl("/submit/update", SESSION_PARAM, sessionId), obj));
+        return parseJSON(post(composeUrl("/submit/update"), obj, SESSION_PARAM, sessionId));
     }
 
     public JSONObject getSubmission(String acc, String sessionId)
             throws BioStudiesClientException, IOException {
-        return parseJSON(get(composeUrl("/submission/" + acc, SESSION_PARAM, sessionId)));
+        return parseJSON(get(composeUrl("/submission/" + acc), SESSION_PARAM, sessionId));
     }
 
     public JSONArray getSubmissions(String sessionId) throws BioStudiesClientException, IOException {
-        JSONObject obj = parseJSON(get(composeUrl("/sbmlist", SESSION_PARAM, sessionId)));
+        JSONObject obj = parseJSON(get(composeUrl("/sbmlist"), SESSION_PARAM, sessionId));
         if (obj.has("status")) {
             String status = obj.getString("status");
             logger.debug("in-json status: " + status);
@@ -85,22 +92,22 @@ public class BioStudiesClient {
     }
 
     public void deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
-        get(composeUrl("/submit/delete", SESSION_PARAM, sessionId, "id", acc));
+        get(composeUrl("/submit/delete"), SESSION_PARAM, sessionId, "id", acc);
     }
 
     public JSONObject getFilesDir(String sessionId) throws BioStudiesClientException, IOException {
-        return parseJSON(get(composeUrl("/dir", SESSION_PARAM, sessionId)));
+        return parseJSON(get(composeUrl("/dir"), SESSION_PARAM, sessionId));
     }
 
     public JSONObject deleteFile(String file, String sessionId) throws BioStudiesClientException, IOException {
-        return parseJSON(get(composeUrl("/dir", SESSION_PARAM, sessionId, "command", "delete", "file", file)));
+        return parseJSON(get(composeUrl("/dir"), SESSION_PARAM, sessionId, "command", "delete", "file", file));
     }
 
     public JSONObject signOut(String sessionId, String username) throws BioStudiesClientException, IOException {
         JSONObject obj = new JSONObject();
         obj.put("username", username);
         obj.put("sessid", sessionId);
-        return parseJSON(post(composeUrl("/auth/signout", SESSION_PARAM, sessionId), obj));
+        return parseJSON(post(composeUrl("/auth/signout"), obj, SESSION_PARAM, sessionId));
     }
 
     public JSONObject signUp(JSONObject obj) throws BioStudiesClientException, IOException {
@@ -118,19 +125,38 @@ public class BioStudiesClient {
         return parseJSON(post(composeUrl("/auth/signin"), obj));
     }
 
-    private String get(URI url) throws BioStudiesClientException, IOException {
-        return executeMethod(new HttpGet(url));
+    public void saveTmpSubmission(JSONObject obj, String accno, String sessionId) throws IOException, BioStudiesClientException {
+        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno, TMP_VALUE_PARAM, obj.toString());
     }
 
-    private String post(URI url, JSONObject data) throws BioStudiesClientException, IOException {
-        HttpPost post = new HttpPost(url);
-        post.setEntity(new StringEntity(data.toString()));
-        post.setHeader("Accept", "application/json");
-        post.setHeader("Content-Type", MediaType.APPLICATION_JSON);
-        return executeMethod(post);
+    public void deleteTmpSubmission(String accno, String sessionId) throws IOException, BioStudiesClientException {
+        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno);
     }
 
-    private String executeMethod(HttpRequestBase req) throws BioStudiesClientException, IOException {
+    public JSONArray listTmpSubmissions(String sessionId) throws IOException, BioStudiesClientException {
+        return parseJSONArray(get(composeUrl("/userdata/listjson"), SESSION_PARAM, sessionId));
+    }
+
+    private String get(URI url, String... params) throws BioStudiesClientException, IOException {
+        RequestBuilder builder = RequestBuilder.get().setUri(url);
+        forEachParam(asList(params), builder::addParameter);
+        return executeMethod(builder.build());
+    }
+
+    private String post(URI url, String... params) throws BioStudiesClientException, IOException {
+        return post(url, null, params);
+    }
+
+    private String post(URI url, JSONObject data, String... params) throws BioStudiesClientException, IOException {
+        RequestBuilder builder = RequestBuilder.post().setUri(url);
+        forEachParam(asList(params), builder::addParameter);
+        if (data != null) {
+            builder.setEntity(new StringEntity(data.toString(), ContentType.APPLICATION_JSON));
+        }
+        return executeMethod(builder.build());
+    }
+
+    private String executeMethod(HttpUriRequest req) throws BioStudiesClientException, IOException {
         CloseableHttpClient client = HttpClients.createDefault();
         try (CloseableHttpResponse response = client.execute(req)) {
             String body = EntityUtils.toString(response.getEntity(), "UTF-8");
@@ -147,25 +173,31 @@ public class BioStudiesClient {
         return new JSONObject(str);
     }
 
-    private URI composeUrl(String relativePath, String... params) throws IOException {
+    private JSONArray parseJSONArray(String str) {
+        return new JSONArray(str);
+    }
+
+    private URI composeUrl(String relativePath) throws IOException {
         try {
-            URIBuilder builder = new URIBuilder()
+            return new URIBuilder()
                     .setScheme(baseUrl.getScheme())
                     .setHost(baseUrl.getHost())
                     .setPort(baseUrl.getPort())
-                    .setPath(asPath(baseUrl.getPath(), relativePath));
-
-            IntStream.range(0, params.length)
-                    .filter(n -> n % 2 == 0)
-                    .forEach(n -> builder.setParameter(params[n], params[n + 1]));
-
-            return builder.build();
+                    .setPath(asPath(baseUrl.getPath(), relativePath))
+                    .build();
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
     }
 
+    private <T> void forEachParam(List<String> params, BiFunction<String, String, T> func2) {
+        IntStream.range(0, params.size())
+                .filter(n -> n % 2 == 0)
+                .forEach(n -> func2.apply(params.get(n), params.get(n + 1)));
+    }
+
     private static String asPath(String... parts) {
         return "/" + stream(parts).flatMap(p -> stream(p.split("/"))).filter(string -> !string.isEmpty()).collect(Collectors.joining("/"));
     }
+
 }

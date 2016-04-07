@@ -16,12 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission;
 
-import org.mapdb.DB;
-import org.mapdb.DBMaker;
-import uk.ac.ebi.biostudy.submission.proxy.Proxy;
-
 import javax.servlet.ServletContext;
-import java.io.File;
 import java.io.IOException;
 
 /**
@@ -29,26 +24,7 @@ import java.io.IOException;
  */
 public class MyContext {
 
-    private static final String DB = "db";
     private static final String CONFIG = "config";
-
-
-    public static void createDb(ServletContext context) {
-        File file = getConfig(context).getDbPath();
-        DB db = DBMaker.fileDB(file).closeOnJvmShutdown().cacheSize(128).transactionDisable().make();
-        context.setAttribute(DB, db);
-    }
-
-    public static DB getDb(ServletContext context) {
-        return (DB) context.getAttribute(DB);
-    }
-
-    public static void closeDb(ServletContext context) {
-        DB db = getDb(context);
-        if (db != null) {
-            db.close();
-        }
-    }
 
     public static void createConfig(ServletContext context) throws IOException {
         context.setAttribute(CONFIG, MyConfig.get());
