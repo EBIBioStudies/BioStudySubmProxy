@@ -103,9 +103,8 @@ public class BioStudiesClient {
         return parseJSON(get(composeUrl("/dir"), SESSION_PARAM, sessionId, "command", "delete", "file", file));
     }
 
-    public JSONObject signOut(String sessionId, String username) throws BioStudiesClientException, IOException {
+    public JSONObject signOut(String sessionId) throws BioStudiesClientException, IOException {
         JSONObject obj = new JSONObject();
-        obj.put("username", username);
         obj.put("sessid", sessionId);
         return parseJSON(post(composeUrl("/auth/signout"), obj, SESSION_PARAM, sessionId));
     }

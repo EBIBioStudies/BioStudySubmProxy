@@ -16,11 +16,11 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
+import uk.ac.ebi.biostudy.submission.MyRequest;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
@@ -57,7 +57,7 @@ public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequ
             RolesAllowed rolesAnnotation = method.getAnnotation(RolesAllowed.class);
             Set<String> rolesSet = new HashSet<String>(Arrays.asList(rolesAnnotation.value()));
 
-            UserSession user = findUserSession();
+            UserSession user = getUserSession();
 
             if (!isUserAllowed(user, rolesSet)) {
                 requestContext.abortWith(ACCESS_DENIED);
@@ -65,13 +65,26 @@ public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequ
         }
     }
 
-    private UserSession findUserSession() {
-        HttpSession session = request.getSession();
-        if (session == null) {
-           return null;
+    private UserSession getUserSession() {
+        String sessid = getSessionId();
+        if (sessid == null) {
+            return null;
         }
 
-        return (UserSession) session.getAttribute("userSession");
+        UserSession session = MyRequest.getUserSession(request);
+        if (session == null) {
+            session = new UserSession(sessid);
+            MyRequest.setUserSession(request, session);
+        }
+        return session;
+    }
+
+    private String getSessionId() {
+        return Arrays.stream(request.getCookies())
+                .filter(c -> c.getName().equals("BIOSTDSESS"))
+                .findFirst()
+                .get()
+                .getValue();
     }
 
     private boolean isUserAllowed(final UserSession userSession, final Set<String> rolesSet) {

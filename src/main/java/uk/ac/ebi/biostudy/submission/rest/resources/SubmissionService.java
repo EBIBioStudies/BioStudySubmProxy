@@ -115,7 +115,7 @@ public class SubmissionService {
     }
 
     public JSONObject singOut(UserSession userSession) throws BioStudiesClientException, IOException {
-        return bsclient.signOut(userSession.getSessid(), userSession.getUsername());
+        return bsclient.signOut(userSession.getSessid());
     }
 
     public JSONObject singUp(JSONObject obj) throws BioStudiesClientException, IOException {

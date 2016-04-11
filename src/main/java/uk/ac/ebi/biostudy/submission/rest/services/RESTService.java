@@ -78,31 +78,6 @@ public class RESTService {
     }
 
     @POST
-    @Path("/auth/register")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public String register(String str) {
-        JSONObject obj = toJson(str);
-
-        UserSession userSession = new UserSession();
-        if (obj.has("username")) {
-            userSession.setUsername(obj.getString("username"));
-        }
-        if (obj.has("sessid")) {
-            userSession.setSessid(obj.getString("sessid"));
-        }
-        File f = new File("submission" + userSession.getUsername() + ".json");
-        userSession.setSubmissionFile(f);
-
-        MyRequest.setUserSession(request, userSession);
-
-
-        JSONObject result = new JSONObject();
-        result.put("token", "token");
-        return result.toString();
-    }
-
-    @POST
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

@@ -16,26 +16,15 @@
 
 package uk.ac.ebi.biostudy.submission.rest.user;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-
 /**
  * @author mdylag
  */
 public final class UserSession {
 
-    private String username;
-
     private String sessid;
 
-    private File submissionFile;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
+    public UserSession(String sessid) {
+        this.sessid = sessid;
     }
 
     public String getSessid() {
@@ -45,13 +34,4 @@ public final class UserSession {
     public void setSessid(String sessid) {
         this.sessid = sessid;
     }
-
-    public void setSubmissionFile(File f) {
-        this.submissionFile = f;
-    }
-
-    public File getSubmissionFile() {
-        return submissionFile;
-    }
-
 }
