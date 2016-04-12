@@ -33,8 +33,8 @@ public class TestEnvironment {
         }
     }
 
-    public static MyConfig getConfig() throws IOException {
-        return MyConfig.get(TestEnvironment.class.getResourceAsStream("/config.properties"));
+    public static AppConfig getConfig() throws IOException {
+        return AppConfig.get(TestEnvironment.class.getResourceAsStream("/config.properties"));
     }
 
     public static URI getServerUrl() throws IOException {

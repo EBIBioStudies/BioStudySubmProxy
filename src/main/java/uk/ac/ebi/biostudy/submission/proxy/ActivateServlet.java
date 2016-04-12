@@ -1,6 +1,6 @@
 package uk.ac.ebi.biostudy.submission.proxy;
 
-import uk.ac.ebi.biostudy.submission.MyContext;
+import uk.ac.ebi.biostudy.submission.AppContext;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -22,7 +22,7 @@ public class ActivateServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        this.proxy = new Proxy(MyContext.getConfig(config.getServletContext()).getServerUrl());
+        this.proxy = new Proxy(AppContext.getConfig(config.getServletContext()).getServerUrl());
     }
 
     @Override

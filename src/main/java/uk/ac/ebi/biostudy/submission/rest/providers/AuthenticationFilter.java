@@ -16,7 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
-import uk.ac.ebi.biostudy.submission.MyRequest;
+import uk.ac.ebi.biostudy.submission.SessionAttributes;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.annotation.security.RolesAllowed;
@@ -71,10 +71,10 @@ public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequ
             return null;
         }
 
-        UserSession session = MyRequest.getUserSession(request);
+        UserSession session = SessionAttributes.getUserSession(request);
         if (session == null) {
             session = new UserSession(sessid);
-            MyRequest.setUserSession(request, session);
+            SessionAttributes.setUserSession(request, session);
         }
         return session;
     }

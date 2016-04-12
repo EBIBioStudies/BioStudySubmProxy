@@ -17,7 +17,7 @@
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
 import org.glassfish.hk2.api.Factory;
-import uk.ac.ebi.biostudy.submission.MyRequest;
+import uk.ac.ebi.biostudy.submission.SessionAttributes;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.inject.Inject;
@@ -39,7 +39,7 @@ public class UserSessionFactory implements Factory<UserSession> {
 
     @Override
     public UserSession provide() {
-        return MyRequest.getUserSession(request);
+        return SessionAttributes.getUserSession(request);
     }
 
     @Override

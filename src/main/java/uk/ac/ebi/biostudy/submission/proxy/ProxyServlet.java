@@ -16,7 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.proxy;
 
-import uk.ac.ebi.biostudy.submission.MyConfig;
+import uk.ac.ebi.biostudy.submission.AppConfig;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -25,7 +25,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
-import java.util.function.Function;
 
 @WebServlet("/raw/*")
 public class ProxyServlet extends HttpServlet {
@@ -37,7 +36,7 @@ public class ProxyServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         try {
-            URI serverUrl = MyConfig.get().getServerUrl();
+            URI serverUrl = AppConfig.get().getServerUrl();
             proxy = new Proxy(serverUrl, source -> source.replace("/raw", ""));
         } catch (IOException e) {
             throw new ServletException(e);

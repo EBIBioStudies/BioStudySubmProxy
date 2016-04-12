@@ -29,11 +29,11 @@ import java.util.Properties;
 /**
  * @author Olga Melnichuk
  */
-public class MyConfig {
+public class AppConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(MyConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
-    public static MyConfig get(InputStream input) throws IOException {
+    public static AppConfig get(InputStream input) throws IOException {
         Properties props = new Properties();
         if (input == null) {
             throw new IOException("Config file not found");
@@ -43,21 +43,21 @@ public class MyConfig {
             URI serverUrl = new URL(props.getProperty("BS_SERVER_URL")).toURI();
             logger.info("serverUrl: " + serverUrl);
 
-            return new MyConfig(serverUrl);
+            return new AppConfig(serverUrl);
         } catch (URISyntaxException e) {
             throw new IOException(e);
         }
     }
 
-    public static MyConfig get() throws IOException {
-        URL configURL = MyConfig.class.getClassLoader().getResource("/config.properties");
+    public static AppConfig get() throws IOException {
+        URL configURL = AppConfig.class.getClassLoader().getResource("/config.properties");
         logger.info("Config URL: " + configURL);
         return get(configURL == null ? null : configURL.openStream());
     }
 
     private final URI serverUrl;
 
-    private MyConfig(URI serverUrl) {
+    private AppConfig(URI serverUrl) {
         this.serverUrl = serverUrl;
     }
 

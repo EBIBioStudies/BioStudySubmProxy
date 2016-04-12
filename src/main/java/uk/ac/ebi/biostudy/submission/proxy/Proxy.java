@@ -31,13 +31,11 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.entity.mime.content.ByteArrayBody;
-import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.ebi.biostudy.submission.MyRequest;
+import uk.ac.ebi.biostudy.submission.SessionAttributes;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.servlet.ServletException;
@@ -286,7 +284,7 @@ public class Proxy {
 
     // TODO: get rid of this in the future
     private void forwardBioStdSession(HttpServletRequest req, HttpRequestBase reqBase) {
-        UserSession userSession = MyRequest.getUserSession(req);
+        UserSession userSession = SessionAttributes.getUserSession(req);
         if (userSession != null) {
             reqBase.setHeader("Cookie", "BIOSTDSESS=" + userSession.getSessid());
         }

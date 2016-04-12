@@ -26,9 +26,9 @@ import javax.servlet.annotation.WebListener;
 import java.io.IOException;
 
 @WebListener
-public class MyContextListener implements ServletContextListener {
+public class AppContextListener implements ServletContextListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(MyContextListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(AppContextListener.class);
 
     @Override
     public void contextInitialized(ServletContextEvent contextEvent) {
@@ -42,7 +42,7 @@ public class MyContextListener implements ServletContextListener {
 
     private void initConfig(ServletContext context) {
         try {
-            MyContext.createConfig(context);
+            AppContext.createConfig(context);
             logger.info("Config found");
         } catch (IOException e) {
             e.printStackTrace();

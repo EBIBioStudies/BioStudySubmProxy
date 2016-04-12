@@ -16,24 +16,21 @@
 
 package uk.ac.ebi.biostudy.submission;
 
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
-
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
+import javax.servlet.ServletContext;
+import java.io.IOException;
 
 /**
  * @author Olga Melnichuk
  */
-public class MyRequest {
+public class AppContext {
 
-    public static final String USER_SESSION = "userSession";
+    private static final String CONFIG = "config";
 
-    public static UserSession getUserSession(HttpServletRequest req) {
-        return (UserSession) req.getSession().getAttribute(USER_SESSION);
+    public static void createConfig(ServletContext context) throws IOException {
+        context.setAttribute(CONFIG, AppConfig.get());
     }
 
-    public static void setUserSession(HttpServletRequest req, UserSession userSession) {
-        HttpSession session = req.getSession(true);
-        session.setAttribute("userSession", userSession);
+    public static AppConfig getConfig(ServletContext context) {
+        return (AppConfig) context.getAttribute(CONFIG);
     }
 }
