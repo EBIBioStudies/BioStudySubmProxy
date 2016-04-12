@@ -17,7 +17,6 @@
 package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.json.JSONObject;
-import uk.ac.ebi.biostudy.submission.MyRequest;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
@@ -28,7 +27,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.File;
 import java.io.IOException;
 
 /**
