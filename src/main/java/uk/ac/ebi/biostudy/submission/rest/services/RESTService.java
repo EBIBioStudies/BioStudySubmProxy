@@ -68,14 +68,6 @@ public class RESTService {
     }
 
     @POST
-    @Path("/auth/signin")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public String signin(String str) throws BioStudiesClientException, IOException {
-        return service.singIn(toJson(str)).toString();
-    }
-
-    @POST
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
