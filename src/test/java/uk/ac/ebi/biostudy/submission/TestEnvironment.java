@@ -19,6 +19,8 @@ package uk.ac.ebi.biostudy.submission;
 import java.io.IOException;
 import java.net.URI;
 
+import static uk.ac.ebi.biostudy.submission.AppConfig.loadConfig;
+
 /**
  * @author Olga Melnichuk
  */
@@ -34,7 +36,7 @@ public class TestEnvironment {
     }
 
     public static AppConfig getConfig() throws IOException {
-        return AppConfig.get(TestEnvironment.class.getResourceAsStream("/config.properties"));
+        return loadConfig(TestEnvironment.class.getResourceAsStream("/config.properties"));
     }
 
     public static URI getServerUrl() throws IOException {

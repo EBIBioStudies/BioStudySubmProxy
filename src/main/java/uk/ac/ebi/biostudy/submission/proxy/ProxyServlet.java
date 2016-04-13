@@ -24,7 +24,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
+
+import static uk.ac.ebi.biostudy.submission.AppContext.getConfig;
 
 @WebServlet("/raw/*")
 public class ProxyServlet extends HttpServlet {
@@ -35,12 +36,8 @@ public class ProxyServlet extends HttpServlet {
 
     @Override
     public void init() throws ServletException {
-        try {
-            URI serverUrl = AppConfig.get().getServerUrl();
-            proxy = new Proxy(serverUrl, source -> source.replace("/raw", ""));
-        } catch (IOException e) {
-            throw new ServletException(e);
-        }
+        AppConfig config = getConfig(getServletContext());
+        proxy = new Proxy(config.getServerUrl(), source -> source.replace("/raw", ""));
     }
 
     @Override
@@ -50,6 +47,6 @@ public class ProxyServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-       proxy.proxyPost(req, resp);
+        proxy.proxyPost(req, resp);
     }
 }

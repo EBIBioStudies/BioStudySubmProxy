@@ -8,6 +8,11 @@
         <welcome-file>index.html</welcome-file>
     </welcome-file-list>
 
+    <context-param>
+        <param-name>BS_SERVER_URL</param-name>
+        <param-value>@BS_SERVER_URL@</param-value>
+    </context-param>
+
     <servlet>
         <servlet-name>jersey-servlet</servlet-name>
         <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>

@@ -16,8 +16,14 @@
 
 package uk.ac.ebi.biostudy.submission;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.servlet.ServletContext;
 import java.io.IOException;
+
+import static uk.ac.ebi.biostudy.submission.AppConfig.defaultConfig;
+import static uk.ac.ebi.biostudy.submission.AppConfig.loadConfig;
 
 /**
  * @author Olga Melnichuk
@@ -26,8 +32,15 @@ public class AppContext {
 
     private static final String CONFIG = "config";
 
-    public static void createConfig(ServletContext context) throws IOException {
-        context.setAttribute(CONFIG, AppConfig.get());
+    private static final Logger logger = LoggerFactory.getLogger(AppContextListener.class);
+
+    public static AppConfig createConfig(ServletContext context) throws IOException {
+        AppConfig config =
+                defaultConfig()
+                .overwrite(loadConfig(context));
+        context.setAttribute(CONFIG, config);
+        logger.info(config.toString());
+        return config;
     }
 
     public static AppConfig getConfig(ServletContext context) {

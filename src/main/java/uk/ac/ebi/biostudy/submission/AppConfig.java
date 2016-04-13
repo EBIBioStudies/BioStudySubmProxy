@@ -19,12 +19,16 @@ package uk.ac.ebi.biostudy.submission;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
+
+import static uk.ac.ebi.biostudy.submission.AppConfig.ConfigProperty.SERVER_URL;
 
 /**
  * @author Olga Melnichuk
@@ -33,35 +37,118 @@ public class AppConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
-    public static AppConfig get(InputStream input) throws IOException {
+    public static class AppConfigBuilder {
+        private final AppConfig config;
+
+        public AppConfigBuilder() {
+            this.config = new AppConfig();
+        }
+
+        public AppConfigBuilder(AppConfig config) {
+            this.config = new AppConfig(config);
+        }
+
+        public AppConfigBuilder setServerUrl(String value) {
+            URI url = null;
+            try {
+                url = new URL(value).toURI();
+            } catch (URISyntaxException | MalformedURLException e) {
+                logger.error("Malformed URL parameter in config", e);
+            }
+            return setServerUrl(url);
+        }
+
+        public AppConfigBuilder setServerUrl(URI url) {
+            config.setServerUrl(url);
+            return this;
+        }
+
+        public AppConfig build() {
+            return config;
+        }
+    }
+
+    public static enum ConfigProperty {
+        SERVER_URL("BS_SERVER_URL");
+
+        private String name;
+
+        ConfigProperty(String name) {
+            this.name = name;
+        }
+
+        private String get(Properties properties) {
+            String value = (String) properties.get(name);
+            logger.debug("properties: " + name + "=" + value);
+            return value;
+        }
+
+        private String get(ServletContext context) {
+            String value = context.getInitParameter(name);
+            logger.debug("context: " + name + "=" + value);
+            return value;
+        }
+    }
+
+    public static AppConfig loadConfig(ServletContext context) throws IOException {
+        logger.info("Loading from context...");
+        return new AppConfigBuilder()
+                .setServerUrl(SERVER_URL.get(context))
+                .build();
+    }
+
+    public static AppConfig loadConfig(InputStream input) throws IOException {
+        logger.info("Loading from input stream...");
         Properties props = new Properties();
         if (input == null) {
             throw new IOException("Config file not found");
         }
         props.load(input);
-        try {
-            URI serverUrl = new URL(props.getProperty("BS_SERVER_URL")).toURI();
-            logger.info("serverUrl: " + serverUrl);
-
-            return new AppConfig(serverUrl);
-        } catch (URISyntaxException e) {
-            throw new IOException(e);
-        }
+        return new AppConfigBuilder()
+                .setServerUrl(SERVER_URL.get(props))
+                .build();
     }
 
-    public static AppConfig get() throws IOException {
+    public static AppConfig defaultConfig() throws IOException {
+        logger.info("Loading from classpath...");
         URL configURL = AppConfig.class.getClassLoader().getResource("/config.properties");
         logger.info("Config URL: " + configURL);
-        return get(configURL == null ? null : configURL.openStream());
+        return loadConfig(configURL == null ? null : configURL.openStream());
     }
 
-    private final URI serverUrl;
+    private AppConfig parent;
 
-    private AppConfig(URI serverUrl) {
-        this.serverUrl = serverUrl;
+    private URI serverUrl;
+
+    public AppConfig() {
+    }
+
+    public AppConfig(AppConfig parent) {
+        this.parent = parent;
     }
 
     public URI getServerUrl() {
-        return serverUrl;
+        return serverUrl == null ? getServerUrl(parent) : serverUrl;
+    }
+
+    private URI getServerUrl(AppConfig parent) {
+        return parent == null ? null : parent.getServerUrl();
+    }
+
+    private void setServerUrl(URI serverUrl) {
+        this.serverUrl = serverUrl;
+    }
+
+    public AppConfig overwrite(AppConfig config) {
+        return new AppConfigBuilder(this)
+                .setServerUrl(config.getServerUrl())
+                .build();
+    }
+
+    @Override
+    public String toString() {
+        return "AppConfig{" +
+                "serverUrl=" + getServerUrl() +
+                '}';
     }
 }

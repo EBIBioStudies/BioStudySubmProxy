@@ -16,19 +16,16 @@
 
 package uk.ac.ebi.biostudy.submission;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 import java.io.IOException;
 
+import static uk.ac.ebi.biostudy.submission.AppContext.createConfig;
+
 @WebListener
 public class AppContextListener implements ServletContextListener {
-
-    private static final Logger logger = LoggerFactory.getLogger(AppContextListener.class);
 
     @Override
     public void contextInitialized(ServletContextEvent contextEvent) {
@@ -42,11 +39,9 @@ public class AppContextListener implements ServletContextListener {
 
     private void initConfig(ServletContext context) {
         try {
-            AppContext.createConfig(context);
-            logger.info("Config found");
+            createConfig(context);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
 }

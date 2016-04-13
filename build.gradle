@@ -81,6 +81,7 @@ test {
 }
 
 war {
+	filter(ReplaceTokens, tokens: ["BS_SERVER_URL" : bsBackendUrl])
 	webAppDirName= 'WebContent'
 	baseName='biostudies#submissions'
 	version=''
