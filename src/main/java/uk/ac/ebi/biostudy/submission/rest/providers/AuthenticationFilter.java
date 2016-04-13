@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
@@ -80,11 +81,15 @@ public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequ
     }
 
     private String getSessionId() {
-        return Arrays.stream(request.getCookies())
-                .filter(c -> c.getName().equals("BIOSTDSESS"))
-                .findFirst()
-                .get()
-                .getValue();
+        try {
+            return Arrays.stream(request.getCookies())
+                    .filter(c -> c.getName().equals("BIOSTDSESS"))
+                    .findFirst()
+                    .get()
+                    .getValue();
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     private boolean isUserAllowed(final UserSession userSession, final Set<String> rolesSet) {
