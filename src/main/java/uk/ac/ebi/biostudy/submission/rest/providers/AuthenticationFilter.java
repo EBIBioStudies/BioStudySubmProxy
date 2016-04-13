@@ -16,7 +16,6 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
-import org.apache.http.Header;
 import uk.ac.ebi.biostudy.submission.SessionAttributes;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.NoSuchElementException;
 import java.util.Set;
 
 /**
