@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
+import org.apache.http.Header;
 import uk.ac.ebi.biostudy.submission.SessionAttributes;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
@@ -81,15 +82,7 @@ public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequ
     }
 
     private String getSessionId() {
-        try {
-            return Arrays.stream(request.getCookies())
-                    .filter(c -> c.getName().equals("BIOSTDSESS"))
-                    .findFirst()
-                    .get()
-                    .getValue();
-        } catch (NoSuchElementException e) {
-            return null;
-        }
+        return request.getHeader("X-Session-Token");
     }
 
     private boolean isUserAllowed(final UserSession userSession, final Set<String> rolesSet) {
