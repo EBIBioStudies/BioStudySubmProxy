@@ -62,9 +62,9 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             RolesAllowed rolesAnnotation = method.getAnnotation(RolesAllowed.class);
             Set<String> rolesSet = new HashSet<String>(Arrays.asList(rolesAnnotation.value()));
 
-            UserSession user = getUserSession();
+            UserSession session = getUserSession();
 
-            if (!isUserAllowed(user, rolesSet)) {
+            if (!isUserAllowed(session, rolesSet)) {
                 requestContext.abortWith(ACCESS_DENIED);
             }
         }
