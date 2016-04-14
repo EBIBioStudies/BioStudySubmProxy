@@ -16,12 +16,15 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.SessionAttributes;
 import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
@@ -36,13 +39,15 @@ import java.util.Set;
  * @author Olga Melnichuk
  */
 @Provider
-public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequestFilter {
+public class AuthenticationFilter implements ContainerRequestFilter {
 
     @Context
     private ResourceInfo resourceInfo;
 
     @Context
     private HttpServletRequest request;
+
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     private static final Response ACCESS_DENIED = Response.status(Response.Status.UNAUTHORIZED)
             .entity("You cannot access this resource").build();
@@ -67,6 +72,7 @@ public class AuthenticationFilter implements javax.ws.rs.container.ContainerRequ
 
     private UserSession getUserSession() {
         String sessid = getSessionId();
+        logger.debug("sessionId=" + sessid);
         if (sessid == null) {
             return null;
         }
