@@ -32,7 +32,7 @@ public class AppContext {
 
     private static final String CONFIG = "config";
 
-    private static final Logger logger = LoggerFactory.getLogger(AppContextListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(AppContext.class);
 
     public static AppConfig createConfig(ServletContext context) throws IOException {
         AppConfig config =
