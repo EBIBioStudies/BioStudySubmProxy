@@ -19,6 +19,15 @@ apply plugin: 'com.bmuschko.tomcat'
 sourceCompatibility = 1.8
 version = '1.0'
 
+
+if (hasProperty("env")) {
+	Properties props = new Properties()
+	props.load(new FileInputStream(".bsconfig/" + env + ".properties"))
+	props.each { prop ->
+		project.ext.set(prop.key, prop.value)
+	}
+}
+
 repositories {
     mavenCentral()
 }

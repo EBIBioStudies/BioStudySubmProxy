@@ -58,7 +58,7 @@ public class SubmissionService {
         JSONArray submitted = bsclient.getSubmissions(userSession.getSessid());
         JSONArray temporary = listTmpSubmissions(userSession);
         JSONObject obj = new JSONObject();
-        obj.put("submissions", join(submitted, temporary));
+        obj.put("submissions", join(temporary, submitted));
         return obj;
     }
 
@@ -74,7 +74,7 @@ public class SubmissionService {
                     o.put("title", attr.getString("value"));
                 }
                 if (attr.getString("name").equals("ReleaseDate")) {
-                    String sdate = attr.getString("value");
+                    Long sdate = attr.getLong("value");
 
                     // formatDate.parse(sdate).getTime();
                     // Date drdate = new Date(new Long(sdate));
