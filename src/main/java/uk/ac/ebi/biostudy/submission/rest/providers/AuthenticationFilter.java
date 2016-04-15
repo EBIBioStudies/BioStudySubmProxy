@@ -35,6 +35,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static uk.ac.ebi.biostudy.submission.SessionAttributes.setUserSession;
+
 /**
  * @author Olga Melnichuk
  */
@@ -74,14 +76,12 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         String sessid = getSessionId();
         logger.debug("sessionId=" + sessid);
         if (sessid == null) {
+            setUserSession(request, null);
             return null;
         }
 
-        UserSession session = SessionAttributes.getUserSession(request);
-        if (session == null) {
-            session = new UserSession(sessid);
-            SessionAttributes.setUserSession(request, session);
-        }
+        UserSession session = new UserSession(sessid);
+        setUserSession(request, session);
         return session;
     }
 
