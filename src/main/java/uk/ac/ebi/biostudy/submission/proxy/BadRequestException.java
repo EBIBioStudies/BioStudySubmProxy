@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.exceptions;
+package uk.ac.ebi.biostudy.submission.proxy;
 
-import org.json.JSONObject;
-
-public class ServiceException extends BaseException {
-	private static final long serialVersionUID = 1L;
-
-	public ServiceException(int code, JSONObject result) {
-		super(code, result);
-	}
-
+/**
+ * @author Olga Melnichuk
+ */
+public class BadRequestException extends Exception {
+    public BadRequestException(String message) {
+        super(message);
+    }
 }

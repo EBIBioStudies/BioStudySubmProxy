@@ -16,12 +16,30 @@
 
 package uk.ac.ebi.biostudy.submission;
 
-public final class Res {
-	public final class Session {
-		public static final String userSession = "userSession";
-	}
+import java.io.IOException;
+import java.net.URI;
 
-	public final class BsServer {
-		public static final String SESSION_PARAM = "BIOSTDSESS";
-	}
+import static uk.ac.ebi.biostudy.submission.AppConfig.loadConfig;
+
+/**
+ * @author Olga Melnichuk
+ */
+public class TestEnvironment {
+
+    public static boolean hasValidServerUrl() {
+        try {
+            getServerUrl();
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
+    public static AppConfig getConfig() throws IOException {
+        return loadConfig(TestEnvironment.class.getResourceAsStream("/config.properties"));
+    }
+
+    public static URI getServerUrl() throws IOException {
+        return getConfig().getServerUrl();
+    }
 }

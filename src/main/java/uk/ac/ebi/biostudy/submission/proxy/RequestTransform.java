@@ -14,42 +14,19 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.proxy;
 
-import java.io.File;
+import org.apache.http.client.methods.HttpRequestBase;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
 /**
- * 
- * @author mdylag
- *
+ * @author Olga Melnichuk
  */
-public final class UserSession {
-	private String username;
-	private String sessid;
-	private File submissionFile;
-
-	public String getUsername() {
-		return username;
-	}
-
-	public void setUsername(String username) {
-		this.username = username;
-	}
-
-	public String getSessid() {
-		return sessid;
-	}
-
-	public void setSessid(String sessid) {
-		this.sessid = sessid;
-	}
-
-	public void setSubmissionFile(File f) {
-		this.submissionFile = f;
-	}
-
-	public File getSubmissionFile() {
-		return submissionFile;
-	}
-
+@FunctionalInterface
+public interface RequestTransform<T extends HttpRequestBase> {
+    T apply(HttpServletRequest req) throws BadRequestException, ServletException, IOException;
 }
+

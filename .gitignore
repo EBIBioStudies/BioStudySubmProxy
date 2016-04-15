@@ -59,8 +59,6 @@ local.properties
 # Code Recommenders
 .recommenders/.
 
-
-.gradle
 build/
 
 # Ignore Gradle GUI config
@@ -71,3 +69,7 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+
+*.iml
+
+gradle.properties
