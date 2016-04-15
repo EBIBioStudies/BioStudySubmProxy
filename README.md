@@ -1,6 +1,6 @@
 #BioStudySubmProxy server
 
-BioStudy Submission Proxy is a tool 
+A proxy server for BioStudies Submission Tool. 
 
 ##### Configure the project
 
