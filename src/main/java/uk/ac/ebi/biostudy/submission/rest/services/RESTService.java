@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.rest.services;
 
+import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
@@ -28,6 +29,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * @author Olga Melnichuk
@@ -72,11 +75,23 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String signup(String str) throws BioStudiesClientException, IOException {
-        JSONObject obj = toJson(str);
+        try {
+            JSONObject obj = toJson(str);
+            URI path = new URI(obj.getString("path"));
+            URI activationUrl = new URIBuilder()
+                    .setScheme(request.getScheme())
+                    .setHost(request.getServerName())
+                    .setPort(request.getServerPort())
+                    .setPath(path.getPath())
+                    .setFragment(path.getFragment())
+                    .build();
 
-        String activationUrl = request.getServerName() + "/biostudies/submissions/index.html#activate/{ACTIVATION:KEY}";
-        obj.put("activationURL", activationUrl);
-        return service.singUp(obj).toString();
+            obj.put("activationURL", activationUrl.toString() + "/{KEY}");
+            obj.remove("path");
+            return service.singUp(obj).toString();
+        } catch (URISyntaxException e) {
+            throw new IOException("Bad url syntax");
+        }
     }
 
     @RolesAllowed("AUTHENTICATED")
