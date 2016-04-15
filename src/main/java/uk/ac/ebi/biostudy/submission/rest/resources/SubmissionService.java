@@ -58,7 +58,7 @@ public class SubmissionService {
         JSONArray submitted = bsclient.getSubmissions(userSession.getSessid());
         JSONArray temporary = listTmpSubmissions(userSession);
         JSONObject obj = new JSONObject();
-        obj.put("submissions", join(submitted, temporary));
+        obj.put("submissions", join(temporary, submitted));
         return obj;
     }
 
