@@ -74,7 +74,7 @@ public class SubmissionService {
                     o.put("title", attr.getString("value"));
                 }
                 if (attr.getString("name").equals("ReleaseDate")) {
-                    String sdate = attr.getString("value");
+                    Long sdate = attr.getLong("value");
 
                     // formatDate.parse(sdate).getTime();
                     // Date drdate = new Date(new Long(sdate));
