@@ -36,7 +36,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.SessionAttributes;
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;

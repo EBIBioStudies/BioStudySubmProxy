@@ -18,8 +18,7 @@ package uk.ac.ebi.biostudy.submission.rest.providers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.ebi.biostudy.submission.SessionAttributes;
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;

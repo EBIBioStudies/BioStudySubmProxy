@@ -20,7 +20,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;

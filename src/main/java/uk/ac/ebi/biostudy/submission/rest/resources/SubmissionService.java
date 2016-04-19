@@ -19,7 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
 import java.net.URI;

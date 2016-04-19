@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.rest.user;
+package uk.ac.ebi.biostudy.submission.rest.data;
 
 /**
  * @author mdylag
