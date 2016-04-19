@@ -106,15 +106,6 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submission/save")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void saveSubmission(@Context UserSession userSession, String str) throws IOException, BioStudiesClientException {
-        service.saveSubmission(userSession, toJson(str));
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @POST
     @Path("/submission/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -124,13 +115,22 @@ public class RESTService {
     }
 
     @RolesAllowed("AUTHENTICATED")
+    @POST
+    @Path("/submission/save")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void saveSubmission(@Context UserSession userSession, String str) throws IOException, BioStudiesClientException {
+        service.saveSubmission(userSession, toJson(str));
+    }
+
+    @RolesAllowed("AUTHENTICATED")
     @PUT
-    @Path("/submission/update")
+    @Path("/submission/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String updateSubmission(@Context UserSession userSession, String str)
             throws BioStudiesClientException, IOException {
-        return service.updateSubmission(userSession, toJson(str)).toString();
+        return service.submitSubmission(userSession, toJson(str)).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")

@@ -60,14 +60,18 @@ public class BioStudiesClient {
         this.baseUrl = baseUrl;
     }
 
-    public JSONObject createSubmission(JSONObject obj, String sessionId)
+    public JSONObject submitNew(JSONObject obj, String sessionId)
             throws BioStudiesClientException, IOException {
         JSONObject copy = new JSONObject(obj.toString());
-        copy.getJSONArray("submissions").getJSONObject(0).put("accno", "!{S-STA}");
-        return parseJSON(post(composeUrl("/submit/create"), copy, SESSION_PARAM, sessionId));
+        copy.put("accno", "!{S-STA}");
+        JSONArray array = new JSONArray();
+        array.put(copy);
+        JSONObject wrap = new JSONObject();
+        obj.put("submissions", array);
+        return parseJSON(post(composeUrl("/submit/create"), wrap, SESSION_PARAM, sessionId));
     }
 
-    public JSONObject updateSubmission(JSONObject obj, String sessionId)
+    public JSONObject submitUpdated(JSONObject obj, String sessionId)
             throws BioStudiesClientException, IOException {
         return parseJSON(post(composeUrl("/submit/update"), obj, SESSION_PARAM, sessionId));
     }
@@ -123,6 +127,10 @@ public class BioStudiesClient {
         return parseJSON(post(composeUrl("/auth/signin"), obj));
     }
 
+    public JSONObject getTmpSubmission(String accno, String sessionId) throws IOException, BioStudiesClientException {
+        return parseJSON(get(composeUrl("/userdata/get"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno));
+    }
+
     public void saveTmpSubmission(JSONObject obj, String accno, String sessionId) throws IOException, BioStudiesClientException {
         post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno, TMP_VALUE_PARAM, obj.toString());
     }
@@ -168,7 +176,7 @@ public class BioStudiesClient {
     }
 
     private JSONObject parseJSON(String str) {
-        return new JSONObject(str);
+        return str == null || str.isEmpty() ? null : new JSONObject(str);
     }
 
     private JSONArray parseJSONArray(String str) {

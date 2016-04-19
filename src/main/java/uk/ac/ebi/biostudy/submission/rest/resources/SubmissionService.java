@@ -23,7 +23,13 @@ import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
+import static uk.ac.ebi.biostudy.submission.rest.data.Submission.isGeneratedAccession;
+import static uk.ac.ebi.biostudy.submission.rest.data.Submission.wrap;
+import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.transformSubmitted;
+import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.transformTemporary;
 
 public class SubmissionService {
 
@@ -33,15 +39,36 @@ public class SubmissionService {
         this.bsclient = new BioStudiesClient(bsServerUrl);
     }
 
+    public JSONObject getSubmission(final UserSession userSession, final String accno)
+            throws BioStudiesClientException, IOException {
+        JSONObject obj = wrap(bsclient.getTmpSubmission(accno, userSession.getSessid()));
+        if (obj != null) {
+            return obj;
+        }
+        return wrap(bsclient.getSubmission(accno, userSession.getSessid()));
+    }
+
+    public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
+        String acc = obj.getString("accno");
+        JSONObject sbm = obj.getJSONObject("data");
+        JSONObject result = isGeneratedAccession(acc) ?
+                bsclient.submitNew(sbm, userSession.getSessid()) :
+                bsclient.submitUpdated(sbm, userSession.getSessid());
+        deleteTmpSubmission(acc, userSession);
+        return result;
+    }
+
+    public JSONObject createSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
+        JSONObject sbm = wrap(obj);
+        saveSubmission(userSession, sbm);
+        return sbm;
+    }
+
     public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
-        String accno = "";
-        if (obj.has("accno")) {
-            accno = obj.getString("accno");
-        }
-        if (accno.equals("!{S-STA}") || accno.isEmpty()) {
-            accno = "TEMP-" + (new Date().getTime());
-            obj.put("accno", accno);
-        }
+        String accno = obj.getString("accno");
+        obj.put("changed", System.currentTimeMillis());
+        //TODO check obj format
+        obj.getJSONObject("data");
         bsclient.saveTmpSubmission(obj, accno, userSession.getSessid());
     }
 
@@ -55,54 +82,11 @@ public class SubmissionService {
     }
 
     public JSONObject listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
-        JSONArray submitted = bsclient.getSubmissions(userSession.getSessid());
-        JSONArray temporary = listTmpSubmissions(userSession);
+        JSONArray submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
+        JSONArray temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
         JSONObject obj = new JSONObject();
-        obj.put("submissions", join(temporary, submitted));
+        obj.put("submissions", removeDuplicates(join(temporary, submitted)));
         return obj;
-    }
-
-    private JSONArray listTmpSubmissions(UserSession userSession) throws IOException, BioStudiesClientException {
-        JSONArray submissions = bsclient.listTmpSubmissions(userSession.getSessid());
-        JSONArray array = new JSONArray();
-        for (int j = 0; j < submissions.length(); j++) {
-            JSONObject o = (JSONObject) submissions.get(j);
-            JSONArray attrs = o.getJSONArray("attributes");
-            for (int i = 0; i < attrs.length(); i++) {
-                JSONObject attr = attrs.getJSONObject(i);
-                if (attr.getString("name").equals("Title")) {
-                    o.put("title", attr.getString("value"));
-                }
-                if (attr.getString("name").equals("ReleaseDate")) {
-                    Long sdate = attr.getLong("value");
-
-                    // formatDate.parse(sdate).getTime();
-                    // Date drdate = new Date(new Long(sdate));
-
-                    // o.put("rtime", attr.getString("value"));
-                }
-            }
-            array.put(o);
-        }
-        return array;
-    }
-
-    public JSONObject getSubmission(final UserSession userSession, final String acc)
-            throws BioStudiesClientException, IOException {
-        return bsclient.getSubmission(acc, userSession.getSessid());
-    }
-
-    public JSONObject createSubmission(UserSession userSession, JSONObject obj)
-            throws IOException, BioStudiesClientException {
-        String acc = obj.getJSONArray("submissions").getJSONObject(0).getString("accno");
-        JSONObject result = bsclient.createSubmission(obj, userSession.getSessid());
-        deleteTmpSubmission(acc, userSession);
-        return result;
-    }
-
-    public JSONObject updateSubmission(UserSession userSession, JSONObject obj)
-            throws BioStudiesClientException, IOException {
-        return bsclient.updateSubmission(obj, userSession.getSessid());
     }
 
     public JSONObject getFilesDir(UserSession userSession) throws BioStudiesClientException, IOException {
@@ -134,5 +118,19 @@ public class SubmissionService {
             }
         }
         return result;
+    }
+
+    private static JSONArray removeDuplicates(JSONArray array) {
+        Set<String> used = new HashSet<>();
+        JSONArray res = new JSONArray();
+        for (int i = 0; i < array.length(); i++) {
+            JSONObject obj = array.getJSONObject(i);
+            String accno = obj.getString("accno");
+            if (!used.contains(accno)) {
+                res.put(obj);
+                used.add(accno);
+            }
+        }
+        return res;
     }
 }
