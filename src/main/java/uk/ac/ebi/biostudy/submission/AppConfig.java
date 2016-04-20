@@ -51,7 +51,9 @@ public class AppConfig {
         public AppConfigBuilder setServerUrl(String value) {
             URI url = null;
             try {
-                url = new URL(value).toURI();
+                if (value != null) {
+                    url = new URL(value).toURI();
+                }
             } catch (URISyntaxException | MalformedURLException e) {
                 logger.error("Malformed URL parameter in config", e);
             }
