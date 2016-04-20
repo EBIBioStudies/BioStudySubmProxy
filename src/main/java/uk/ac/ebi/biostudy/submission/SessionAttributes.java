@@ -16,7 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission;
 
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;

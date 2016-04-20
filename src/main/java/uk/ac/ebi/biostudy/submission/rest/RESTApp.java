@@ -24,7 +24,7 @@ import uk.ac.ebi.biostudy.submission.rest.providers.AuthenticationFilter;
 import uk.ac.ebi.biostudy.submission.rest.providers.SubmissionServiceFactory;
 import uk.ac.ebi.biostudy.submission.rest.providers.UserSessionFactory;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
-import uk.ac.ebi.biostudy.submission.rest.user.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import javax.inject.Singleton;
 
