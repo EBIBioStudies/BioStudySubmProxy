@@ -20,8 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
+import javax.annotation.Priority;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -40,6 +42,7 @@ import static uk.ac.ebi.biostudy.submission.SessionAttributes.setUserSession;
  * @author Olga Melnichuk
  */
 @Provider
+@Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
 
     @Context
@@ -50,8 +53,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 
-    private static final Response ACCESS_DENIED = Response.status(Response.Status.UNAUTHORIZED)
-            .entity("You cannot access this resource").build();
     //private static final Response ACCESS_FORBIDDEN = Response.status(Response.Status.FORBIDDEN)
     //        .entity("Access blocked for all users !!").build();
 
@@ -66,9 +67,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             UserSession session = getUserSession();
 
             if (!isUserAllowed(session, rolesSet)) {
-                requestContext.abortWith(ACCESS_DENIED);
+                requestContext.abortWith(accessDenied());
             }
         }
+    }
+
+    private Response accessDenied() {
+        return Response.status(Response.Status.UNAUTHORIZED)
+                .entity("You cannot access this resource").build();
     }
 
     private UserSession getUserSession() {
