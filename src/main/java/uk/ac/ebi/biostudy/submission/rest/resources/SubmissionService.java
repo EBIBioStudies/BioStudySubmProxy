@@ -41,7 +41,7 @@ public class SubmissionService {
 
     public JSONObject getSubmission(final UserSession userSession, final String accno)
             throws BioStudiesClientException, IOException {
-        JSONObject obj = wrap(bsclient.getTmpSubmission(accno, userSession.getSessid()));
+        JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
         if (obj != null) {
             return obj;
         }
