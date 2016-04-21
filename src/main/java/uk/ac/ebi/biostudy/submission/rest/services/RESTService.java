@@ -139,15 +139,6 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
-        service.deleteTmpSubmission(acc, userSession);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @DELETE
-    @Path("/submission/submitted/{acc}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubmittedSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
-            throws BioStudiesClientException, IOException {
         service.deleteSubmission(acc, userSession);
     }
 
