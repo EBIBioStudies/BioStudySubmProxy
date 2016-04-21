@@ -16,12 +16,16 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
+import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
+import javax.annotation.Priority;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Priorities;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -30,16 +34,19 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static java.nio.charset.Charset.defaultCharset;
 import static uk.ac.ebi.biostudy.submission.SessionAttributes.setUserSession;
 
 /**
  * @author Olga Melnichuk
  */
 @Provider
+@Priority(Priorities.AUTHENTICATION)
 public class AuthenticationFilter implements ContainerRequestFilter {
 
     @Context
@@ -49,11 +56,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private HttpServletRequest request;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
-
-    private static final Response ACCESS_DENIED = Response.status(Response.Status.UNAUTHORIZED)
-            .entity("You cannot access this resource").build();
-    //private static final Response ACCESS_FORBIDDEN = Response.status(Response.Status.FORBIDDEN)
-    //        .entity("Access blocked for all users !!").build();
 
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
@@ -66,10 +68,19 @@ public class AuthenticationFilter implements ContainerRequestFilter {
             UserSession session = getUserSession();
 
             if (!isUserAllowed(session, rolesSet)) {
-                requestContext.abortWith(ACCESS_DENIED);
+                requestContext.abortWith(accessDenied());
             }
         }
     }
+
+    private Response accessDenied() {
+        return Response.status(Response.Status.UNAUTHORIZED).build();
+    }
+/*
+    private Response accessForbidden() {
+        return Response.status(Response.Status.FORBIDDEN).build();
+    }
+*/
 
     private UserSession getUserSession() {
         String sessid = getSessionId();
