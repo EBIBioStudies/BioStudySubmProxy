@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
+import org.apache.http.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
@@ -24,6 +25,7 @@ import javax.annotation.Priority;
 import javax.annotation.security.RolesAllowed;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Priorities;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ResourceInfo;
@@ -32,10 +34,12 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static java.nio.charset.Charset.defaultCharset;
 import static uk.ac.ebi.biostudy.submission.SessionAttributes.setUserSession;
 
 /**
@@ -70,12 +74,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     private Response accessDenied() {
-        return Response.status(Response.Status.UNAUTHORIZED).entity("You cannot access this resource").build();
+        return Response.status(Response.Status.UNAUTHORIZED).build();
     }
-
 /*
     private Response accessForbidden() {
-        return Response.status(Response.Status.FORBIDDEN).entity("Access blocked for all users !!").build();
+        return Response.status(Response.Status.FORBIDDEN).build();
     }
 */
 
