@@ -48,7 +48,7 @@ public class SubmissionList {
     private static String getAttributeValue(JSONArray attrs, String attrName) {
         for (int i = 0; i < attrs.length(); i++) {
             JSONObject attr = attrs.getJSONObject(i);
-            if (attr.getString("name").equals(attrName)) {
+            if (attr.getString("name").equalsIgnoreCase(attrName)) {
                 return attr.getString("value");
             }
         }

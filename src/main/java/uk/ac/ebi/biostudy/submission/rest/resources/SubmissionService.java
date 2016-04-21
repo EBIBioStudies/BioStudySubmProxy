@@ -54,7 +54,7 @@ public class SubmissionService {
         JSONObject result = isGeneratedAccession(acc) ?
                 bsclient.submitNew(sbm, userSession.getSessid()) :
                 bsclient.submitUpdated(sbm, userSession.getSessid());
-        deleteTmpSubmission(acc, userSession);
+        bsclient.deleteTmpSubmission(acc, userSession.getSessid());
         return result;
     }
 
@@ -72,12 +72,13 @@ public class SubmissionService {
         bsclient.saveTmpSubmission(obj, accno, userSession.getSessid());
     }
 
-    public void deleteTmpSubmission(final String acc, final UserSession userSession) throws IOException, BioStudiesClientException {
-        bsclient.deleteTmpSubmission(acc, userSession.getSessid());
-    }
-
     public void deleteSubmission(final String acc, final UserSession userSession)
             throws BioStudiesClientException, IOException {
+        JSONObject sbm = bsclient.getTmpSubmission(acc, userSession.getSessid());
+        if (sbm != null) {
+            bsclient.deleteTmpSubmission(acc, userSession.getSessid());
+            return;
+        }
         bsclient.deleteSubmission(acc, userSession.getSessid());
     }
 
