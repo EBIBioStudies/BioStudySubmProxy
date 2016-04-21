@@ -53,9 +53,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 
-    //private static final Response ACCESS_FORBIDDEN = Response.status(Response.Status.FORBIDDEN)
-    //        .entity("Access blocked for all users !!").build();
-
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
         Method method = resourceInfo.getResourceMethod();
@@ -73,9 +70,14 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     }
 
     private Response accessDenied() {
-        return Response.status(Response.Status.UNAUTHORIZED)
-                .entity("You cannot access this resource").build();
+        return Response.status(Response.Status.UNAUTHORIZED).entity("You cannot access this resource").build();
     }
+
+/*
+    private Response accessForbidden() {
+        return Response.status(Response.Status.FORBIDDEN).entity("Access blocked for all users !!").build();
+    }
+*/
 
     private UserSession getUserSession() {
         String sessid = getSessionId();
