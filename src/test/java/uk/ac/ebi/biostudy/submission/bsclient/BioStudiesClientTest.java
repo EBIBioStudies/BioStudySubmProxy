@@ -26,6 +26,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import static org.junit.Assert.assertNotNull;
+
 /**
  * TODO: make it a proper test
  * @author Olga Melnichuk
@@ -38,18 +40,17 @@ public class BioStudiesClientTest {
 
         BioStudiesClient bsclient = new BioStudiesClient(getServerUrl());
         JSONObject obj = bsclient.signIn("demo", "demo");
-        System.out.println(obj);
+        assertNotNull(obj);
 
         String sessionId = obj.getString("sessid");
         JSONArray submissions = bsclient.getSubmissions(sessionId);
-        System.out.println(submissions);
-
+        assertNotNull(submissions);
 
         JSONObject submission = bsclient.getSubmission("S-STA2", sessionId);
-        System.out.println(submission);
+        assertNotNull(submission);
 
         JSONObject filesDir = bsclient.getFilesDir(sessionId);
-        System.out.println(filesDir);
+        assertNotNull(filesDir);
     }
 
     private static URI getServerUrl() throws IOException {
