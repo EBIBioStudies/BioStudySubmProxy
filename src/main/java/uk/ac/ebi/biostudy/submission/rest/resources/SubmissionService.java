@@ -64,6 +64,16 @@ public class SubmissionService {
         return sbm;
     }
 
+    public JSONObject editSubmission(final UserSession userSession, final String accno)
+            throws BioStudiesClientException, IOException {
+        JSONObject sbm = getSubmission(userSession, accno);
+        JSONObject tmp = bsclient.getTmpSubmission(sbm.getString("accno"), userSession.getSessid());
+        if (tmp == null) {
+            saveSubmission(userSession, sbm);
+        }
+        return sbm;
+    }
+
     public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
         String accno = obj.getString("accno");
         obj.put("changed", System.currentTimeMillis());
@@ -86,7 +96,7 @@ public class SubmissionService {
         JSONArray submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
         JSONArray temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
         JSONObject obj = new JSONObject();
-        obj.put("submissions", removeDuplicates(join(temporary, submitted)));
+        obj.put("submissions", join(temporary, submitted));
         return obj;
     }
 
@@ -119,19 +129,5 @@ public class SubmissionService {
             }
         }
         return result;
-    }
-
-    private static JSONArray removeDuplicates(JSONArray array) {
-        Set<String> used = new HashSet<>();
-        JSONArray res = new JSONArray();
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject obj = array.getJSONObject(i);
-            String accno = obj.getString("accno");
-            if (!used.contains(accno)) {
-                res.put(obj);
-                used.add(accno);
-            }
-        }
-        return res;
     }
 }
