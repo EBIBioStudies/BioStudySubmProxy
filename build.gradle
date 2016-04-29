@@ -89,7 +89,7 @@ test {
 war {
 	filter(ReplaceTokens, tokens: ["BS_SERVER_URL" : bsBackendUrl])
 	webAppDirName= 'WebContent'
-	baseName='biostudies#submissions'
+	baseName='proxy'
 	version=''
 	from  'src/main/webapp/'
 }

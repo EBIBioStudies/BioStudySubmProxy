@@ -43,7 +43,7 @@ public class Submission {
     }
 
     private static String accession(String accno) {
-        return accno.matches("[\\w\\-]+]") ? accno : generateAccession();
+        return accno.matches("[\\w\\-]+") ? "COPY_" + accno : generateAccession();
     }
 
     private static String generateAccession() {

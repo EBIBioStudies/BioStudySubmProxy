@@ -116,6 +116,16 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
+    @Path("/submission/edit/{acc}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String editSubmission(@Context UserSession userSession,  @PathParam("acc") String acc)
+            throws IOException, BioStudiesClientException {
+        return service.editSubmission(userSession, acc).toString();
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @POST
     @Path("/submission/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
