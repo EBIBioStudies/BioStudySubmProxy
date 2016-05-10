@@ -54,7 +54,6 @@ public class SubmissionService {
         JSONObject result = isGeneratedAccession(acc) ?
                 bsclient.submitNew(sbm, userSession.getSessid()) :
                 bsclient.submitUpdated(sbm, userSession.getSessid());
-        bsclient.deleteTmpSubmission(acc, userSession.getSessid());
         return result;
     }
 
