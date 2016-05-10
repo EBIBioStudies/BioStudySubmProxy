@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
+import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -171,7 +172,12 @@ public class BioStudiesClient {
             if (statusCode == 200) {
                 return body;
             }
-            throw new BioStudiesClientException(statusCode, response.getEntity().getContentType().getValue(), body);
+
+            Header contentType = response.getEntity().getContentType();
+            if (contentType == null) {
+                logger.warn("Server responded with NULL content-type: " + req.getURI());
+            }
+            throw new BioStudiesClientException(statusCode, contentType == null ? ContentType.TEXT_PLAIN.toString(): contentType.getValue(), body);
         }
     }
 
