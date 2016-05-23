@@ -23,14 +23,18 @@ import org.json.JSONObject;
  */
 public class Submission {
 
-    public static final String TMP = "TMP_";
+    private static final String TMP = "TMP_";
 
     public static JSONObject wrap(JSONObject sbm) {
+        return wrap(sbm, true);
+    }
+
+    public static JSONObject wrap(JSONObject sbm, boolean copy) {
         if (sbm == null) {
             return null;
         }
 
-        String accno = accession(sbm.getString("accno"));
+        String accno = accession(sbm.getString("accno"), copy);
 
         JSONObject wrap = new JSONObject();
         wrap.put("accno", accno);
@@ -42,8 +46,9 @@ public class Submission {
         return accno.startsWith(TMP);
     }
 
-    private static String accession(String accno) {
-        return accno.matches("[\\w\\-]+") ? "COPY_" + accno : generateAccession();
+    private static String accession(String accno, boolean copy) {
+        return accno.matches("[\\w\\-]+") ?
+                (copy ? "COPY_" + accno : accno) : generateAccession();
     }
 
     private static String generateAccession() {

@@ -59,7 +59,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws BioStudiesClientException, IOException {
-        return service.getSubmission(userSession, acc).toString();
+        return service.getSubmission(userSession, acc, false).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")

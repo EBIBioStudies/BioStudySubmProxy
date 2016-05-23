@@ -39,13 +39,13 @@ public class SubmissionService {
         this.bsclient = new BioStudiesClient(bsServerUrl);
     }
 
-    public JSONObject getSubmission(final UserSession userSession, final String accno)
+    public JSONObject getSubmission(final UserSession userSession, final String accno, boolean copy)
             throws BioStudiesClientException, IOException {
         JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
         if (obj != null) {
             return obj;
         }
-        return wrap(bsclient.getSubmission(accno, userSession.getSessid()));
+        return wrap(bsclient.getSubmission(accno, userSession.getSessid()), copy);
     }
 
     public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
@@ -65,7 +65,7 @@ public class SubmissionService {
 
     public JSONObject editSubmission(final UserSession userSession, final String accno)
             throws BioStudiesClientException, IOException {
-        JSONObject sbm = getSubmission(userSession, accno);
+        JSONObject sbm = getSubmission(userSession, accno, true);
         JSONObject tmp = bsclient.getTmpSubmission(sbm.getString("accno"), userSession.getSessid());
         if (tmp == null) {
             saveSubmission(userSession, sbm);
