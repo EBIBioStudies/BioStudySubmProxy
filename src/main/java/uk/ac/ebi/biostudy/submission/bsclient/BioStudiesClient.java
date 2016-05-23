@@ -68,7 +68,7 @@ public class BioStudiesClient {
         JSONArray array = new JSONArray();
         array.put(copy);
         JSONObject wrap = new JSONObject();
-        obj.put("submissions", array);
+        wrap.put("submissions", array);
         return parseJSON(post(composeUrl("/submit/create"), wrap, SESSION_PARAM, sessionId));
     }
 
