@@ -44,15 +44,6 @@ public class SubmissionService {
         return wrap(bsclient.getSubmission(accno, userSession.getSessid()));
     }
 
-    public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
-        String acc = accno(obj);
-        JSONObject sbm = data(obj);
-        JSONObject result = isGeneratedAccession(acc) ?
-                bsclient.submitNew(sbm, userSession.getSessid()) :
-                bsclient.submitUpdated(sbm, userSession.getSessid());
-        return result;
-    }
-
     public JSONObject createSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
         JSONObject sbm = wrap(obj);
         saveSubmission(userSession, sbm);
@@ -72,6 +63,20 @@ public class SubmissionService {
     public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
         data(obj); // data exist?
         bsclient.saveTmpSubmission(modified(obj), accno(obj), userSession.getSessid());
+    }
+
+    public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
+        String acc = accno(obj);
+        JSONObject sbm = data(obj);
+        JSONObject result = isGeneratedAccession(acc) ?
+                bsclient.submitNew(sbm, userSession.getSessid()) :
+                bsclient.submitUpdated(sbm, userSession.getSessid());
+
+        String status = result.getString("status");
+        if (status.equals("OK")) {
+            deleteTmpSubmission(acc, userSession);
+        }
+        return result;
     }
 
     public boolean deleteSubmission(final String acc, final UserSession userSession)
