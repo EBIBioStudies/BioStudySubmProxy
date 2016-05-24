@@ -119,7 +119,7 @@ public class RESTService {
     @Path("/submission/edit/{acc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String editSubmission(@Context UserSession userSession,  @PathParam("acc") String acc)
+    public String editSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
         return service.editSubmission(userSession, acc).toString();
     }
@@ -147,9 +147,20 @@ public class RESTService {
     @DELETE
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+    public String deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
-        service.deleteSubmission(acc, userSession);
+        boolean deleted = service.deleteSubmission(acc, userSession);
+        return statusObj(deleted).toString();
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @DELETE
+    @Path("/submission/tmp/{acc}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String deleteTmpSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+            throws IOException, BioStudiesClientException {
+        boolean deleted = service.deleteTmpSubmission(acc, userSession);
+        return statusObj(deleted).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -163,5 +174,11 @@ public class RESTService {
 
     private static JSONObject toJson(String str) {
         return new JSONObject(str);
+    }
+
+    private static JSONObject statusObj(boolean value) {
+        JSONObject obj = new JSONObject();
+        obj.put("status", value ? "OK" : "FAILED");
+        return obj;
     }
 }

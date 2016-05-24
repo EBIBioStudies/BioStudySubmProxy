@@ -67,14 +67,18 @@ public class BioStudiesClient {
         copy.put("accno", "!{S-STA}");
         JSONArray array = new JSONArray();
         array.put(copy);
-        JSONObject wrap = new JSONObject();
-        wrap.put("submissions", array);
-        return parseJSON(post(composeUrl("/submit/create"), wrap, SESSION_PARAM, sessionId));
+        JSONObject submissions = new JSONObject();
+        submissions.put("submissions", array);
+        return parseJSON(post(composeUrl("/submit/create"), submissions, SESSION_PARAM, sessionId));
     }
 
     public JSONObject submitUpdated(JSONObject obj, String sessionId)
             throws BioStudiesClientException, IOException {
-        return parseJSON(post(composeUrl("/submit/update"), obj, SESSION_PARAM, sessionId));
+        JSONArray array = new JSONArray();
+        array.put(obj);
+        JSONObject submissions = new JSONObject();
+        submissions.put("submissions", array);
+        return parseJSON(post(composeUrl("/submit/update"), submissions, SESSION_PARAM, sessionId));
     }
 
     public JSONObject getSubmission(String acc, String sessionId)
@@ -95,8 +99,9 @@ public class BioStudiesClient {
         return new JSONArray();
     }
 
-    public void deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
-        get(composeUrl("/submit/delete"), SESSION_PARAM, sessionId, "id", acc);
+    public boolean deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
+        JSONObject resp = parseJSON(get(composeUrl("/submit/delete"), SESSION_PARAM, sessionId, "id", acc));
+        return resp.has("level") && resp.getString("level").equalsIgnoreCase("success");
     }
 
     public JSONObject getFilesDir(String sessionId) throws BioStudiesClientException, IOException {
