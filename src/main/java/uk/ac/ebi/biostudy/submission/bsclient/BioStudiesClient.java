@@ -95,8 +95,9 @@ public class BioStudiesClient {
         return new JSONArray();
     }
 
-    public void deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
-        get(composeUrl("/submit/delete"), SESSION_PARAM, sessionId, "id", acc);
+    public boolean deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
+        JSONObject resp = parseJSON(get(composeUrl("/submit/delete"), SESSION_PARAM, sessionId, "id", acc));
+        return resp.has("level") && resp.getString("level").equalsIgnoreCase("success");
     }
 
     public JSONObject getFilesDir(String sessionId) throws BioStudiesClientException, IOException {

@@ -26,29 +26,43 @@ public class Submission {
     private static final String TMP = "TMP_";
 
     public static JSONObject wrap(JSONObject sbm) {
-        return wrap(sbm, true);
-    }
-
-    public static JSONObject wrap(JSONObject sbm, boolean copy) {
         if (sbm == null) {
             return null;
         }
 
-        String accno = accession(sbm.getString("accno"), copy);
+        String accno = accession(sbm.getString("accno"));
 
         JSONObject wrap = new JSONObject();
         wrap.put("accno", accno);
         wrap.put("data", sbm);
-        return wrap;
+        return modified(wrap);
+    }
+
+    public static String accno(JSONObject obj) {
+        return obj.getString("accno");
+    }
+
+    public static JSONObject data(JSONObject obj) {
+        return obj.getJSONObject("data");
+    }
+
+    public static JSONObject modified(JSONObject obj) {
+        obj.put("changed", System.currentTimeMillis());
+        return obj;
+    }
+
+    public static JSONObject deleted(JSONObject obj) {
+        obj = modified(obj);
+        obj.put("deleted", "true");
+        return obj;
     }
 
     public static boolean isGeneratedAccession(String accno) {
         return accno.startsWith(TMP);
     }
 
-    private static String accession(String accno, boolean copy) {
-        return accno.matches("[\\w\\-]+") ?
-                (copy ? "COPY_" + accno : accno) : generateAccession();
+    private static String accession(String accno) {
+        return accno.matches("[\\w\\-]+") ? accno :  generateAccession();
     }
 
     private static String generateAccession() {

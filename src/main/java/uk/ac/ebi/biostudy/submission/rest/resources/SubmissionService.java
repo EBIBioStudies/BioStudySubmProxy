@@ -15,7 +15,6 @@
  */
 package uk.ac.ebi.biostudy.submission.rest.resources;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
@@ -23,13 +22,10 @@ import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
-import static uk.ac.ebi.biostudy.submission.rest.data.Submission.isGeneratedAccession;
-import static uk.ac.ebi.biostudy.submission.rest.data.Submission.wrap;
-import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.transformSubmitted;
-import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.transformTemporary;
+import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
+import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.*;
 
 public class SubmissionService {
 
@@ -39,18 +35,18 @@ public class SubmissionService {
         this.bsclient = new BioStudiesClient(bsServerUrl);
     }
 
-    public JSONObject getSubmission(final UserSession userSession, final String accno, boolean copy)
+    public JSONObject getSubmission(final UserSession userSession, final String accno)
             throws BioStudiesClientException, IOException {
         JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
         if (obj != null) {
             return obj;
         }
-        return wrap(bsclient.getSubmission(accno, userSession.getSessid()), copy);
+        return wrap(bsclient.getSubmission(accno, userSession.getSessid()));
     }
 
     public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
-        String acc = obj.getString("accno");
-        JSONObject sbm = obj.getJSONObject("data");
+        String acc = accno(obj);
+        JSONObject sbm = data(obj);
         JSONObject result = isGeneratedAccession(acc) ?
                 bsclient.submitNew(sbm, userSession.getSessid()) :
                 bsclient.submitUpdated(sbm, userSession.getSessid());
@@ -65,7 +61,7 @@ public class SubmissionService {
 
     public JSONObject editSubmission(final UserSession userSession, final String accno)
             throws BioStudiesClientException, IOException {
-        JSONObject sbm = getSubmission(userSession, accno, true);
+        JSONObject sbm = getSubmission(userSession, accno);
         JSONObject tmp = bsclient.getTmpSubmission(sbm.getString("accno"), userSession.getSessid());
         if (tmp == null) {
             saveSubmission(userSession, sbm);
@@ -74,28 +70,48 @@ public class SubmissionService {
     }
 
     public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
-        String accno = obj.getString("accno");
-        obj.put("changed", System.currentTimeMillis());
-        //TODO check obj format
-        obj.getJSONObject("data");
-        bsclient.saveTmpSubmission(obj, accno, userSession.getSessid());
+        data(obj); // data exist?
+        bsclient.saveTmpSubmission(modified(obj), accno(obj), userSession.getSessid());
     }
 
-    public void deleteSubmission(final String acc, final UserSession userSession)
+    public boolean deleteSubmission(final String acc, final UserSession userSession)
             throws BioStudiesClientException, IOException {
-        JSONObject sbm = bsclient.getTmpSubmission(acc, userSession.getSessid());
+        JSONObject sbm = bsclient.getSubmission(acc, userSession.getSessid());
         if (sbm != null) {
-            bsclient.deleteTmpSubmission(acc, userSession.getSessid());
-            return;
+            JSONObject copy = bsclient.getTmpSubmission(acc, userSession.getSessid());
+            if (copy != null) {
+                saveSubmission(userSession, deleted(copy)); // mark deleted
+            }
+            if (bsclient.deleteSubmission(acc, userSession.getSessid())) {
+                if (copy != null) {
+                    deleteTmpSubmission(acc, userSession);
+                }
+            } else {
+                if (copy != null) {
+                    saveSubmission(userSession, modified(copy)); // revert status
+                }
+                return false;
+            }
         }
-        bsclient.deleteSubmission(acc, userSession.getSessid());
+        return true;
+    }
+
+    public boolean deleteTmpSubmission(final String acc, final UserSession userSession)
+            throws IOException, BioStudiesClientException {
+        JSONObject sbm = bsclient.getTmpSubmission(acc, userSession.getSessid());
+        if (sbm == null) {
+            return true;
+        }
+        saveSubmission(userSession, deleted(sbm));
+        bsclient.deleteTmpSubmission(acc, userSession.getSessid());
+        return true;
     }
 
     public JSONObject listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
-        JSONArray submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
-        JSONArray temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
+        List<JSONObject> submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
+        List<JSONObject> temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
         JSONObject obj = new JSONObject();
-        obj.put("submissions", join(temporary, submitted));
+        obj.put("submissions", merge(temporary, submitted));
         return obj;
     }
 
@@ -118,15 +134,5 @@ public class SubmissionService {
 
     public JSONObject singIn(JSONObject obj) throws BioStudiesClientException, IOException {
         return bsclient.signIn(obj);
-    }
-
-    private static JSONArray join(JSONArray... arrs) {
-        JSONArray result = new JSONArray();
-        for (JSONArray arr : arrs) {
-            for (int i = 0; i < arr.length(); i++) {
-                result.put(arr.get(i));
-            }
-        }
-        return result;
     }
 }
