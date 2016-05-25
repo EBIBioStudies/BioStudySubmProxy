@@ -155,16 +155,6 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @DELETE
-    @Path("/submission/tmp/{acc}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String deleteTmpSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
-            throws IOException, BioStudiesClientException {
-        boolean deleted = service.deleteTmpSubmission(acc, userSession);
-        return statusObj(deleted).toString();
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @DELETE
     @Path("/files/delete")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
