@@ -57,9 +57,9 @@ public class RESTService {
     @GET
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+    public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
             throws BioStudiesClientException, IOException {
-        return service.getSubmission(userSession, acc).toString();
+        return service.getSubmission(userSession, acc, origin).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
