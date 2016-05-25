@@ -51,12 +51,6 @@ public class Submission {
         return obj;
     }
 
-    public static JSONObject deleted(JSONObject obj) {
-        obj = modified(obj);
-        obj.put("deleted", "true");
-        return obj;
-    }
-
     public static boolean isGeneratedAccession(String accno) {
         return accno.startsWith(TMP);
     }

@@ -57,9 +57,9 @@ public class RESTService {
     @GET
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+    public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
             throws BioStudiesClientException, IOException {
-        return service.getSubmission(userSession, acc).toString();
+        return service.getSubmission(userSession, acc, origin).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -150,16 +150,6 @@ public class RESTService {
     public String deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
         boolean deleted = service.deleteSubmission(acc, userSession);
-        return statusObj(deleted).toString();
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @DELETE
-    @Path("/submission/tmp/{acc}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String deleteTmpSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
-            throws IOException, BioStudiesClientException {
-        boolean deleted = service.deleteTmpSubmission(acc, userSession);
         return statusObj(deleted).toString();
     }
 

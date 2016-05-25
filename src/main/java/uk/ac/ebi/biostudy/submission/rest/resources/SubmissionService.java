@@ -35,11 +35,13 @@ public class SubmissionService {
         this.bsclient = new BioStudiesClient(bsServerUrl);
     }
 
-    public JSONObject getSubmission(final UserSession userSession, final String accno)
+    public JSONObject getSubmission(final UserSession userSession, final String accno, boolean origin)
             throws BioStudiesClientException, IOException {
-        JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
-        if (obj != null) {
-            return obj;
+        if (!origin) {
+            JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
+            if (obj != null) {
+                return obj;
+            }
         }
         return wrap(bsclient.getSubmission(accno, userSession.getSessid()));
     }
@@ -52,7 +54,7 @@ public class SubmissionService {
 
     public JSONObject editSubmission(final UserSession userSession, final String accno)
             throws BioStudiesClientException, IOException {
-        JSONObject sbm = getSubmission(userSession, accno);
+        JSONObject sbm = getSubmission(userSession, accno, false);
         JSONObject tmp = bsclient.getTmpSubmission(sbm.getString("accno"), userSession.getSessid());
         if (tmp == null) {
             saveSubmission(userSession, sbm);
@@ -74,42 +76,20 @@ public class SubmissionService {
 
         String status = result.getString("status");
         if (status.equals("OK")) {
-            deleteTmpSubmission(acc, userSession);
+            deleteSubmission(acc, userSession);
         }
         return result;
     }
 
     public boolean deleteSubmission(final String acc, final UserSession userSession)
             throws BioStudiesClientException, IOException {
-        JSONObject sbm = bsclient.getSubmission(acc, userSession.getSessid());
-        if (sbm != null) {
-            JSONObject copy = bsclient.getTmpSubmission(acc, userSession.getSessid());
-            if (copy != null) {
-                saveSubmission(userSession, deleted(copy)); // mark deleted
-            }
-            if (bsclient.deleteSubmission(acc, userSession.getSessid())) {
-                if (copy != null) {
-                    deleteTmpSubmission(acc, userSession);
-                }
-            } else {
-                if (copy != null) {
-                    saveSubmission(userSession, modified(copy)); // revert status
-                }
-                return false;
-            }
-        }
-        return true;
-    }
-
-    public boolean deleteTmpSubmission(final String acc, final UserSession userSession)
-            throws IOException, BioStudiesClientException {
         JSONObject sbm = bsclient.getTmpSubmission(acc, userSession.getSessid());
-        if (sbm == null) {
+        if (sbm != null) {
+            bsclient.deleteTmpSubmission(acc, userSession.getSessid());
             return true;
         }
-        saveSubmission(userSession, deleted(sbm));
-        bsclient.deleteTmpSubmission(acc, userSession.getSessid());
-        return true;
+        sbm = bsclient.getSubmission(acc, userSession.getSessid());
+        return sbm == null || bsclient.deleteSubmission(acc, userSession.getSessid());
     }
 
     public JSONObject listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {

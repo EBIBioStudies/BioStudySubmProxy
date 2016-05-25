@@ -34,8 +34,7 @@ public class SubmissionList {
     enum SubmissionStatus {
         NEW,
         SUBMITTED,
-        MODIFIED,
-        DELETED
+        MODIFIED
     }
 
     enum ListColumn {
@@ -91,8 +90,7 @@ public class SubmissionList {
             JSONArray attrs = data.getJSONArray("attributes");
             String title = getAttributeValue(attrs, "title");
             Long mtime = obj.getLong("changed");
-            boolean deleted = obj.has("deleted");
-            return listItem(accno, title, null, mtime, deleted ? DELETED : NEW);
+            return listItem(accno, title, null, mtime, NEW);
         });
     }
 
@@ -122,16 +120,13 @@ public class SubmissionList {
             String accno = ACCNO.get(item);
             if (copies.containsKey(accno)) {
                 JSONObject copy = copies.get(accno);
-                SubmissionStatus status = SubmissionStatus.valueOf(STATUS.get(copy));
-                if (status != DELETED) {
-                    String title = TITLE.get(copy);
-                    String modifDate = MODIFICATION_DATE.get(copy);
-                    String releaseDate = RELEASE_DATE.get(item);
-                    merged.add(listItem(accno, title,
-                            releaseDate.isEmpty() ? null : parseLong(releaseDate),
-                            modifDate.isEmpty() ? null : parseLong(modifDate),
-                            MODIFIED));
-                }
+                String title = TITLE.get(copy);
+                String modifDate = MODIFICATION_DATE.get(copy);
+                String releaseDate = RELEASE_DATE.get(item);
+                merged.add(listItem(accno, title,
+                        releaseDate.isEmpty() ? null : parseLong(releaseDate),
+                        modifDate.isEmpty() ? null : parseLong(modifDate),
+                        MODIFIED));
             } else {
                 merged.add(item);
             }
@@ -142,7 +137,7 @@ public class SubmissionList {
 
     private static JSONArray toJSONArray(List<JSONObject> list) {
         JSONArray result = new JSONArray();
-        for(JSONObject obj: list) {
+        for (JSONObject obj : list) {
             result.put(obj);
         }
         return result;
