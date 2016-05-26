@@ -89,9 +89,14 @@ public class SubmissionList {
             JSONObject data = obj.getJSONObject("data");
             JSONArray attrs = data.getJSONArray("attributes");
             String title = getAttributeValue(attrs, "title");
-            Long mtime = obj.getLong("changed");
-            return listItem(accno, title, null, mtime, NEW);
+            Long rtime = readLong(getAttributeValue(attrs, "releaseDate"));
+            Long mtime = readLong(obj.getString("changed"));
+            return listItem(accno, title, rtime, mtime, NEW);
         });
+    }
+
+    private static final Long readLong(String value) {
+        return value == null || value.isEmpty() ? null : parseLong(value);
     }
 
     private static String getAttributeValue(JSONArray attrs, String attrName) {
