@@ -64,7 +64,7 @@ public class BioStudiesClient {
     public JSONObject submitNew(JSONObject obj, String sessionId)
             throws BioStudiesClientException, IOException {
         JSONObject copy = new JSONObject(obj.toString());
-        copy.put("accno", "!{S-STA}");
+        copy.put("accno", "!{S-BSST}");
         JSONArray array = new JSONArray();
         array.put(copy);
         JSONObject submissions = new JSONObject();
