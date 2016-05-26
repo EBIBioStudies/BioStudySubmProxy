@@ -19,6 +19,9 @@ package uk.ac.ebi.biostudy.submission.rest.data;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Function;
 
@@ -30,6 +33,7 @@ import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.SubmissionS
  * @author Olga Melnichuk
  */
 public class SubmissionList {
+    static final DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     enum SubmissionStatus {
         NEW,
@@ -89,14 +93,21 @@ public class SubmissionList {
             JSONObject data = obj.getJSONObject("data");
             JSONArray attrs = data.getJSONArray("attributes");
             String title = getAttributeValue(attrs, "title");
-            Long rtime = readLong(getAttributeValue(attrs, "releaseDate"));
-            Long mtime = readLong(obj.getString("changed"));
+            Long rtime = getSeconds(getAttributeValue(attrs, "releaseDate"));
+            Long mtime = obj.getLong("changed");
             return listItem(accno, title, rtime, mtime, NEW);
         });
     }
 
-    private static final Long readLong(String value) {
-        return value == null || value.isEmpty() ? null : parseLong(value);
+    private static Long getSeconds(String value) {
+        try {
+            if (value != null && !value.isEmpty()) {
+                return format.parse(value).getTime()/1000;
+            }
+        } catch (ParseException e) {
+            //todo add loger
+        }
+        return null;
     }
 
     private static String getAttributeValue(JSONArray attrs, String attrName) {
