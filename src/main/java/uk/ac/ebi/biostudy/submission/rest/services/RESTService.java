@@ -57,9 +57,9 @@ public class RESTService {
     @GET
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+    public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
             throws BioStudiesClientException, IOException {
-        return service.getSubmission(userSession, acc).toString();
+        return service.getSubmission(userSession, acc, origin).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -116,6 +116,16 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
+    @Path("/submission/edit/{acc}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String editSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+            throws IOException, BioStudiesClientException {
+        return service.editSubmission(userSession, acc).toString();
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @POST
     @Path("/submission/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -137,9 +147,10 @@ public class RESTService {
     @DELETE
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+    public String deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
-        service.deleteSubmission(acc, userSession);
+        boolean deleted = service.deleteSubmission(acc, userSession);
+        return statusObj(deleted).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -153,5 +164,11 @@ public class RESTService {
 
     private static JSONObject toJson(String str) {
         return new JSONObject(str);
+    }
+
+    private static JSONObject statusObj(boolean value) {
+        JSONObject obj = new JSONObject();
+        obj.put("status", value ? "OK" : "FAILED");
+        return obj;
     }
 }
