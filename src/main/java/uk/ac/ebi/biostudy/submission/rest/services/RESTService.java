@@ -78,13 +78,7 @@ public class RESTService {
         try {
             JSONObject obj = toJson(str);
             URI path = new URI(obj.getString("path"));
-            URI activationUrl = new URIBuilder()
-                    .setScheme(request.getScheme())
-                    .setHost(request.getServerName())
-                    .setPort(request.getServerPort())
-                    .setPath(path.getPath())
-                    .setFragment(path.getFragment())
-                    .build();
+            URI activationUrl = buildAppUrl(path);
 
             obj.put("activationURL", activationUrl.toString() + "/{KEY}");
             obj.remove("path");
@@ -92,6 +86,34 @@ public class RESTService {
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
+    }
+
+    @POST
+    @Path("/auth/passrstreq")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String passwordResetRequest(String str) throws BioStudiesClientException, IOException {
+        try {
+            JSONObject obj = toJson(str);
+            URI path = new URI(obj.getString("path"));
+            URI passwordResetUrl = buildAppUrl(path);
+
+            obj.put("resetURL", passwordResetUrl.toString() + "/{KEY}");
+            obj.remove("path");
+            return service.passwordResetRequest(obj).toString();
+        } catch (URISyntaxException e) {
+            throw new IOException("Bad url syntax");
+        }
+    }
+
+    private URI buildAppUrl(URI path) throws URISyntaxException {
+        return new URIBuilder()
+                .setScheme(request.getScheme())
+                .setHost(request.getServerName())
+                .setPort(request.getServerPort())
+                .setPath(path.getPath())
+                .setFragment(path.getFragment())
+                .build();
     }
 
     @RolesAllowed("AUTHENTICATED")

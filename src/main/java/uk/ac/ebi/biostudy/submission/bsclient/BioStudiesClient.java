@@ -122,6 +122,10 @@ public class BioStudiesClient {
         return parseJSON(post(composeUrl("/auth/signup"), obj));
     }
 
+    public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
+        return parseJSON(post(composeUrl("/auth/passrstreq"), obj));
+    }
+
     public JSONObject signIn(String username, String password) throws BioStudiesClientException, IOException {
         JSONObject obj = new JSONObject();
         obj.put("login", username);

@@ -120,4 +120,8 @@ public class SubmissionService {
     public JSONObject singIn(JSONObject obj) throws BioStudiesClientException, IOException {
         return bsclient.signIn(obj);
     }
+
+    public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
+        return bsclient.passwordResetRequest(obj);
+    }
 }
