@@ -184,6 +184,14 @@ public class RESTService {
         service.deleteFile(userSession, file);
     }
 
+    @RolesAllowed("AUTHENTICATED")
+    @GET
+    @Path("/pubMedSearch/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String pubMedSearch(@Context UserSession userSession,  @PathParam("id") String id) {
+        return service.pubMedSearch(id).toString();
+    }
+
     private static JSONObject toJson(String str) {
         return new JSONObject(str);
     }

@@ -18,11 +18,14 @@ package uk.ac.ebi.biostudy.submission.rest.resources;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
 import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.*;
@@ -30,9 +33,23 @@ import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.*;
 public class SubmissionService {
 
     private final BioStudiesClient bsclient;
+    private final EuropePmcClient europePmc;
+
+    private static final Map<String, String> europePmcAttributes = new HashMap<String, String>() {
+        {
+            put("title", "title");
+            put("authorString", "authors");
+            put("pubType", "type");
+            put("issue", "issue");
+            put("journalIssn", "issn");
+            put("pubYear", "year");
+            put("journalVolume", "volume");
+        }
+    };
 
     public SubmissionService(URI bsServerUrl) {
         this.bsclient = new BioStudiesClient(bsServerUrl);
+        this.europePmc = new EuropePmcClient();
     }
 
     public JSONObject getSubmission(final UserSession userSession, final String accno, boolean origin)
@@ -111,6 +128,7 @@ public class SubmissionService {
 
     public JSONObject singOut(UserSession userSession) throws BioStudiesClientException, IOException {
         return bsclient.signOut(userSession.getSessid());
+
     }
 
     public JSONObject singUp(JSONObject obj) throws BioStudiesClientException, IOException {
@@ -123,5 +141,35 @@ public class SubmissionService {
 
     public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
         return bsclient.passwordResetRequest(obj);
+    }
+
+    public JSONObject pubMedSearch(String id) {
+        try {
+            JSONObject res = europePmc.pubMedSearch(id);
+
+            int hitCount = res.getInt("hitCount");
+            JSONObject data = new JSONObject();
+
+            if (hitCount >= 1) {
+                data.put("DOI", id);
+                final JSONObject publ = res.getJSONObject("resultList").getJSONArray("result").getJSONObject(0);
+                europePmcAttributes.entrySet().stream().forEach(entry -> {
+                            if (publ.has(entry.getKey())) {
+                                data.put(entry.getValue(), publ.getString(entry.getKey()));
+                            }
+                        }
+                );
+            }
+            JSONObject obj = new JSONObject();
+            obj.put("status", "OK");
+            obj.put("data", data);
+            return obj;
+        } catch (IOException e) {
+            return fail("EuropePMC error");
+        }
+    }
+
+    private static JSONObject fail(String message) {
+        return new JSONObject().put("status", "FAIL").put("message", message);
     }
 }
