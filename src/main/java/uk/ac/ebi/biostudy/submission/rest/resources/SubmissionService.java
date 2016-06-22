@@ -151,7 +151,6 @@ public class SubmissionService {
             JSONObject data = new JSONObject();
 
             if (hitCount >= 1) {
-                data.put("DOI", id);
                 final JSONObject publ = res.getJSONObject("resultList").getJSONArray("result").getJSONObject(0);
                 europePmcAttributes.entrySet().stream().forEach(entry -> {
                             if (publ.has(entry.getKey())) {
