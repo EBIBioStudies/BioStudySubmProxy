@@ -74,9 +74,9 @@ public class HttpsFilter implements Filter {
         StringBuffer requestURL = request.getRequestURL();
         String queryString = request.getQueryString();
 
-        if (queryString == null) {
+        if (queryString != null) {
             requestURL.append('?').append(queryString);
         }
-        return requestURL.toString():
+        return requestURL.toString();
     }
 }
