@@ -60,15 +60,23 @@ public class HttpsFilter implements Filter {
         }
 
         String xfp = httpRequest.getHeader("X-Forwarded-Proto");
-        logger.info("X-Forwarded-Proto=" + xfp);
-
         if ("https".equals(xfp)) {
             httpResponse.setHeader("Strict-Transport-Security", "max-age=60");
             chain.doFilter(request, response);
         } else {
-            String url = httpRequest.getRequestURL().toString();
-            logger.info("url before redirect: " + url);
+            String url = getUrl(httpRequest);
+            logger.info("http url: " + url);
             httpResponse.sendRedirect(url.replace("http", "https"));
         }
+    }
+
+    private static String getUrl(HttpServletRequest request) {
+        StringBuffer requestURL = request.getRequestURL();
+        String queryString = request.getQueryString();
+
+        if (queryString == null) {
+            requestURL.append('?').append(queryString);
+        }
+        return requestURL.toString():
     }
 }
