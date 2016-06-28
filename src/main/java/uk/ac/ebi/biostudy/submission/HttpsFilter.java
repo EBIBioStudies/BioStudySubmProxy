@@ -25,13 +25,24 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static java.lang.Boolean.parseBoolean;
+
 @WebFilter("/*")
 public class HttpsFilter implements Filter {
 
+    private static final String FILTER_DISABLED = "uk.ac.ebi.biostudy.submission.HTTPS_FILTER_DISABLED";
+
     private static final Logger logger = LoggerFactory.getLogger(HttpsFilter.class);
+
+    private boolean enabled = true;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        String disabled = System.getProperty(FILTER_DISABLED);
+        if (disabled != null) {
+            logger.info(FILTER_DISABLED + ": " + disabled);
+            enabled = !parseBoolean(disabled);
+        }
     }
 
     @Override
@@ -43,38 +54,21 @@ public class HttpsFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        logger.info("javax.servlet.forward.request_uri='" + request.getAttribute("javax.servlet.forward.request_uri") + "'");
-
-        logger.info("X-Forwarded-Proto='" + httpRequest.getHeader("X-Forwarded-Proto") + "'");
-
-        chain.doFilter(request, response);
-
-        /*if ("https".equals(xfp)) {
-            httpResponse.setHeader("Strict-Transport-Security", "max-age=60");
-
+        if (!enabled) {
             chain.doFilter(request, response);
-        } else if ("http".equals(xfp)) {
-            try {
-                URI uri1 = new URI(httpRequest.getRequestURL().toString());
+            return;
+        }
 
-                if (uri1.getPort() >= 0) {
-                    throw new ServletException(format("Only standard ports are supported (given %s)", uri1.getPort()));
-                }
+        String xfp = httpRequest.getHeader("X-Forwarded-Proto");
+        logger.info("X-Forwarded-Proto=" + xfp);
 
-                URI uri2 = new URI("https",
-                        uri1.getUserInfo(),
-                        uri1.getHost(),
-                                   *//* port: *//* -1,
-                        uri1.getPath(),
-                        httpRequest.getQueryString(),
-                                   *//* fragment: *//* null);
-
-                httpResponse.sendRedirect(uri2.toString());
-            } catch (URISyntaxException e) {
-                throw new ServletException("Something went wrong with the URIs", e);
-            }
+        if ("https".equals(xfp)) {
+            httpResponse.setHeader("Strict-Transport-Security", "max-age=60");
+            chain.doFilter(request, response);
         } else {
-            throw new ServletException(format("Unsupported value for X-Forwarded-Proto: %s", xfp));
-        }*/
+            String url = httpRequest.getRequestURL().toString();
+            logger.info("url before redirect: " + url);
+            httpResponse.sendRedirect(url.replace("http", "https"));
+        }
     }
 }
