@@ -23,7 +23,7 @@ import org.json.JSONObject;
  */
 public class Submission {
 
-    public static final String TMP = "TMP_";
+    private static final String TMP = "TMP_";
 
     public static JSONObject wrap(JSONObject sbm) {
         if (sbm == null) {
@@ -35,7 +35,20 @@ public class Submission {
         JSONObject wrap = new JSONObject();
         wrap.put("accno", accno);
         wrap.put("data", sbm);
-        return wrap;
+        return modified(wrap);
+    }
+
+    public static String accno(JSONObject obj) {
+        return obj.getString("accno");
+    }
+
+    public static JSONObject data(JSONObject obj) {
+        return obj.getJSONObject("data");
+    }
+
+    public static JSONObject modified(JSONObject obj) {
+        obj.put("changed", System.currentTimeMillis());
+        return obj;
     }
 
     public static boolean isGeneratedAccession(String accno) {
@@ -43,7 +56,7 @@ public class Submission {
     }
 
     private static String accession(String accno) {
-        return accno.matches("[\\w\\-]+]") ? accno : generateAccession();
+        return accno.matches("[\\w\\-]+") ? accno :  generateAccession();
     }
 
     private static String generateAccession() {

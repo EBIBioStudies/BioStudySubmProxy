@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.rest;
+package uk.ac.ebi.biostudy.submission.rest.providers;
 
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
+import javax.ws.rs.ext.Provider;
 
 /**
  * @author Olga Melnichuk
  */
+@Provider
 public class BioStudiesClientExceptionMapper implements ExceptionMapper<BioStudiesClientException> {
 
+    @Override
     public Response toResponse(BioStudiesClientException ex) {
         if (ex.getContentType().contains(MediaType.APPLICATION_JSON))
             return Response.status(ex.getStatusCode())

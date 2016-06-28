@@ -21,6 +21,7 @@ import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import uk.ac.ebi.biostudy.submission.rest.providers.AuthenticationFilter;
+import uk.ac.ebi.biostudy.submission.rest.providers.BioStudiesClientExceptionMapper;
 import uk.ac.ebi.biostudy.submission.rest.providers.SubmissionServiceFactory;
 import uk.ac.ebi.biostudy.submission.rest.providers.UserSessionFactory;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;

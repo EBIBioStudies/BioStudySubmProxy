@@ -15,47 +15,52 @@
  */
 package uk.ac.ebi.biostudy.submission.rest.resources;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static uk.ac.ebi.biostudy.submission.rest.data.Submission.isGeneratedAccession;
-import static uk.ac.ebi.biostudy.submission.rest.data.Submission.wrap;
-import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.transformSubmitted;
-import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.transformTemporary;
+import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
+import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.*;
 
 public class SubmissionService {
 
     private final BioStudiesClient bsclient;
+    private final EuropePmcClient europePmc;
+
+    private static final Map<String, String> europePmcAttributes = new HashMap<String, String>() {
+        {
+            put("title", "title");
+            put("authorString", "authors");
+            put("pubType", "type");
+            put("issue", "issue");
+            put("journalIssn", "issn");
+            put("pubYear", "year");
+            put("journalVolume", "volume");
+        }
+    };
 
     public SubmissionService(URI bsServerUrl) {
         this.bsclient = new BioStudiesClient(bsServerUrl);
+        this.europePmc = new EuropePmcClient();
     }
 
-    public JSONObject getSubmission(final UserSession userSession, final String accno)
+    public JSONObject getSubmission(final UserSession userSession, final String accno, boolean origin)
             throws BioStudiesClientException, IOException {
-        JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
-        if (obj != null) {
-            return obj;
+        if (!origin) {
+            JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
+            if (obj != null) {
+                return obj;
+            }
         }
         return wrap(bsclient.getSubmission(accno, userSession.getSessid()));
-    }
-
-    public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
-        String acc = obj.getString("accno");
-        JSONObject sbm = obj.getJSONObject("data");
-        JSONObject result = isGeneratedAccession(acc) ?
-                bsclient.submitNew(sbm, userSession.getSessid()) :
-                bsclient.submitUpdated(sbm, userSession.getSessid());
-        bsclient.deleteTmpSubmission(acc, userSession.getSessid());
-        return result;
     }
 
     public JSONObject createSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
@@ -64,29 +69,51 @@ public class SubmissionService {
         return sbm;
     }
 
-    public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
-        String accno = obj.getString("accno");
-        obj.put("changed", System.currentTimeMillis());
-        //TODO check obj format
-        obj.getJSONObject("data");
-        bsclient.saveTmpSubmission(obj, accno, userSession.getSessid());
+    public JSONObject editSubmission(final UserSession userSession, final String accno)
+            throws BioStudiesClientException, IOException {
+        JSONObject sbm = getSubmission(userSession, accno, false);
+        JSONObject tmp = bsclient.getTmpSubmission(sbm.getString("accno"), userSession.getSessid());
+        if (tmp == null) {
+            saveSubmission(userSession, sbm);
+        }
+        return sbm;
     }
 
-    public void deleteSubmission(final String acc, final UserSession userSession)
+    public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
+        data(obj); // data exist?
+        bsclient.saveTmpSubmission(modified(obj), accno(obj), userSession.getSessid());
+    }
+
+    public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
+        String acc = accno(obj);
+        JSONObject sbm = data(obj);
+        JSONObject result = isGeneratedAccession(acc) ?
+                bsclient.submitNew(sbm, userSession.getSessid()) :
+                bsclient.submitUpdated(sbm, userSession.getSessid());
+
+        String status = result.getString("status");
+        if (status.equals("OK")) {
+            deleteSubmission(acc, userSession);
+        }
+        return result;
+    }
+
+    public boolean deleteSubmission(final String acc, final UserSession userSession)
             throws BioStudiesClientException, IOException {
         JSONObject sbm = bsclient.getTmpSubmission(acc, userSession.getSessid());
         if (sbm != null) {
             bsclient.deleteTmpSubmission(acc, userSession.getSessid());
-            return;
+            return true;
         }
-        bsclient.deleteSubmission(acc, userSession.getSessid());
+        sbm = bsclient.getSubmission(acc, userSession.getSessid());
+        return sbm == null || bsclient.deleteSubmission(acc, userSession.getSessid());
     }
 
     public JSONObject listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
-        JSONArray submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
-        JSONArray temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
+        List<JSONObject> submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
+        List<JSONObject> temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
         JSONObject obj = new JSONObject();
-        obj.put("submissions", removeDuplicates(join(temporary, submitted)));
+        obj.put("submissions", merge(temporary, submitted));
         return obj;
     }
 
@@ -101,6 +128,7 @@ public class SubmissionService {
 
     public JSONObject singOut(UserSession userSession) throws BioStudiesClientException, IOException {
         return bsclient.signOut(userSession.getSessid());
+
     }
 
     public JSONObject singUp(JSONObject obj) throws BioStudiesClientException, IOException {
@@ -111,27 +139,36 @@ public class SubmissionService {
         return bsclient.signIn(obj);
     }
 
-    private static JSONArray join(JSONArray... arrs) {
-        JSONArray result = new JSONArray();
-        for (JSONArray arr : arrs) {
-            for (int i = 0; i < arr.length(); i++) {
-                result.put(arr.get(i));
-            }
-        }
-        return result;
+    public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
+        return bsclient.passwordResetRequest(obj);
     }
 
-    private static JSONArray removeDuplicates(JSONArray array) {
-        Set<String> used = new HashSet<>();
-        JSONArray res = new JSONArray();
-        for (int i = 0; i < array.length(); i++) {
-            JSONObject obj = array.getJSONObject(i);
-            String accno = obj.getString("accno");
-            if (!used.contains(accno)) {
-                res.put(obj);
-                used.add(accno);
+    public JSONObject pubMedSearch(String id) {
+        try {
+            JSONObject res = europePmc.pubMedSearch(id);
+
+            int hitCount = res.getInt("hitCount");
+            JSONObject data = new JSONObject();
+
+            if (hitCount >= 1) {
+                final JSONObject publ = res.getJSONObject("resultList").getJSONArray("result").getJSONObject(0);
+                europePmcAttributes.entrySet().stream().forEach(entry -> {
+                            if (publ.has(entry.getKey())) {
+                                data.put(entry.getValue(), publ.getString(entry.getKey()));
+                            }
+                        }
+                );
             }
+            JSONObject obj = new JSONObject();
+            obj.put("status", "OK");
+            obj.put("data", data);
+            return obj;
+        } catch (IOException e) {
+            return fail("EuropePMC error");
         }
-        return res;
+    }
+
+    private static JSONObject fail(String message) {
+        return new JSONObject().put("status", "FAIL").put("message", message);
     }
 }

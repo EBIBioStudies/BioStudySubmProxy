@@ -35,8 +35,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.ac.ebi.biostudy.submission.SessionAttributes;
-import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -54,22 +52,22 @@ import static java.util.Arrays.stream;
 /**
  * @author Olga Melnichuk
  */
-public class Proxy {
+class Proxy {
 
     private static class Pair<K, V> {
         private K key;
         private V value;
 
-        public Pair(K key, V value) {
+        Pair(K key, V value) {
             this.key = key;
             this.value = value;
         }
 
-        public K getKey() {
+        K getKey() {
             return key;
         }
 
-        public V getValue() {
+        V getValue() {
             return value;
         }
 
@@ -119,21 +117,16 @@ public class Proxy {
     private final URI dest;
     private final Function<String, String> pathFilter;
 
-    public Proxy(URI dest) {
-        this.dest = dest;
-        this.pathFilter = s -> s;
-    }
-
-    public Proxy(URI dest, Function<String, String> pathFilter) {
+    Proxy(URI dest, Function<String, String> pathFilter) {
         this.dest = dest;
         this.pathFilter = pathFilter;
     }
 
-    public void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         executeMethod(this::createProxyGetReq, req, resp);
     }
 
-    public void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         executeMethod(this::createProxyPostReq, req, resp);
     }
 
@@ -202,8 +195,8 @@ public class Proxy {
         }
     }
 
-    public void executeMethod(RequestTransform transform, HttpServletRequest req,
-                              HttpServletResponse resp) throws ServletException, IOException {
+    private void executeMethod(RequestTransform transform, HttpServletRequest req,
+                               HttpServletResponse resp) throws ServletException, IOException {
         HttpRequestBase reqBase;
         try {
             reqBase = transform.apply(req);
@@ -214,8 +207,6 @@ public class Proxy {
 
         reqBase.setURI(proxyUrl(reqBase.getURI()));
         logger.debug("proxied url: " + reqBase.getURI());
-
-        forwardBioStdSession(req, reqBase);
 
         CloseableHttpClient client = HttpClients.createDefault();
         try (CloseableHttpResponse response = client.execute(reqBase)) {
@@ -280,14 +271,6 @@ public class Proxy {
 
         logger.debug("request headers are: " + list);
         return list;
-    }
-
-    // TODO: get rid of this in the future
-    private void forwardBioStdSession(HttpServletRequest req, HttpRequestBase reqBase) {
-        UserSession userSession = SessionAttributes.getUserSession(req);
-        if (userSession != null) {
-            reqBase.setHeader("Cookie", "BIOSTDSESS=" + userSession.getSessid());
-        }
     }
 
     private void redirect(HttpServletRequest req, HttpServletResponse resp, String location) throws IOException {
