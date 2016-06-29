@@ -31,7 +31,10 @@ public final class UserSession {
         return sessid;
     }
 
-    public void setSessid(String sessid) {
-        this.sessid = sessid;
+    @Override
+    public String toString() {
+        return "UserSession{" +
+                "sessid='" + sessid + '\'' +
+                '}';
     }
 }
