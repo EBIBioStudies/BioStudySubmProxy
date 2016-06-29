@@ -111,14 +111,22 @@ public class RESTService {
     }
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
-        logger.info("javax.servlet.forward.request_uri: " + request.getAttribute("javax.servlet.forward.request_uri").toString());
-        return new URIBuilder()
-                .setScheme(request.getScheme())
-                .setHost(request.getServerName())
-                .setPort(request.getServerPort())
+        String reqUrl = request.getHeader("origin");
+        if (reqUrl == null) {
+            reqUrl = request.getRequestURI();
+        }
+        URI uri = new URI(reqUrl);
+        URIBuilder uriBuilder = new URIBuilder()
+                .setScheme(uri.getScheme())
+                .setHost(uri.getHost())
                 .setPath(path.getPath())
-                .setFragment(path.getFragment())
-                .build();
+                .setFragment(path.getFragment());
+
+        int port = uri.getPort();
+        if (port > 0 && port != 80 && port != 443) {
+            uriBuilder.setPort(port);
+        }
+        return uriBuilder.build();
     }
 
     @RolesAllowed("AUTHENTICATED")
