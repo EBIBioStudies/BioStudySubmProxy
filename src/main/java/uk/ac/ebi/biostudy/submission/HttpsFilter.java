@@ -65,7 +65,7 @@ public class HttpsFilter implements Filter {
             chain.doFilter(request, response);
         } else {
             String url = getUrl(httpRequest);
-            logger.info("http url: " + url);
+            logger.info("redirecting non-SSL url: " + url);
             httpResponse.sendRedirect(url.replace("http", "https"));
         }
     }
