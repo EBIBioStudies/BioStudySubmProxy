@@ -71,6 +71,10 @@ public class HttpsFilter implements Filter {
     }
 
     private static String getUrl(HttpServletRequest request) {
+        String origin = request.getHeader("origin");
+        if (origin != null) {
+            return origin;
+        }
         StringBuffer requestURL = request.getRequestURL();
         String queryString = request.getQueryString();
 

@@ -18,9 +18,11 @@ package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -37,6 +39,8 @@ import java.net.URISyntaxException;
  */
 @Path("/")
 public class RESTService {
+
+    private static final Logger logger = LoggerFactory.getLogger(RESTService.class);
 
     @Context
     private HttpServletRequest request;
@@ -107,13 +111,22 @@ public class RESTService {
     }
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
-        return new URIBuilder()
-                .setScheme(request.getScheme())
-                .setHost(request.getServerName())
-                .setPort(request.getServerPort())
+        String reqUrl = request.getHeader("origin");
+        if (reqUrl == null) {
+            reqUrl = request.getRequestURI();
+        }
+        URI uri = new URI(reqUrl);
+        URIBuilder uriBuilder = new URIBuilder()
+                .setScheme(uri.getScheme())
+                .setHost(uri.getHost())
                 .setPath(path.getPath())
-                .setFragment(path.getFragment())
-                .build();
+                .setFragment(path.getFragment());
+
+        int port = uri.getPort();
+        if (port > 0 && port != 80 && port != 443) {
+            uriBuilder.setPort(port);
+        }
+        return uriBuilder.build();
     }
 
     @RolesAllowed("AUTHENTICATED")
