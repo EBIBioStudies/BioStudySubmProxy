@@ -1,13 +1,13 @@
 import org.apache.tools.ant.filters.*
 
 buildscript {
-	repositories {
-		jcenter()
-	}
+    repositories {
+        jcenter()
+    }
 
-	dependencies {
-		classpath 'com.bmuschko:gradle-tomcat-plugin:2.2.4'
-	}
+    dependencies {
+        classpath 'com.bmuschko:gradle-tomcat-plugin:2.2.4'
+    }
 }
 
 apply plugin: 'java'
@@ -21,11 +21,11 @@ version = '1.0'
 
 
 if (hasProperty("env")) {
-	Properties props = new Properties()
-	props.load(new FileInputStream(".bsconfig/" + env + ".properties"))
-	props.each { prop ->
-		project.ext.set(prop.key, prop.value)
-	}
+    Properties props = new Properties()
+    props.load(new FileInputStream(".bsconfig/" + env + ".properties"))
+    props.each { prop ->
+        project.ext.set(prop.key, prop.value)
+    }
 }
 
 repositories {
@@ -33,53 +33,46 @@ repositories {
 }
 
 processResources {
-	filter ReplaceTokens, tokens: [
-			"BS_SERVER_URL" : bsBackendUrl
-	]
+    filter ReplaceTokens, tokens: [
+            "BS_SERVER_URL": bsBackendUrl,
+            "LOGS_DIR": logsDir
+    ]
 }
 
 processTestResources {
-	filter ReplaceTokens, tokens: [
-			"BS_SERVER_URL_4TESTS" : bsBackendUrl_4tests
-	]
+    filter ReplaceTokens, tokens: [
+            "BS_SERVER_URL_4TESTS": bsBackendUrl_4tests
+    ]
 }
-
-//This step is needed for eclipse to be able to debug application
-task filterEclipseResources(type: Copy) {
-    from 'src/main/resources'
-    into 'bin'
-    filter(ReplaceTokens, tokens: [
-			"BS_SERVER_URL": bsBackendUrl
-	])
-}
-processResources.finalizedBy filterEclipseResources
-
 
 task printEnv << {
     println bsBackendUrl;
 }
 
 dependencies {
-	compile group: 'org.apache.httpcomponents', version:'4.5.2', name: 'httpmime'
-	compile group: 'org.apache.httpcomponents', version: '4.5.2', name: 'httpclient'
-	compile group: 'commons-fileupload', version: '1.3.1', name: 'commons-fileupload'
-	compile group: 'javax.ws.rs', version: '2.0.1', name: 'javax.ws.rs-api'
-	compile group: 'org.glassfish.jersey.containers', version: '2.22.2', name: 'jersey-container-servlet'
+    compile group: 'org.apache.httpcomponents', version: '4.5.2', name: 'httpmime'
+    compile group: 'org.apache.httpcomponents', version: '4.5.2', name: 'httpclient'
+    compile group: 'commons-fileupload', version: '1.3.1', name: 'commons-fileupload'
+    compile group: 'javax.ws.rs', version: '2.0.1', name: 'javax.ws.rs-api'
+    compile group: 'org.glassfish.jersey.containers', version: '2.22.2', name: 'jersey-container-servlet'
 
-	compile group: 'log4j', version: '1.2.17' , name: 'log4j'
-  	compile group: 'org.slf4j', version: '1.7.13', name: 'slf4j-log4j12'
-  	compile group: 'org.json', version: '20140107', name: 'json'
-  	compile group: 'org.mapdb', version: '2.0-beta13', name: 'mapdb'
+    compile group: 'ch.qos.logback', version: '1.1.7', name: 'logback-classic'
+    compile group: 'ch.qos.logback', version: '1.1.7', name: 'logback-core'
+    compile group: 'org.slf4j', version: '1.7.21', name: 'slf4j-api'
+    compile group: 'org.slf4j', version: '1.7.21', name: 'jul-to-slf4j'
+
+    compile group: 'org.json', version: '20140107', name: 'json'
+    compile group: 'org.mapdb', version: '2.0-beta13', name: 'mapdb'
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '2.0.2-beta'
-    
+
     providedCompile "javax.servlet:javax.servlet-api:3.0.1"
 
-	def tomcatVersion = '7.0.59'
-	tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
-			"org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}",
-			"org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
+    def tomcatVersion = '7.0.59'
+    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
+            "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}",
+            "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
 }
 
 test {
@@ -87,36 +80,36 @@ test {
 }
 
 war {
-	filter(ReplaceTokens, tokens: ["BS_SERVER_URL" : bsBackendUrl])
-	webAppDirName= 'WebContent'
-	baseName='proxy'
-	version=''
-	from  'src/main/webapp/'
+    filter(ReplaceTokens, tokens: ["BS_SERVER_URL": bsBackendUrl])
+    webAppDirName = 'WebContent'
+    baseName = 'proxy'
+    version = ''
+    from 'src/main/webapp/'
 }
 
 eclipse {
-	wtp {
-	component {
- 		contextPath = '/biostudies/submissions'
- 		resource sourcePath: 'src/main/webapp', deployPath: '/'
- 		resource sourcePath: 'WebContent', deployPath: '/'
- 		resource sourcePath: 'build/resources/main', deployPath: '/WEB-INF/classes' 
- 		}
- 		
- 	facet {
-	 	facet name: 'jst.web', version: '3.0'
-	 	facet name: 'java', version: '1.8'
-    	}
- 				
-	}
-	
+    wtp {
+        component {
+            contextPath = '/biostudies/submissions'
+            resource sourcePath: 'src/main/webapp', deployPath: '/'
+            resource sourcePath: 'WebContent', deployPath: '/'
+            resource sourcePath: 'build/resources/main', deployPath: '/WEB-INF/classes'
+        }
+
+        facet {
+            facet name: 'jst.web', version: '3.0'
+            facet name: 'java', version: '1.8'
+        }
+
+    }
+
 }
 
 tomcat {
-	httpPort = 9180
-	//httpsPort = 9181
-	//enableSSL = true
-	contextPath = 'proxy'
+    httpPort = 9180
+    //httpsPort = 9181
+    //enableSSL = true
+    contextPath = 'proxy'
 }
 
 

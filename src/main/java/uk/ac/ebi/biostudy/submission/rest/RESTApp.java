@@ -20,10 +20,10 @@ import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
-import uk.ac.ebi.biostudy.submission.rest.providers.AuthenticationFilter;
-import uk.ac.ebi.biostudy.submission.rest.providers.BioStudiesClientExceptionMapper;
-import uk.ac.ebi.biostudy.submission.rest.providers.SubmissionServiceFactory;
-import uk.ac.ebi.biostudy.submission.rest.providers.UserSessionFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.ac.ebi.biostudy.submission.AppContext;
+import uk.ac.ebi.biostudy.submission.rest.providers.*;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
@@ -38,6 +38,7 @@ public class RESTApp extends ResourceConfig {
         register(LoggingFilter.class);
         register(AuthenticationFilter.class);
         register(BioStudiesClientExceptionMapper.class);
+        register(ExceptionLogger.class);
         register(new AbstractBinder() {
             @Override
             protected void configure() {
