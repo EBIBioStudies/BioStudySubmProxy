@@ -18,9 +18,11 @@ package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -37,6 +39,8 @@ import java.net.URISyntaxException;
  */
 @Path("/")
 public class RESTService {
+
+    private static final Logger logger = LoggerFactory.getLogger(RESTService.class);
 
     @Context
     private HttpServletRequest request;
@@ -107,6 +111,7 @@ public class RESTService {
     }
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
+        logger.info("javax.servlet.forward.request_uri: " + request.getAttribute("javax.servlet.forward.request_uri").toString());
         return new URIBuilder()
                 .setScheme(request.getScheme())
                 .setHost(request.getServerName())
