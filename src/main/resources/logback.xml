@@ -22,9 +22,9 @@
         </layout>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>${catalina.base}/logs/biostudies-submtool.log</file>
+        <file>@LOGS_DIR@/biostudies-submtool.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${catalina.base}/logs/biostudies-submtool.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>@LOGS_DIR@/biostudies-submtool.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
             <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>

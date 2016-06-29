@@ -34,7 +34,8 @@ repositories {
 
 processResources {
     filter ReplaceTokens, tokens: [
-            "BS_SERVER_URL": bsBackendUrl
+            "BS_SERVER_URL": bsBackendUrl,
+            "LOGS_DIR": logsDir
     ]
 }
 
@@ -43,17 +44,6 @@ processTestResources {
             "BS_SERVER_URL_4TESTS": bsBackendUrl_4tests
     ]
 }
-
-//This step is needed for eclipse to be able to debug application
-task filterEclipseResources(type: Copy) {
-    from 'src/main/resources'
-    into 'bin'
-    filter(ReplaceTokens, tokens: [
-            "BS_SERVER_URL": bsBackendUrl
-    ])
-}
-processResources.finalizedBy filterEclipseResources
-
 
 task printEnv << {
     println bsBackendUrl;
