@@ -21,7 +21,7 @@
             <Pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Pattern>
         </layout>
     </appender>
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>@LOGS_DIR@/biostudies-submtool.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>@LOGS_DIR@/biostudies-submtool.%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -29,13 +29,13 @@
             <totalSizeCap>100MB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%-30(%d{HH:mm:ss.SSS} [%thread]) %-5level %logger{35} - %msg%n</pattern>
+            <pattern>%-30(%d{MM-dd HH:mm:ss.SSS} [%thread]) %-5level %logger{35} - %msg%n</pattern>
         </encoder>
     </appender>
 
     <logger name="org.apache.http.client" level="INFO"/>
 
-    <root level="INFO">
+    <root level="@LOG_LEVEL@">
         <!--appender-ref ref="STDOUT" /-->
         <appender-ref ref="FILE" />
     </root>
