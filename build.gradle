@@ -35,7 +35,8 @@ repositories {
 processResources {
     filter ReplaceTokens, tokens: [
             "BS_SERVER_URL": bsBackendUrl,
-            "LOGS_DIR": logsDir
+            "LOGS_DIR": logsDir,
+            "LOG_LEVEL": logLevel
     ]
 }
 
