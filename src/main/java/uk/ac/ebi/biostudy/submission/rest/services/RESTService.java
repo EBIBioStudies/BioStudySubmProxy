@@ -54,6 +54,7 @@ public class RESTService {
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
     public String getSubmissions(@Context UserSession userSession) throws BioStudiesClientException, IOException {
+        logger.debug("getSubmissions(userSession={})", userSession);
         return service.listSubmissions(userSession).toString();
     }
 
@@ -63,6 +64,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
             throws BioStudiesClientException, IOException {
+        logger.debug("getSubmission(userSession={}, acc={}, origin={})", userSession, acc, origin);
         return service.getSubmission(userSession, acc, origin).toString();
     }
 
@@ -71,6 +73,7 @@ public class RESTService {
     @Path("/files/dir")
     @Produces(MediaType.APPLICATION_JSON)
     public String getFileDir(@Context UserSession userSession) throws BioStudiesClientException, IOException {
+        logger.debug("getFileDir(userSession={})", userSession);
         return service.getFilesDir(userSession).toString();
     }
 
@@ -79,6 +82,7 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String signup(String str) throws BioStudiesClientException, IOException {
+        logger.debug("signup(str={})", str);
         try {
             JSONObject obj = toJson(str);
             URI path = new URI(obj.getString("path"));
@@ -97,6 +101,7 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String passwordResetRequest(String str) throws BioStudiesClientException, IOException {
+        logger.debug("passwordResetRequest(str={})", str);
         try {
             JSONObject obj = toJson(str);
             URI path = new URI(obj.getString("path"));
@@ -111,6 +116,7 @@ public class RESTService {
     }
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
+        logger.debug("buildAppUrl(path={})", path);
         String reqUrl = request.getHeader("origin");
         if (reqUrl == null) {
             reqUrl = request.getRequestURI();
@@ -134,6 +140,7 @@ public class RESTService {
     @Path("/auth/signout")
     @Produces(MediaType.APPLICATION_JSON)
     public String signout(@Context UserSession userSession) throws BioStudiesClientException, IOException {
+        logger.info("signout(userSession={})", userSession);
         JSONObject obj = service.singOut(userSession);
         request.getSession(false).invalidate();
         return obj.toString();
@@ -146,6 +153,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public String createSubmission(@Context UserSession userSession, String str)
             throws IOException, BioStudiesClientException {
+        logger.debug("createSubmission(userSession={}, str={})", userSession, str);
         return service.createSubmission(userSession, toJson(str)).toString();
     }
 
@@ -156,6 +164,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public String editSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
+        logger.debug("editSubmission(userSession={}, acc={})", userSession, acc);
         return service.editSubmission(userSession, acc).toString();
     }
 
@@ -165,6 +174,7 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void saveSubmission(@Context UserSession userSession, String str) throws IOException, BioStudiesClientException {
+        logger.debug("saveSubmission(userSession={}, str={})", userSession, str);
         service.saveSubmission(userSession, toJson(str));
     }
 
@@ -173,8 +183,9 @@ public class RESTService {
     @Path("/submission/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String updateSubmission(@Context UserSession userSession, String str)
+    public String submitSubmission(@Context UserSession userSession, String str)
             throws BioStudiesClientException, IOException {
+        logger.debug("submitSubmission(userSession={}, str={})", userSession, str);
         return service.submitSubmission(userSession, toJson(str)).toString();
     }
 
@@ -184,7 +195,9 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public String deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
-        boolean deleted = service.deleteSubmission(acc, userSession);
+        logger.debug("deleteSubmission(userSession={}, acc={})", userSession, acc);
+        boolean deleted = service.deleteSubmission(userSession, acc);
+        logger.debug("deleteSubmission(): {}", deleted);
         return statusObj(deleted).toString();
     }
 
@@ -194,6 +207,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
             throws BioStudiesClientException, IOException {
+        logger.debug("deleteFile(userSession={}, file={})", userSession, file);
         service.deleteFile(userSession, file);
     }
 
@@ -202,6 +216,7 @@ public class RESTService {
     @Path("/pubMedSearch/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String pubMedSearch(@Context UserSession userSession,  @PathParam("id") String id) {
+        logger.debug("pubMedSearch(userSession={}, id={})", userSession, id);
         return service.pubMedSearch(id).toString();
     }
 

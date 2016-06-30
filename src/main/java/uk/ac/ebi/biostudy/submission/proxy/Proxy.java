@@ -123,21 +123,27 @@ class Proxy {
     }
 
     void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        logger.debug("proxyGet()");
         executeMethod(this::createProxyGetReq, req, resp);
     }
 
     void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        logger.debug("proxyPost()");
         executeMethod(this::createProxyPostReq, req, resp);
     }
 
     private HttpGet createProxyGetReq(HttpServletRequest req) throws ServletException, IOException {
+        logger.debug("createProxyGetReq()");
         HttpGet get =  new HttpGet(getRequestUri(req));
+        logger.debug("get: {}", get);
         forwardRequestHeaders(req, get);
         return get;
     }
 
     private HttpPost createProxyPostReq(HttpServletRequest req) throws ServletException, IOException {
+        logger.debug("createProxyPostReq()");
         HttpPost post = new HttpPost(getRequestUri(req));
+        logger.debug("post: {}", post);
         forwardRequestHeaders(req, post);
 
         if (ServletFileUpload.isMultipartContent(req)) {
@@ -149,6 +155,7 @@ class Proxy {
     }
 
     private void handleMultipartPost(HttpPost post, HttpServletRequest req) throws ServletException {
+        logger.debug("handleMultipartPost()");
         DiskFileItemFactory diskFileItemFactory = new DiskFileItemFactory();
         diskFileItemFactory.setSizeThreshold(MAX_FILE_UPLOAD_SIZE);
         diskFileItemFactory.setRepository(FILE_UPLOAD_TEMP_DIRECTORY);
@@ -157,6 +164,7 @@ class Proxy {
         try {
             MultipartEntityBuilder builder = MultipartEntityBuilder.create();
             List<FileItem> items = servletFileUpload.parseRequest(req);
+            logger.debug("file items length: {}", items.size());
             items.stream().forEach(
                     fileItem -> {
                         if (fileItem.isFormField()) {
@@ -197,6 +205,7 @@ class Proxy {
 
     private void executeMethod(RequestTransform transform, HttpServletRequest req,
                                HttpServletResponse resp) throws ServletException, IOException {
+        logger.debug("executeMethod()");
         HttpRequestBase reqBase;
         try {
             reqBase = transform.apply(req);
@@ -255,8 +264,10 @@ class Proxy {
     }
 
     private void forwardRequestHeaders(HttpServletRequest req, HttpRequestBase reqBase) {
+        logger.debug("forwardRequestHeaders()");
         getHeaders(req).forEach(p ->
                 reqBase.setHeader(p.getKey(), p.getValue()));
+        logger.debug("reqBase: {}", reqBase);
     }
 
     private List<Pair<String, String>> getHeaders(HttpServletRequest req) {
