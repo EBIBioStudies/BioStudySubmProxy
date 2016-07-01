@@ -55,6 +55,10 @@ public class BioStudiesClient {
 
     private static final String TMP_VALUE_PARAM = "value";
 
+    private static final String TMP_TOPIC_PARAM = "topic";
+
+    private static final String TMP_TOPIC_SUBMISSION = "submission";
+
     private final URI baseUrl;
 
     public BioStudiesClient(URI baseUrl) {
@@ -151,22 +155,22 @@ public class BioStudiesClient {
 
     public JSONObject getTmpSubmission(String accno, String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("getTmpSubmission(accno={}, sessionId={})", accno, sessionId);
-        return parseJSON(get(composeUrl("/userdata/get"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno));
+        return parseJSON(get(composeUrl("/userdata/get"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION, TMP_KEY_PARAM, accno));
     }
 
     public void saveTmpSubmission(JSONObject obj, String accno, String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("saveTmpSubmission(obj={}, accno={}, sessionId={})", obj, accno, sessionId);
-        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno, TMP_VALUE_PARAM, obj.toString());
+        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION, TMP_KEY_PARAM, accno, TMP_VALUE_PARAM, obj.toString());
     }
 
     public void deleteTmpSubmission(String accno, String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("deleteTmpSubmission(accno={}, sessionId={})", accno, sessionId);
-        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno);
+        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION, TMP_KEY_PARAM, accno);
     }
 
     public JSONArray listTmpSubmissions(String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("listTmpSubmissions(sessionId={})", sessionId);
-        return parseJSONArray(get(composeUrl("/userdata/listjson"), SESSION_PARAM, sessionId));
+        return parseJSONArray(get(composeUrl("/userdata/listjson"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION));
     }
 
     private String get(URI url, String... params) throws BioStudiesClientException, IOException {
@@ -208,7 +212,7 @@ public class BioStudiesClient {
             if (contentType == null) {
                 logger.warn("Server responded with NULL content-type: " + req.getURI());
             }
-            throw new BioStudiesClientException(statusCode, contentType == null ? ContentType.TEXT_PLAIN.toString(): contentType.getValue(), body);
+            throw new BioStudiesClientException(statusCode, contentType == null ? ContentType.TEXT_PLAIN.toString() : contentType.getValue(), body);
         }
     }
 
