@@ -18,6 +18,8 @@ package uk.ac.ebi.biostudy.submission.rest.data;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -33,6 +35,9 @@ import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.SubmissionS
  * @author Olga Melnichuk
  */
 public class SubmissionList {
+
+    private static final Logger logger = LoggerFactory.getLogger(SubmissionList.class);
+
     static final DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     enum SubmissionStatus {
@@ -105,7 +110,7 @@ public class SubmissionList {
                 return format.parse(value).getTime()/1000;
             }
         } catch (ParseException e) {
-            //todo add loger
+            logger.error("Data format error: {}", value);
         }
         return null;
     }
@@ -114,6 +119,10 @@ public class SubmissionList {
         for (int i = 0; i < attrs.length(); i++) {
             JSONObject attr = attrs.getJSONObject(i);
             if (attr.getString("name").equalsIgnoreCase(attrName)) {
+                if (!attr.has("value")) {
+                    logger.error("attribute: {} has no value", attrName);
+                    return "";
+                }
                 return attr.getString("value");
             }
         }
