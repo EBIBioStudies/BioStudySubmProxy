@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
+import org.apache.http.Header;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.methods.RequestBuilder;
@@ -54,6 +55,10 @@ public class BioStudiesClient {
 
     private static final String TMP_VALUE_PARAM = "value";
 
+    private static final String TMP_TOPIC_PARAM = "topic";
+
+    private static final String TMP_TOPIC_SUBMISSION = "submission";
+
     private final URI baseUrl;
 
     public BioStudiesClient(URI baseUrl) {
@@ -62,26 +67,34 @@ public class BioStudiesClient {
 
     public JSONObject submitNew(JSONObject obj, String sessionId)
             throws BioStudiesClientException, IOException {
+        logger.debug("submitNew(obj={}, sessionId={})", obj, sessionId);
         JSONObject copy = new JSONObject(obj.toString());
-        copy.put("accno", "!{S-STA}");
+        copy.put("accno", "!{S-BSST}");
         JSONArray array = new JSONArray();
         array.put(copy);
-        JSONObject wrap = new JSONObject();
-        obj.put("submissions", array);
-        return parseJSON(post(composeUrl("/submit/create"), wrap, SESSION_PARAM, sessionId));
+        JSONObject submissions = new JSONObject();
+        submissions.put("submissions", array);
+        return parseJSON(post(composeUrl("/submit/create"), submissions, SESSION_PARAM, sessionId));
     }
 
     public JSONObject submitUpdated(JSONObject obj, String sessionId)
             throws BioStudiesClientException, IOException {
-        return parseJSON(post(composeUrl("/submit/update"), obj, SESSION_PARAM, sessionId));
+        logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
+        JSONArray array = new JSONArray();
+        array.put(obj);
+        JSONObject submissions = new JSONObject();
+        submissions.put("submissions", array);
+        return parseJSON(post(composeUrl("/submit/update"), submissions, SESSION_PARAM, sessionId));
     }
 
     public JSONObject getSubmission(String acc, String sessionId)
             throws BioStudiesClientException, IOException {
+        logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
         return parseJSON(get(composeUrl("/submission/" + acc), SESSION_PARAM, sessionId));
     }
 
     public JSONArray getSubmissions(String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("getSubmissions(sessionId={})", sessionId);
         JSONObject obj = parseJSON(get(composeUrl("/sbmlist"), SESSION_PARAM, sessionId));
         if (obj.has("status")) {
             String status = obj.getString("status");
@@ -94,29 +107,41 @@ public class BioStudiesClient {
         return new JSONArray();
     }
 
-    public void deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
-        get(composeUrl("/submit/delete"), SESSION_PARAM, sessionId, "id", acc);
+    public boolean deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
+        JSONObject resp = parseJSON(get(composeUrl("/submit/delete"), SESSION_PARAM, sessionId, "id", acc));
+        return resp.has("level") && resp.getString("level").equalsIgnoreCase("success");
     }
 
     public JSONObject getFilesDir(String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("getFilesDir(sessionId={})", sessionId);
         return parseJSON(get(composeUrl("/dir"), SESSION_PARAM, sessionId));
     }
 
     public JSONObject deleteFile(String file, String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
         return parseJSON(get(composeUrl("/dir"), SESSION_PARAM, sessionId, "command", "delete", "file", file));
     }
 
     public JSONObject signOut(String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("signOut(sessionId={})", sessionId);
         JSONObject obj = new JSONObject();
         obj.put("sessid", sessionId);
         return parseJSON(post(composeUrl("/auth/signout"), obj, SESSION_PARAM, sessionId));
     }
 
     public JSONObject signUp(JSONObject obj) throws BioStudiesClientException, IOException {
+        logger.debug("signUp(obj={})", obj);
         return parseJSON(post(composeUrl("/auth/signup"), obj));
     }
 
+    public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
+        logger.debug("passwordResetRequest(obj={})", obj);
+        return parseJSON(post(composeUrl("/auth/passrstreq"), obj));
+    }
+
     public JSONObject signIn(String username, String password) throws BioStudiesClientException, IOException {
+        logger.debug("signIn(username={}, password=...)", username);
         JSONObject obj = new JSONObject();
         obj.put("login", username);
         obj.put("password", password);
@@ -124,26 +149,32 @@ public class BioStudiesClient {
     }
 
     public JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException {
+        logger.debug("signIn(obj={})", obj);
         return parseJSON(post(composeUrl("/auth/signin"), obj));
     }
 
     public JSONObject getTmpSubmission(String accno, String sessionId) throws IOException, BioStudiesClientException {
-        return parseJSON(get(composeUrl("/userdata/get"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno));
+        logger.debug("getTmpSubmission(accno={}, sessionId={})", accno, sessionId);
+        return parseJSON(get(composeUrl("/userdata/get"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION, TMP_KEY_PARAM, accno));
     }
 
     public void saveTmpSubmission(JSONObject obj, String accno, String sessionId) throws IOException, BioStudiesClientException {
-        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno, TMP_VALUE_PARAM, obj.toString());
+        logger.debug("saveTmpSubmission(obj={}, accno={}, sessionId={})", obj, accno, sessionId);
+        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION, TMP_KEY_PARAM, accno, TMP_VALUE_PARAM, obj.toString());
     }
 
     public void deleteTmpSubmission(String accno, String sessionId) throws IOException, BioStudiesClientException {
-        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_KEY_PARAM, accno);
+        logger.debug("deleteTmpSubmission(accno={}, sessionId={})", accno, sessionId);
+        post(composeUrl("/userdata/set"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION, TMP_KEY_PARAM, accno);
     }
 
     public JSONArray listTmpSubmissions(String sessionId) throws IOException, BioStudiesClientException {
-        return parseJSONArray(get(composeUrl("/userdata/listjson"), SESSION_PARAM, sessionId));
+        logger.debug("listTmpSubmissions(sessionId={})", sessionId);
+        return parseJSONArray(get(composeUrl("/userdata/listjson"), SESSION_PARAM, sessionId, TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION));
     }
 
     private String get(URI url, String... params) throws BioStudiesClientException, IOException {
+        logger.debug("get(url={}, params={})", url, params);
         RequestBuilder builder = RequestBuilder.get().setUri(url);
         forEachParam(asList(params), builder::addParameter);
         return executeMethod(builder.build());
@@ -154,6 +185,7 @@ public class BioStudiesClient {
     }
 
     private String post(URI url, JSONObject data, String... params) throws BioStudiesClientException, IOException {
+        logger.debug("post(url={}, data={}, params={})", url, data, params);
         RequestBuilder builder = RequestBuilder.post().setUri(url);
         forEachParam(asList(params), builder::addParameter);
         if (data != null) {
@@ -163,15 +195,24 @@ public class BioStudiesClient {
     }
 
     private String executeMethod(HttpUriRequest req) throws BioStudiesClientException, IOException {
+        logger.debug("executeMethod(req={})", req);
         CloseableHttpClient client = HttpClients.createDefault();
         try (CloseableHttpResponse response = client.execute(req)) {
             String body = EntityUtils.toString(response.getEntity(), "UTF-8");
 
             int statusCode = response.getStatusLine().getStatusCode();
+            logger.debug("response: statusCode={}", statusCode);
+            logger.debug("response: body={}", body);
             if (statusCode == 200) {
                 return body;
             }
-            throw new BioStudiesClientException(statusCode, response.getEntity().getContentType().getValue(), body);
+
+            Header contentType = response.getEntity().getContentType();
+            logger.debug("response: contentType={}", contentType);
+            if (contentType == null) {
+                logger.warn("Server responded with NULL content-type: " + req.getURI());
+            }
+            throw new BioStudiesClientException(statusCode, contentType == null ? ContentType.TEXT_PLAIN.toString() : contentType.getValue(), body);
         }
     }
 
@@ -184,14 +225,18 @@ public class BioStudiesClient {
     }
 
     private URI composeUrl(String relativePath) throws IOException {
+        logger.debug("composeUrl(relativePath={})", relativePath);
         try {
-            return new URIBuilder()
+            URI composed = new URIBuilder()
                     .setScheme(baseUrl.getScheme())
                     .setHost(baseUrl.getHost())
                     .setPort(baseUrl.getPort())
                     .setPath(asPath(baseUrl.getPath(), relativePath))
                     .build();
+            logger.debug("composed URI: {}", composed);
+            return composed;
         } catch (URISyntaxException e) {
+            logger.error("should never happen: ", e);
             throw new IOException(e);
         }
     }
@@ -203,7 +248,10 @@ public class BioStudiesClient {
     }
 
     private static String asPath(String... parts) {
-        return "/" + stream(parts).flatMap(p -> stream(p.split("/"))).filter(string -> !string.isEmpty()).collect(Collectors.joining("/"));
+        logger.debug("asPath(parts={})", parts);
+        String path = "/" + stream(parts).flatMap(p -> stream(p.split("/"))).filter(string -> !string.isEmpty()).collect(Collectors.joining("/"));
+        logger.debug("path: {}", path);
+        return path;
     }
 
 }

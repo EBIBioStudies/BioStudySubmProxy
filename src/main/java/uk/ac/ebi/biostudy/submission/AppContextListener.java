@@ -16,6 +16,8 @@
 
 package uk.ac.ebi.biostudy.submission;
 
+import org.slf4j.bridge.SLF4JBridgeHandler;
+
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
@@ -31,6 +33,7 @@ public class AppContextListener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent contextEvent) {
         ServletContext context = contextEvent.getServletContext();
         initConfig(context);
+        initJulLogger();
     }
 
     @Override
@@ -44,4 +47,11 @@ public class AppContextListener implements ServletContextListener {
             e.printStackTrace();
         }
     }
+
+    private void initJulLogger() {
+        // JUL -> SLF4j bridge init
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+    }
+
 }
