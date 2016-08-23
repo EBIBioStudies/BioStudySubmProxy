@@ -58,6 +58,9 @@ dependencies {
     compile group: 'org.glassfish.jersey.containers', version: '2.23.2', name: 'jersey-container-servlet'
     compile group: 'org.glassfish.jersey.core', version: '2.23.2', name: 'jersey-client'
     compile group: 'org.glassfish.jersey.connectors', version: '2.23.2', name: 'jersey-apache-connector'
+    compile group: 'org.glassfish.jersey.ext.rx', version: '2.23.2', name: 'jersey-rx-client'
+    compile group: 'org.glassfish.jersey.ext.rx', version: '2.23.2', name: 'jersey-rx-client-rxjava'
+
 
 
     compile group: 'ch.qos.logback', version: '1.1.7', name: 'logback-classic'

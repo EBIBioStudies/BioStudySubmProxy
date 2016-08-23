@@ -15,12 +15,16 @@
  */
 package uk.ac.ebi.biostudy.submission.rest.resources;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.Subscription;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
+import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
@@ -124,12 +128,23 @@ public class SubmissionService {
         logger.debug("listSubmissions(userSession={})", userSession);
         List<JSONObject> submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
         logger.debug("transformed submitted: {}", submitted);
-        List<JSONObject> temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
+        List<JSONObject> temporary = transformEdited(bsclient.listTmpSubmissions(userSession.getSessid()));
         logger.debug("transformed temporary: {}", temporary);
         JSONObject obj = new JSONObject();
         obj.put("submissions", merge(temporary, submitted));
         logger.debug("listSubmissions(): result={}", obj);
         return obj;
+    }
+
+    public Observable<JSONArray> listSubmissionsRx(UserSession userSession) throws BioStudiesClientException, IOException {
+        logger.debug("listSubmissions(userSession={})", userSession);
+        Observable<JSONArray> edited = bsclient.listTmpSubmissionsRx(userSession.getSessid());
+        Observable<JSONArray> submitted = bsclient.getSubmissionsRx(userSession.getSessid());
+
+        Observable<List<JSONObject>> editedTransformed = edited.map(SubmissionList::transformEdited);
+        Observable<List<JSONObject>> submittedTransformed = submitted.map(SubmissionList::transformSubmitted);
+
+        return Observable.zip(editedTransformed, submittedTransformed, SubmissionList::merge).take(1);
     }
 
     public JSONObject getFilesDir(UserSession userSession) throws BioStudiesClientException, IOException {

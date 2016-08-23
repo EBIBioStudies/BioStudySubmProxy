@@ -28,6 +28,8 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -53,9 +55,14 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmissions(@Context UserSession userSession) throws BioStudiesClientException, IOException {
+    public void getSubmissions(@Context UserSession userSession, @Suspended final AsyncResponse async) throws BioStudiesClientException, IOException {
         logger.debug("getSubmissions(userSession={})", userSession);
-        return service.listSubmissions(userSession).toString();
+        service.listSubmissionsRx(userSession)
+                .subscribe(submissions -> {
+                    JSONObject obj = new JSONObject();
+                    obj.put("submissions", submissions);
+                    async.resume(obj);
+                }, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -215,7 +222,7 @@ public class RESTService {
     @GET
     @Path("/pubMedSearch/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String pubMedSearch(@Context UserSession userSession,  @PathParam("id") String id) {
+    public String pubMedSearch(@Context UserSession userSession, @PathParam("id") String id) {
         logger.debug("pubMedSearch(userSession={}, id={})", userSession, id);
         return service.pubMedSearch(id).toString();
     }
