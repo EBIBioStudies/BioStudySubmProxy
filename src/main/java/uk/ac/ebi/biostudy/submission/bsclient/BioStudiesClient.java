@@ -16,10 +16,12 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
+import org.glassfish.jersey.client.rx.rxjava.RxObservable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.*;
@@ -27,6 +29,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Queue;
 
 /**
  * @author Olga Melnichuk
@@ -100,6 +103,33 @@ public class BioStudiesClient {
         }
         logger.warn("not getting status in response");
         return new JSONArray();
+    }
+
+    public Observable<JSONArray> getSubmissionsRx(String sessionId, final Queue<String> errors) throws BioStudiesClientException, IOException {
+        return RxObservable.from(webTarget)
+                .path("/sbmlist")
+                .queryParam(SESSION_PARAM, sessionId)
+                .request()
+                .rx()
+                .get()
+                .onErrorReturn(throwable -> {
+                    errors.offer("Submlist: " + throwable.getMessage());
+                    return null;
+                })
+                .flatMap(resp -> {
+                    try {
+                        JSONObject obj = parseJSON(readResponse(resp));
+                        if (obj.has("status")) {
+                            String status = obj.getString("status");
+                            if (status.equals("OK")) {
+                                return Observable.just(obj.getJSONArray("submissions"));
+                            }
+                        }
+                        return Observable.just(new JSONArray());
+                    } catch (BioStudiesClientException | IOException e) {
+                        return Observable.error(e);
+                    }
+                });
     }
 
     public boolean deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
@@ -194,6 +224,27 @@ public class BioStudiesClient {
                         .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)));
     }
 
+    public Observable<JSONArray> listTmpSubmissionsRx(String sessionId, final Queue<String> errors) throws IOException, BioStudiesClientException {
+        return RxObservable.from(webTarget)
+                .path("/userdata/listjson")
+                .queryParam(SESSION_PARAM, sessionId)
+                .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
+                .request()
+                .rx()
+                .get()
+                .onErrorReturn(throwable -> {
+                    errors.offer("listTmpSubmissions: " + throwable.getMessage());
+                    return null;
+                })
+                .flatMap(resp -> {
+                    try {
+                        return Observable.just(parseJSONArray(readResponse(resp)));
+                    } catch (BioStudiesClientException | IOException e) {
+                        return Observable.error(e);
+                    }
+                });
+    }
+
     private String get(WebTarget target) throws BioStudiesClientException, IOException {
         Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
         Response resp = null;
@@ -225,7 +276,10 @@ public class BioStudiesClient {
         }
     }
 
-    private String readResponse(Response resp) throws BioStudiesClientException, IOException {
+    private static String readResponse(Response resp) throws BioStudiesClientException, IOException {
+        if (resp == null) {
+            throw new IOException("null response; see logs for details");
+        }
         String body = resp.readEntity(String.class);
         MediaType mediaType = resp.getMediaType();
         if (mediaType == null) {
@@ -238,11 +292,12 @@ public class BioStudiesClient {
         throw new BioStudiesClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
     }
 
-    private JSONObject parseJSON(String str) {
+    private static JSONObject parseJSON(String str) {
         return str == null || str.isEmpty() ? null : new JSONObject(str);
     }
 
-    private JSONArray parseJSONArray(String str) {
+    private static JSONArray parseJSONArray(String str) {
+        logger.debug("parseJSONArray: str={}", str);
         return new JSONArray(str);
     }
 }

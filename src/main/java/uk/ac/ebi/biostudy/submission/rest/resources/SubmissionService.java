@@ -32,6 +32,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
 import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.*;
@@ -136,10 +137,10 @@ public class SubmissionService {
         return obj;
     }
 
-    public Observable<JSONArray> listSubmissionsRx(UserSession userSession) throws BioStudiesClientException, IOException {
+    public Observable<JSONArray> listSubmissionsRx(UserSession userSession, final Queue<String> errors) throws BioStudiesClientException, IOException {
         logger.debug("listSubmissions(userSession={})", userSession);
-        Observable<JSONArray> edited = bsclient.listTmpSubmissionsRx(userSession.getSessid());
-        Observable<JSONArray> submitted = bsclient.getSubmissionsRx(userSession.getSessid());
+        Observable<JSONArray> edited = bsclient.listTmpSubmissionsRx(userSession.getSessid(), errors);
+        Observable<JSONArray> submitted = bsclient.getSubmissionsRx(userSession.getSessid(), errors);
 
         Observable<List<JSONObject>> editedTransformed = edited.map(SubmissionList::transformEdited);
         Observable<List<JSONObject>> submittedTransformed = submitted.map(SubmissionList::transformSubmitted);
