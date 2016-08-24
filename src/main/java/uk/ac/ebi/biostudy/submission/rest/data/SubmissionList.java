@@ -92,7 +92,7 @@ public class SubmissionList {
         });
     }
 
-    public static List<JSONObject> transformEdited(JSONArray array) {
+    public static List<JSONObject> transformModified(JSONArray array) {
         return transform(array, obj -> {
             String accno = obj.getString("accno");
             JSONObject data = obj.getJSONObject("data");

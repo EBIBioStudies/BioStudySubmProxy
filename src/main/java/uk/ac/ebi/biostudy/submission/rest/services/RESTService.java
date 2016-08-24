@@ -35,8 +35,6 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @author Olga Melnichuk
@@ -59,8 +57,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public void getSubmissions(@Context UserSession userSession, @Suspended final AsyncResponse async) throws BioStudiesClientException, IOException {
         logger.debug("getSubmissions(userSession={})", userSession);
-        final Queue<String> errors = new ConcurrentLinkedQueue<>();
-        service.listSubmissionsRx(userSession, errors)
+        service.getSubmissionsRx(userSession)
                 .subscribe(submissions -> {
                     JSONObject obj = new JSONObject();
                     obj.put("submissions", submissions);
