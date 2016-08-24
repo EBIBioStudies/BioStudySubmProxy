@@ -129,7 +129,7 @@ public class SubmissionService {
         List<JSONObject> submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
         logger.debug("transformed submitted: {}", submitted);
         List<JSONObject> modified = transformModified(bsclient.getModifiedSubmissions(userSession.getSessid()));
-        logger.debug("transformed temporary: {}", modified);
+        logger.debug("transformed modified: {}", modified);
         JSONObject obj = new JSONObject();
         obj.put("submissions", merge(modified, submitted));
         logger.debug("getSubmissions(): result={}", obj);
