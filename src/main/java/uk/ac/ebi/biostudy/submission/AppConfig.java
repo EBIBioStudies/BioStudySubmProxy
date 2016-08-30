@@ -28,6 +28,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Properties;
 
+import static java.lang.Boolean.parseBoolean;
+import static uk.ac.ebi.biostudy.submission.AppConfig.ConfigProperty.OFFLINE_MODE;
 import static uk.ac.ebi.biostudy.submission.AppConfig.ConfigProperty.SERVER_URL;
 
 /**
@@ -37,18 +39,18 @@ public class AppConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
-    public static class AppConfigBuilder {
+    private static class AppConfigBuilder {
         private final AppConfig config;
 
-        public AppConfigBuilder() {
+        AppConfigBuilder() {
             this.config = new AppConfig();
         }
 
-        public AppConfigBuilder(AppConfig config) {
+        AppConfigBuilder(AppConfig config) {
             this.config = new AppConfig(config);
         }
 
-        public AppConfigBuilder setServerUrl(String value) {
+        AppConfigBuilder setServerUrl(String value) {
             URI url = null;
             try {
                 if (value != null) {
@@ -60,18 +62,24 @@ public class AppConfig {
             return setServerUrl(url);
         }
 
-        public AppConfigBuilder setServerUrl(URI url) {
+        AppConfigBuilder setOfflineMode(String value) {
+            config.setOfflineMode(parseBoolean(value));
+            return this;
+        }
+
+        AppConfigBuilder setServerUrl(URI url) {
             config.setServerUrl(url);
             return this;
         }
 
-        public AppConfig build() {
+        AppConfig build() {
             return config;
         }
     }
 
-    public static enum ConfigProperty {
-        SERVER_URL("BS_SERVER_URL");
+    enum ConfigProperty {
+        SERVER_URL("BS_SERVER_URL"),
+        OFFLINE_MODE("OFFLINE_MODE");
 
         private String name;
 
@@ -92,14 +100,15 @@ public class AppConfig {
         }
     }
 
-    public static AppConfig loadConfig(ServletContext context) throws IOException {
+    static AppConfig loadConfig(ServletContext context) throws IOException {
         logger.info("Loading from context...");
         return new AppConfigBuilder()
                 .setServerUrl(SERVER_URL.get(context))
+                .setOfflineMode(OFFLINE_MODE.get(context))
                 .build();
     }
 
-    public static AppConfig loadConfig(InputStream input) throws IOException {
+    static AppConfig loadConfig(InputStream input) throws IOException {
         logger.info("Loading from input stream...");
         Properties props = new Properties();
         if (input == null) {
@@ -108,10 +117,11 @@ public class AppConfig {
         props.load(input);
         return new AppConfigBuilder()
                 .setServerUrl(SERVER_URL.get(props))
+                .setOfflineMode(OFFLINE_MODE.get(props))
                 .build();
     }
 
-    public static AppConfig defaultConfig() throws IOException {
+    static AppConfig defaultConfig() throws IOException {
         logger.info("Loading from classpath...");
         URL configURL = AppConfig.class.getClassLoader().getResource("/config.properties");
         logger.info("Config URL: " + configURL);
@@ -121,11 +131,12 @@ public class AppConfig {
     private AppConfig parent;
 
     private URI serverUrl;
+    private Boolean offlineMode;
 
-    public AppConfig() {
+    private AppConfig() {
     }
 
-    public AppConfig(AppConfig parent) {
+    private AppConfig(AppConfig parent) {
         this.parent = parent;
     }
 
@@ -133,12 +144,24 @@ public class AppConfig {
         return serverUrl == null ? getServerUrl(parent) : serverUrl;
     }
 
+    public boolean isOfflineModeOn() {
+        return offlineMode == null ? isOfflineModeOn(parent) : offlineMode;
+    }
+
     private URI getServerUrl(AppConfig parent) {
         return parent == null ? null : parent.getServerUrl();
     }
 
+    private boolean isOfflineModeOn(AppConfig parent) {
+        return parent != null && parent.isOfflineModeOn();
+    }
+
     private void setServerUrl(URI serverUrl) {
         this.serverUrl = serverUrl;
+    }
+
+    private void setOfflineMode(Boolean offlineMode) {
+        this.offlineMode = offlineMode;
     }
 
     public AppConfig overwrite(AppConfig config) {

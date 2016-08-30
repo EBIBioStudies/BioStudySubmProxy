@@ -37,7 +37,9 @@ public class ProxyServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         AppConfig config = getConfig(getServletContext());
-        proxy = new Proxy(config.getServerUrl(), source -> source.replace("/raw", ""));
+        proxy = config.isOfflineModeOn() ?
+                new ProxyStub() :
+                new RemoteProxy(config.getServerUrl(), source -> source.replace("/raw", ""));
     }
 
     @Override
