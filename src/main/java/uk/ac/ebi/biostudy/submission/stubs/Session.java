@@ -14,15 +14,8 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.proxy;
+package uk.ac.ebi.biostudy.submission.stubs;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-public interface Proxy {
-    void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
-
-    void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
+interface Session {
+    String ID = "123";
 }

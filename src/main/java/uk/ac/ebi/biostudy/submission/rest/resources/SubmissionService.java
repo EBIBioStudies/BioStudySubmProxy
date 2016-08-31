@@ -21,7 +21,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
+import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesRestClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudy.submission.stubs.BioStudiesClientStub;
 import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
 import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
@@ -54,8 +56,8 @@ public class SubmissionService {
         }
     };
 
-    public SubmissionService(URI bsServerUrl) {
-        this.bsclient = new BioStudiesClient(bsServerUrl);
+    public SubmissionService(URI bsServerUrl, boolean inOfflineMode) {
+        this.bsclient = inOfflineMode ? new BioStudiesClientStub() : new BioStudiesRestClient(bsServerUrl);
         this.europePmc = new EuropePmcClient();
     }
 
@@ -180,7 +182,7 @@ public class SubmissionService {
     }
 
     public JSONObject pubMedSearch(String id) {
-        logger.debug("pubMedSearch(id={})", id);
+        logger.debug("pubMedSearch(ID={})", id);
         try {
             JSONObject res = europePmc.pubMedSearch(id);
 
@@ -201,7 +203,7 @@ public class SubmissionService {
             obj.put("data", data);
             return obj;
         } catch (IOException e) {
-            logger.warn("EuropePMC call for id={} failed: {}", id, e);
+            logger.warn("EuropePMC call for ID={} failed: {}", id, e);
             return fail("EuropePMC error");
         }
     }

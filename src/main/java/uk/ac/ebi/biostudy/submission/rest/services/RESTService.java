@@ -223,7 +223,7 @@ public class RESTService {
     @Path("/pubMedSearch/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public String pubMedSearch(@Context UserSession userSession, @PathParam("id") String id) {
-        logger.debug("pubMedSearch(userSession={}, id={})", userSession, id);
+        logger.debug("pubMedSearch(userSession={}, ID={})", userSession, id);
         return service.pubMedSearch(id).toString();
     }
 

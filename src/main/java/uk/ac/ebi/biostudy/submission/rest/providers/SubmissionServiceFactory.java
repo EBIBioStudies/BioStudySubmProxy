@@ -17,6 +17,7 @@
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
 import org.glassfish.hk2.api.Factory;
+import uk.ac.ebi.biostudy.submission.AppConfig;
 import uk.ac.ebi.biostudy.submission.AppContext;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 
@@ -34,7 +35,8 @@ public class SubmissionServiceFactory implements Factory<SubmissionService> {
 
     @Inject
     public SubmissionServiceFactory(ServletContext context) {
-        this.service = new SubmissionService(AppContext.getConfig(context).getServerUrl());
+        AppConfig config = AppContext.getConfig(context);
+        this.service = new SubmissionService(config.getServerUrl(), config.isOfflineModeOn());
     }
 
     @Override

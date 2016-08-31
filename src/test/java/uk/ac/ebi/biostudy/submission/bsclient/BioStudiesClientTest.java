@@ -38,7 +38,7 @@ public class BioStudiesClientTest {
     public void test() throws URISyntaxException, IOException, BioStudiesClientException {
         Assume.assumeTrue(TestEnvironment.hasValidServerUrl());
 
-        BioStudiesClient bsclient = new BioStudiesClient(getServerUrl());
+        BioStudiesClient bsclient = new BioStudiesRestClient(getServerUrl());
         JSONObject obj = bsclient.signIn("demo", "demo");
         assertNotNull(obj);
 

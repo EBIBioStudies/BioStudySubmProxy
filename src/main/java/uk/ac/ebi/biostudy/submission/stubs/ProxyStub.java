@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.proxy;
+package uk.ac.ebi.biostudy.submission.stubs;
 
+
+import org.json.JSONObject;
+import uk.ac.ebi.biostudy.submission.proxy.Proxy;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -26,14 +29,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-class ProxyStub implements Proxy {
+public class ProxyStub implements Proxy {
 
-    private static Map<String, String> paths = new HashMap<String, String>(){
+    private static Map<String, JSONObject> paths = new HashMap<String, JSONObject>() {
         {
-            put("/auth/signin", "{status: \"OK\"\n" +
-                                "sessid: \"123\"\n" +
-                                "username: \"Dev\"\n" +
-                                "email: \"dev@nomail.com\"}");
+            put("/auth/signin", new JSONObject()
+                    .put("status", "OK")
+                    .put("sessid", Session.ID)
+                    .put("username", "Dev")
+                    .put("email", "dev@nomail.com"));
         }
     };
 
@@ -45,7 +49,7 @@ class ProxyStub implements Proxy {
     @Override
     public void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Optional<String> path = paths.keySet().stream().filter(key ->
-            req.getRequestURI().matches(".*" + key + ".*")
+                req.getRequestURI().matches(".*" + key + ".*")
         ).findFirst();
 
         if (path.isPresent()) {
@@ -55,8 +59,9 @@ class ProxyStub implements Proxy {
         }
     }
 
-    private void responseWith(String json, HttpServletResponse resp) throws IOException {
+    private void responseWith(JSONObject json, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
+        resp.setCharacterEncoding("UTF-8");
         PrintWriter out = resp.getWriter();
         out.print(json);
         out.flush();

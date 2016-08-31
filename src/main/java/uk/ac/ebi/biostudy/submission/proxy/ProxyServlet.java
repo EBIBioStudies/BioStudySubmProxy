@@ -17,6 +17,7 @@
 package uk.ac.ebi.biostudy.submission.proxy;
 
 import uk.ac.ebi.biostudy.submission.AppConfig;
+import uk.ac.ebi.biostudy.submission.stubs.ProxyStub;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
