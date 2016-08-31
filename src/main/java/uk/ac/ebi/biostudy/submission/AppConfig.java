@@ -20,17 +20,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Properties;
 
 import static java.lang.Boolean.parseBoolean;
-import static uk.ac.ebi.biostudy.submission.AppConfig.ConfigProperty.OFFLINE_MODE;
-import static uk.ac.ebi.biostudy.submission.AppConfig.ConfigProperty.SERVER_URL;
+import static uk.ac.ebi.biostudy.submission.AppConfig.ConfigProperty.*;
 
 /**
  * @author Olga Melnichuk
@@ -67,6 +69,26 @@ public class AppConfig {
             return this;
         }
 
+        AppConfigBuilder setOfflineUserDir(String value) {
+            File dir = null;
+            try {
+                if (value != null) {
+                    dir = new File(value);
+                    if (!dir.exists()) {
+                        Files.createDirectory(dir.toPath());
+                    }
+                    if (!dir.isDirectory()) {
+                        dir = dir.getParentFile();
+                    }
+                }
+            } catch (IOException e) {
+                logger.error("Can't set user dir setting", e);
+                dir = null;
+            }
+            config.setOfflineUserDir(dir == null ? null : dir.toPath());
+            return this;
+        }
+
         AppConfigBuilder setServerUrl(URI url) {
             config.setServerUrl(url);
             return this;
@@ -79,7 +101,8 @@ public class AppConfig {
 
     enum ConfigProperty {
         SERVER_URL("BS_SERVER_URL"),
-        OFFLINE_MODE("OFFLINE_MODE");
+        OFFLINE_MODE("OFFLINE_MODE"),
+        OFFLINE_USER_DIR("OFFLINE_USER_DIR");
 
         private String name;
 
@@ -105,6 +128,7 @@ public class AppConfig {
         return new AppConfigBuilder()
                 .setServerUrl(SERVER_URL.get(context))
                 .setOfflineMode(OFFLINE_MODE.get(context))
+                .setOfflineUserDir(OFFLINE_USER_DIR.get(context))
                 .build();
     }
 
@@ -118,6 +142,7 @@ public class AppConfig {
         return new AppConfigBuilder()
                 .setServerUrl(SERVER_URL.get(props))
                 .setOfflineMode(OFFLINE_MODE.get(props))
+                .setOfflineUserDir(OFFLINE_USER_DIR.get(props))
                 .build();
     }
 
@@ -132,12 +157,17 @@ public class AppConfig {
 
     private URI serverUrl;
     private Boolean offlineMode;
+    private Path userDir;
 
     private AppConfig() {
     }
 
     private AppConfig(AppConfig parent) {
         this.parent = parent;
+    }
+
+    public Path getUserDir() {
+        return userDir == null ? getUserDir(parent) : userDir;
     }
 
     public URI getServerUrl() {
@@ -152,6 +182,10 @@ public class AppConfig {
         return parent == null ? null : parent.getServerUrl();
     }
 
+    private Path getUserDir(AppConfig parent) {
+        return parent == null ? null : parent.getUserDir();
+    }
+
     private boolean isOfflineModeOn(AppConfig parent) {
         return parent != null && parent.isOfflineModeOn();
     }
@@ -162,6 +196,10 @@ public class AppConfig {
 
     private void setOfflineMode(Boolean offlineMode) {
         this.offlineMode = offlineMode;
+    }
+
+    private void setOfflineUserDir(Path path) {
+        this.userDir = path;
     }
 
     public AppConfig overwrite(AppConfig config) {

@@ -25,6 +25,7 @@ import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -36,7 +37,11 @@ public class BioStudiesClientStub implements BioStudiesClient {
     private final AtomicInteger counter = new AtomicInteger(0);
     private final ConcurrentMap<String, JSONObject> modified = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, JSONObject> submitted = new ConcurrentHashMap<>();
+    private final UserDir userDir;
 
+    public BioStudiesClientStub(Path path) {
+        this.userDir = new UserDir(path);
+    }
 
     @Override
     public JSONObject getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException {
@@ -139,7 +144,11 @@ public class BioStudiesClientStub implements BioStudiesClient {
 
     @Override
     public JSONObject getFilesDir(String sessid) throws BioStudiesClientException, IOException {
-        return null;
+        checkSessionId(sessid);
+
+        return new JSONObject()
+                .put("status", "OK")
+                .put("files", userDir.list());
     }
 
     @Override

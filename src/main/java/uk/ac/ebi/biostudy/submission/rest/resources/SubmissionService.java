@@ -56,8 +56,8 @@ public class SubmissionService {
         }
     };
 
-    public SubmissionService(URI bsServerUrl, boolean inOfflineMode) {
-        this.bsclient = inOfflineMode ? new BioStudiesClientStub() : new BioStudiesRestClient(bsServerUrl);
+    public SubmissionService(BioStudiesClient bsclient) {
+        this.bsclient = bsclient;
         this.europePmc = new EuropePmcClient();
     }
 
