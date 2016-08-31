@@ -30,6 +30,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * TODO: make it a proper test
+ *
  * @author Olga Melnichuk
  */
 public class BioStudiesClientTest {
@@ -39,7 +40,7 @@ public class BioStudiesClientTest {
         Assume.assumeTrue(TestEnvironment.hasValidServerUrl());
 
         BioStudiesClient bsclient = new BioStudiesRestClient(getServerUrl());
-        JSONObject obj = bsclient.signIn("demo", "demo");
+        JSONObject obj = bsclient.signIn(new JSONObject().put("login", "demo").put("password", "demo"));
         assertNotNull(obj);
 
         String sessionId = obj.getString("sessid");
