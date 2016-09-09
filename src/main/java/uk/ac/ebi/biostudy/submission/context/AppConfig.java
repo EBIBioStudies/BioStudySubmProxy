@@ -173,13 +173,13 @@ public class AppConfig {
         }
     }
 
-    static AppConfig loadConfig(ServletContext context) throws IOException {
+    public static AppConfig loadConfig(ServletContext context) throws IOException {
         logger.info("Loading from context...");
         ContextConfigSource  configSource = new ContextConfigSource(context);
         return buildConfig(configSource);
     }
 
-    static AppConfig loadConfig(InputStream input) throws IOException {
+    public static AppConfig loadConfig(InputStream input) throws IOException {
         logger.info("Loading from input stream...");
         Properties props = new Properties();
         if (input == null) {
