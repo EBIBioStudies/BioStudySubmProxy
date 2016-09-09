@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.function.Function;
 
 import static java.lang.Long.parseLong;
+import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
 import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.ListColumn.*;
 import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.SubmissionStatus.*;
 
@@ -35,10 +36,6 @@ import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.SubmissionS
  * @author Olga Melnichuk
  */
 public class SubmissionList {
-
-    private static final Logger logger = LoggerFactory.getLogger(SubmissionList.class);
-
-    static final DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     enum SubmissionStatus {
         NEW,
@@ -94,39 +91,13 @@ public class SubmissionList {
 
     public static List<JSONObject> transformModified(JSONArray array) {
         return transform(array, obj -> {
-            String accno = obj.getString("accno");
-            JSONObject data = obj.getJSONObject("data");
-            JSONArray attrs = data.getJSONArray("attributes");
-            String title = getAttributeValue(attrs, "title");
-            Long rtime = getSeconds(getAttributeValue(attrs, "releaseDate"));
+            String acc = accno(obj);
+            JSONObject d = data(obj);
+            String title = titleAttribute(d);
+            Long rtime = releaseDateAttributeInSeconds(d);
             Long mtime = obj.getLong("changed");
-            return listItem(accno, title, rtime, mtime, NEW);
+            return listItem(acc, title, rtime, mtime, NEW);
         });
-    }
-
-    private static Long getSeconds(String value) {
-        try {
-            if (value != null && !value.isEmpty()) {
-                return format.parse(value).getTime()/1000;
-            }
-        } catch (ParseException e) {
-            logger.error("Data format error: {}", value);
-        }
-        return null;
-    }
-
-    private static String getAttributeValue(JSONArray attrs, String attrName) {
-        for (int i = 0; i < attrs.length(); i++) {
-            JSONObject attr = attrs.getJSONObject(i);
-            if (attr.getString("name").equalsIgnoreCase(attrName)) {
-                if (!attr.has("value")) {
-                    logger.error("attribute: {} has no value", attrName);
-                    return "";
-                }
-                return attr.getString("value");
-            }
-        }
-        return "";
     }
 
     public static JSONArray merge(List<JSONObject> temporary, List<JSONObject> submitted) {

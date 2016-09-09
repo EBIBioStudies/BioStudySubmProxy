@@ -14,15 +14,27 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.proxy;
+package uk.ac.ebi.biostudy.submission.context;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletContext;
 import java.io.IOException;
 
-public interface Proxy {
-    void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
+import static uk.ac.ebi.biostudy.submission.context.AppConfig.defaultConfig;
+import static uk.ac.ebi.biostudy.submission.context.AppConfig.loadConfig;
 
-    void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
+class AppConfigFactory implements Factory<AppConfig> {
+
+    @Override
+    public AppConfig create(ServletContext context) {
+        try {
+            return defaultConfig().overwrite(loadConfig(context));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void destroy() {
+    }
 }
+

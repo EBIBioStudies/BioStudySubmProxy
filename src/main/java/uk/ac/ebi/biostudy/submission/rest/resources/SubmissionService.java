@@ -27,7 +27,6 @@ import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,8 +53,8 @@ public class SubmissionService {
         }
     };
 
-    public SubmissionService(URI bsServerUrl) {
-        this.bsclient = new BioStudiesClient(bsServerUrl);
+    public SubmissionService(BioStudiesClient bsclient) {
+        this.bsclient = bsclient;
         this.europePmc = new EuropePmcClient();
     }
 
@@ -180,7 +179,7 @@ public class SubmissionService {
     }
 
     public JSONObject pubMedSearch(String id) {
-        logger.debug("pubMedSearch(id={})", id);
+        logger.debug("pubMedSearch(ID={})", id);
         try {
             JSONObject res = europePmc.pubMedSearch(id);
 
@@ -201,7 +200,7 @@ public class SubmissionService {
             obj.put("data", data);
             return obj;
         } catch (IOException e) {
-            logger.warn("EuropePMC call for id={} failed: {}", id, e);
+            logger.warn("EuropePMC call for ID={} failed: {}", id, e);
             return fail("EuropePMC error");
         }
     }

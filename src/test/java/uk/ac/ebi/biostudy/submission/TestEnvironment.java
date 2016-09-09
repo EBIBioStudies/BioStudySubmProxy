@@ -16,10 +16,12 @@
 
 package uk.ac.ebi.biostudy.submission;
 
+import uk.ac.ebi.biostudy.submission.context.AppConfig;
+
 import java.io.IOException;
 import java.net.URI;
 
-import static uk.ac.ebi.biostudy.submission.AppConfig.loadConfig;
+import static uk.ac.ebi.biostudy.submission.context.AppConfig.loadConfig;
 
 /**
  * @author Olga Melnichuk

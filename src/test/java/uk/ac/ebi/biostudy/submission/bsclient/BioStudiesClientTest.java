@@ -30,6 +30,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * TODO: make it a proper test
+ *
  * @author Olga Melnichuk
  */
 public class BioStudiesClientTest {
@@ -38,8 +39,8 @@ public class BioStudiesClientTest {
     public void test() throws URISyntaxException, IOException, BioStudiesClientException {
         Assume.assumeTrue(TestEnvironment.hasValidServerUrl());
 
-        BioStudiesClient bsclient = new BioStudiesClient(getServerUrl());
-        JSONObject obj = bsclient.signIn("demo", "demo");
+        BioStudiesClient bsclient = new BioStudiesRestClient(getServerUrl());
+        JSONObject obj = bsclient.signIn(new JSONObject().put("login", "demo").put("password", "demo"));
         assertNotNull(obj);
 
         String sessionId = obj.getString("sessid");
