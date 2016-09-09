@@ -44,6 +44,11 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
+    public void close() throws IOException {
+        // nothing to close
+    }
+
+    @Override
     public JSONObject getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException {
         checkSessionId(sessid);
         return modified.get(accno);

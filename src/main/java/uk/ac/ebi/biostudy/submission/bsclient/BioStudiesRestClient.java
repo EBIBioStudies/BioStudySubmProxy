@@ -146,9 +146,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     private final APITargets targets;
 
+    private final Client rsClient;
+
     public BioStudiesRestClient(URI baseUrl) {
-        Client rsClient = ClientBuilder.newClient();
+        rsClient = ClientBuilder.newClient();
         targets = new APITargets(rsClient.target(baseUrl));
+    }
+
+    public void close() {
+        rsClient.close();
     }
 
     public JSONObject submitNew(JSONObject obj, String sessionId)

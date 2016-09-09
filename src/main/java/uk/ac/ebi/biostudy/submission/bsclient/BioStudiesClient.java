@@ -20,9 +20,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import rx.Observable;
 
+import java.io.Closeable;
 import java.io.IOException;
 
-public interface BioStudiesClient {
+public interface BioStudiesClient extends Closeable {
     JSONObject getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException;
 
     JSONObject getSubmission(String accno, String sessid) throws BioStudiesClientException, IOException;

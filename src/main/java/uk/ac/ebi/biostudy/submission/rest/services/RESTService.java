@@ -17,6 +17,7 @@
 package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.glassfish.jersey.server.ManagedAsync;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +56,7 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getSubmissions(@Context UserSession userSession, @Suspended final AsyncResponse async) throws BioStudiesClientException, IOException {
+    public void getSubmissions(@Context UserSession userSession, @Suspended final AsyncResponse async) {
         logger.debug("getSubmissions(userSession={})", userSession);
         service.getSubmissionsRx(userSession)
                 .subscribe(submissions -> {

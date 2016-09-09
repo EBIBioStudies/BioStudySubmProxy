@@ -21,15 +21,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
-import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesRestClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudy.submission.stubs.BioStudiesClientStub;
 import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
 import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

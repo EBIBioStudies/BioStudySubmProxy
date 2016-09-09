@@ -16,7 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.proxy;
 
-import uk.ac.ebi.biostudy.submission.AppConfig;
+import uk.ac.ebi.biostudy.submission.context.AppConfig;
 import uk.ac.ebi.biostudy.submission.stubs.ProxyStub;
 
 import javax.servlet.ServletException;
@@ -26,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static uk.ac.ebi.biostudy.submission.AppContext.getConfig;
+import static uk.ac.ebi.biostudy.submission.context.AppContext.getConfig;
 
 @WebServlet("/raw/*")
 public class ProxyServlet extends HttpServlet {

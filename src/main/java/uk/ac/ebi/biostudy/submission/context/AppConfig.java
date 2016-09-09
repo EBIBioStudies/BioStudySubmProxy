@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.context;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +30,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import static java.lang.Boolean.parseBoolean;
-import static uk.ac.ebi.biostudy.submission.AppConfig.ConfigProperty.*;
 
 /**
  * @author Olga Melnichuk
@@ -52,6 +52,10 @@ public class AppConfig {
             this.config = new AppConfig(config);
         }
 
+        void set(ConfigProperty cp, String value) {
+            cp.set(this, value);
+        }
+
         AppConfigBuilder setServerUrl(String value) {
             URI url = null;
             try {
@@ -62,6 +66,11 @@ public class AppConfig {
                 logger.error("Malformed URL parameter in config", e);
             }
             return setServerUrl(url);
+        }
+
+        AppConfigBuilder setServerUrl(URI url) {
+            config.setServerUrl(url);
+            return this;
         }
 
         AppConfigBuilder setOfflineMode(String value) {
@@ -88,21 +97,30 @@ public class AppConfig {
             config.setOfflineUserDir(dir == null ? null : dir.toPath());
             return this;
         }
-
-        AppConfigBuilder setServerUrl(URI url) {
-            config.setServerUrl(url);
-            return this;
-        }
-
         AppConfig build() {
             return config;
         }
     }
 
     enum ConfigProperty {
-        SERVER_URL("BS_SERVER_URL"),
-        OFFLINE_MODE("OFFLINE_MODE"),
-        OFFLINE_USER_DIR("OFFLINE_USER_DIR");
+        SERVER_URL("BS_SERVER_URL") {
+            @Override
+            void set(AppConfigBuilder builder, String value) {
+                builder.setServerUrl(value);
+            }
+        },
+        OFFLINE_MODE("OFFLINE_MODE") {
+            @Override
+            void set(AppConfigBuilder builder, String value) {
+                builder.setOfflineMode(value);
+            }
+        },
+        OFFLINE_USER_DIR("OFFLINE_USER_DIR") {
+            @Override
+            void set(AppConfigBuilder builder, String value) {
+                builder.setOfflineUserDir(value);
+            }
+        };
 
         private String name;
 
@@ -110,14 +128,46 @@ public class AppConfig {
             this.name = name;
         }
 
-        private String get(Properties properties) {
-            String value = (String) properties.get(name);
+        abstract void set(AppConfigBuilder builder, String value);
+    }
+
+    private static abstract class ConfigSource<T> {
+        private final T source;
+
+        ConfigSource(T source) {
+            this.source = source;
+        }
+
+        String read(String name) {
+            return read(name, source);
+        }
+
+        abstract String read(String name, T source);
+    }
+
+    private static class PropertiesConfigSource extends ConfigSource<Properties> {
+
+        PropertiesConfigSource(Properties source) {
+            super(source);
+        }
+
+        @Override
+        public String read(String name, Properties source) {
+            String value = (String) source.get(name);
             logger.debug("properties: " + name + "=" + value);
             return value;
         }
+    }
 
-        private String get(ServletContext context) {
-            String value = context.getInitParameter(name);
+    private static class ContextConfigSource extends ConfigSource<ServletContext> {
+
+        ContextConfigSource(ServletContext source) {
+            super(source);
+        }
+
+        @Override
+        public String read(String name, ServletContext source) {
+            String value = source.getInitParameter(name);
             logger.debug("context: " + name + "=" + value);
             return value;
         }
@@ -125,11 +175,8 @@ public class AppConfig {
 
     static AppConfig loadConfig(ServletContext context) throws IOException {
         logger.info("Loading from context...");
-        return new AppConfigBuilder()
-                .setServerUrl(SERVER_URL.get(context))
-                .setOfflineMode(OFFLINE_MODE.get(context))
-                .setOfflineUserDir(OFFLINE_USER_DIR.get(context))
-                .build();
+        ContextConfigSource  configSource = new ContextConfigSource(context);
+        return buildConfig(configSource);
     }
 
     static AppConfig loadConfig(InputStream input) throws IOException {
@@ -139,11 +186,18 @@ public class AppConfig {
             throw new IOException("Config file not found");
         }
         props.load(input);
-        return new AppConfigBuilder()
-                .setServerUrl(SERVER_URL.get(props))
-                .setOfflineMode(OFFLINE_MODE.get(props))
-                .setOfflineUserDir(OFFLINE_USER_DIR.get(props))
-                .build();
+        PropertiesConfigSource  configSource = new PropertiesConfigSource(props);
+        return buildConfig(configSource);
+    }
+
+    static <T extends ConfigSource> AppConfig buildConfig(T configSource) {
+        AppConfigBuilder builder = new AppConfigBuilder();
+        Stream.of(ConfigProperty.values())
+                .forEach(p -> {
+                    String value = configSource.read(p.name);
+                    builder.set(p, value);
+                });
+        return builder.build();
     }
 
     static AppConfig defaultConfig() throws IOException {
@@ -202,7 +256,7 @@ public class AppConfig {
         this.userDir = path;
     }
 
-    public AppConfig overwrite(AppConfig config) {
+    AppConfig overwrite(AppConfig config) {
         return new AppConfigBuilder(this)
                 .setServerUrl(config.getServerUrl())
                 .build();

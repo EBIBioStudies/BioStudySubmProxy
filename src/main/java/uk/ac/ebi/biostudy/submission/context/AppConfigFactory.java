@@ -14,34 +14,27 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission;
+package uk.ac.ebi.biostudy.submission.context;
 
-import uk.ac.ebi.biostudy.submission.context.AppConfig;
-
+import javax.servlet.ServletContext;
 import java.io.IOException;
-import java.net.URI;
 
+import static uk.ac.ebi.biostudy.submission.context.AppConfig.defaultConfig;
 import static uk.ac.ebi.biostudy.submission.context.AppConfig.loadConfig;
 
-/**
- * @author Olga Melnichuk
- */
-public class TestEnvironment {
+class AppConfigFactory implements Factory<AppConfig> {
 
-    public static boolean hasValidServerUrl() {
+    @Override
+    public AppConfig create(ServletContext context) {
         try {
-            getServerUrl();
-            return true;
+            return defaultConfig().overwrite(loadConfig(context));
         } catch (IOException e) {
-            return false;
+            throw new RuntimeException(e);
         }
     }
 
-    public static AppConfig getConfig() throws IOException {
-        return loadConfig(TestEnvironment.class.getResourceAsStream("/config.properties"));
-    }
-
-    public static URI getServerUrl() throws IOException {
-        return getConfig().getServerUrl();
+    @Override
+    public void destroy() {
     }
 }
+
