@@ -109,7 +109,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
         }
 
         WebTarget deleteModifiedSubmissionReq(String sessionId, String acc) {
-            return baseTarget.path("/userdata/set")
+            return baseTarget.path("/userdata/del")
                     .queryParam(SESSION_PARAM, sessionId)
                     .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
                     .queryParam(TMP_KEY_PARAM, acc);
