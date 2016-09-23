@@ -76,7 +76,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
         WebTarget deleteSubmissionReq(String sessionId, String acc) {
             return baseTarget.path("/submit/delete")
                     .queryParam(SESSION_PARAM, sessionId)
-                    .queryParam("ID", acc);
+                    .queryParam("id", acc);
         }
 
         WebTarget getFilesDirReq(String sessionId) {
