@@ -11,22 +11,8 @@ buildscript {
 }
 
 apply plugin: 'java'
-apply plugin: 'eclipse'
 apply plugin: 'war'
-apply plugin: 'eclipse-wtp'
 apply plugin: 'com.bmuschko.tomcat'
-
-sourceCompatibility = 1.8
-version = '1.0'
-
-
-if (hasProperty("env")) {
-    Properties props = new Properties()
-    props.load(new FileInputStream(".bsconfig/" + env + ".properties"))
-    props.each { prop ->
-        project.ext.set(prop.key, prop.value)
-    }
-}
 
 repositories {
     mavenCentral()
@@ -36,7 +22,9 @@ processResources {
     filter ReplaceTokens, tokens: [
             "BS_SERVER_URL": bsBackendUrl,
             "LOGS_DIR": logsDir,
-            "LOG_LEVEL": logLevel
+            "LOG_LEVEL": logLevel,
+            "OFFLINE_MODE": offlineMode,
+            "OFFLINE_USER_DIR": offlineUserDir
     ]
 }
 
@@ -46,9 +34,8 @@ processTestResources {
     ]
 }
 
-task printEnv << {
-    println bsBackendUrl;
-}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 dependencies {
     compile group: 'org.apache.httpcomponents', version: '4.5.2', name: 'httpmime'
@@ -93,24 +80,6 @@ war {
     baseName = 'proxy'
     version = ''
     from 'src/main/webapp/'
-}
-
-eclipse {
-    wtp {
-        component {
-            contextPath = '/biostudies/submissions'
-            resource sourcePath: 'src/main/webapp', deployPath: '/'
-            resource sourcePath: 'WebContent', deployPath: '/'
-            resource sourcePath: 'build/resources/main', deployPath: '/WEB-INF/classes'
-        }
-
-        facet {
-            facet name: 'jst.web', version: '3.0'
-            facet name: 'java', version: '1.8'
-        }
-
-    }
-
 }
 
 tomcat {

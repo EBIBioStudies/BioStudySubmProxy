@@ -163,7 +163,7 @@ public class BioStudiesClientStub implements BioStudiesClient {
 
     @Override
     public JSONObject signOut(String sessid) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     @Override
