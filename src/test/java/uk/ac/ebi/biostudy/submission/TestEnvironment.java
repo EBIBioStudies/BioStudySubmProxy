@@ -37,7 +37,7 @@ public class TestEnvironment {
         }
     }
 
-    public static AppConfig getConfig() throws IOException {
+    static AppConfig getConfig() throws IOException {
         return loadConfig(TestEnvironment.class.getResourceAsStream("/config.properties"));
     }
 
