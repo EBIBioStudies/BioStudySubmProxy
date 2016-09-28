@@ -17,15 +17,12 @@
 package uk.ac.ebi.biostudy.submission.rest;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
-import org.glassfish.jersey.filter.LoggingFilter;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import uk.ac.ebi.biostudy.submission.AppContext;
+import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 import uk.ac.ebi.biostudy.submission.rest.providers.*;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
-import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import javax.inject.Singleton;
 
@@ -35,7 +32,7 @@ import javax.inject.Singleton;
 public class RESTApp extends ResourceConfig {
     public RESTApp() {
         packages("uk.ac.ebi.biostudy.submission.rest");
-        register(LoggingFilter.class);
+        register(LoggingFeature.class);
         register(AuthenticationFilter.class);
         register(BioStudiesClientExceptionMapper.class);
         register(ExceptionLogger.class);
@@ -48,3 +45,4 @@ public class RESTApp extends ResourceConfig {
         });
     }
 }
+

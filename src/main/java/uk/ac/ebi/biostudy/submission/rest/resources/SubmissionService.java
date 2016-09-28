@@ -15,16 +15,18 @@
  */
 package uk.ac.ebi.biostudy.submission.rest.resources;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
+import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +53,8 @@ public class SubmissionService {
         }
     };
 
-    public SubmissionService(URI bsServerUrl) {
-        this.bsclient = new BioStudiesClient(bsServerUrl);
+    public SubmissionService(BioStudiesClient bsclient) {
+        this.bsclient = bsclient;
         this.europePmc = new EuropePmcClient();
     }
 
@@ -60,7 +62,7 @@ public class SubmissionService {
             throws BioStudiesClientException, IOException {
         logger.debug("getSubmission(userSession={}, accno={}, origin={})", userSession, accno, origin);
         if (!origin) {
-            JSONObject obj = bsclient.getTmpSubmission(accno, userSession.getSessid());
+            JSONObject obj = bsclient.getModifiedSubmission(accno, userSession.getSessid());
             if (obj != null) {
                 return obj;
             }
@@ -78,7 +80,7 @@ public class SubmissionService {
     public JSONObject editSubmission(final UserSession userSession, final String accno)
             throws BioStudiesClientException, IOException {
         logger.debug("editSubmission(userSession={}, accno={})", userSession, accno);
-        JSONObject sbm = bsclient.getTmpSubmission(accno, userSession.getSessid());
+        JSONObject sbm = bsclient.getModifiedSubmission(accno, userSession.getSessid());
         if (sbm == null) {
             logger.debug("no temporary copy; creating one...");
             sbm = getSubmission(userSession, accno, true);
@@ -90,7 +92,7 @@ public class SubmissionService {
     public void saveSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
         logger.debug("saveSubmission(userSession={}, obj={})", userSession, obj);
         data(obj); // data exist?
-        bsclient.saveTmpSubmission(modified(obj), accno(obj), userSession.getSessid());
+        bsclient.saveModifiedSubmission(modified(obj), accno(obj), userSession.getSessid());
     }
 
     public JSONObject submitSubmission(UserSession userSession, JSONObject obj) throws IOException, BioStudiesClientException {
@@ -111,25 +113,39 @@ public class SubmissionService {
     public boolean deleteSubmission(final UserSession userSession, final String acc)
             throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(userSession={}, acc={})", userSession, acc);
-        JSONObject sbm = bsclient.getTmpSubmission(acc, userSession.getSessid());
+        JSONObject sbm = bsclient.getModifiedSubmission(acc, userSession.getSessid());
         if (sbm != null) {
-            bsclient.deleteTmpSubmission(acc, userSession.getSessid());
+            bsclient.deleteModifiedSubmission(acc, userSession.getSessid());
             return true;
         }
         sbm = bsclient.getSubmission(acc, userSession.getSessid());
         return sbm == null || bsclient.deleteSubmission(acc, userSession.getSessid());
     }
 
-    public JSONObject listSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("listSubmissions(userSession={})", userSession);
+    @SuppressWarnings("unused") // keeping the sync version for a while
+    public JSONObject getSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
+        logger.debug("getSubmissions(userSession={})", userSession);
         List<JSONObject> submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
         logger.debug("transformed submitted: {}", submitted);
-        List<JSONObject> temporary = transformTemporary(bsclient.listTmpSubmissions(userSession.getSessid()));
-        logger.debug("transformed temporary: {}", temporary);
+        List<JSONObject> modified = transformModified(bsclient.getModifiedSubmissions(userSession.getSessid()));
+        logger.debug("transformed modified: {}", modified);
         JSONObject obj = new JSONObject();
-        obj.put("submissions", merge(temporary, submitted));
-        logger.debug("listSubmissions(): result={}", obj);
+        obj.put("submissions", merge(modified, submitted));
+        logger.debug("getSubmissions(): result={}", obj);
         return obj;
+    }
+
+    public Observable<JSONArray> getSubmissionsRx(UserSession userSession) {
+        logger.debug("getSubmissionsRx(userSession={})", userSession);
+        Observable<List<JSONObject>> modified = bsclient
+                .getModifiedSubmissionsRx(userSession.getSessid())
+                .map(SubmissionList::transformModified);
+
+        Observable<List<JSONObject>> submitted = bsclient
+                .getSubmissionsRx(userSession.getSessid())
+                .map(SubmissionList::transformSubmitted);
+
+        return Observable.zip(modified, submitted, SubmissionList::merge).take(1);
     }
 
     public JSONObject getFilesDir(UserSession userSession) throws BioStudiesClientException, IOException {
@@ -163,7 +179,7 @@ public class SubmissionService {
     }
 
     public JSONObject pubMedSearch(String id) {
-        logger.debug("pubMedSearch(id={})", id);
+        logger.debug("pubMedSearch(ID={})", id);
         try {
             JSONObject res = europePmc.pubMedSearch(id);
 
@@ -184,7 +200,7 @@ public class SubmissionService {
             obj.put("data", data);
             return obj;
         } catch (IOException e) {
-            logger.warn("EuropePMC call for id={} failed: {}", id, e);
+            logger.warn("EuropePMC call for ID={} failed: {}", id, e);
             return fail("EuropePMC error");
         }
     }

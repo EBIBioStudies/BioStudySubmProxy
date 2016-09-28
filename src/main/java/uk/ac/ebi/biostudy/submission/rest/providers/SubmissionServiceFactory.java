@@ -17,12 +17,14 @@
 package uk.ac.ebi.biostudy.submission.rest.providers;
 
 import org.glassfish.hk2.api.Factory;
-import uk.ac.ebi.biostudy.submission.AppContext;
+import uk.ac.ebi.biostudy.submission.context.AppContext;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 
 import javax.inject.Inject;
 import javax.servlet.ServletContext;
 import javax.ws.rs.ext.Provider;
+
+import static uk.ac.ebi.biostudy.submission.context.AppContext.getBioStudiesClient;
 
 /**
  * @author Olga Melnichuk
@@ -34,7 +36,7 @@ public class SubmissionServiceFactory implements Factory<SubmissionService> {
 
     @Inject
     public SubmissionServiceFactory(ServletContext context) {
-        this.service = new SubmissionService(AppContext.getConfig(context).getServerUrl());
+        this.service = new SubmissionService(getBioStudiesClient(context));
     }
 
     @Override
@@ -44,6 +46,5 @@ public class SubmissionServiceFactory implements Factory<SubmissionService> {
 
     @Override
     public void dispose(SubmissionService instance) {
-
     }
 }

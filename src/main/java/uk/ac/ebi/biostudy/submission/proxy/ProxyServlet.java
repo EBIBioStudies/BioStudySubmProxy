@@ -16,7 +16,8 @@
 
 package uk.ac.ebi.biostudy.submission.proxy;
 
-import uk.ac.ebi.biostudy.submission.AppConfig;
+import uk.ac.ebi.biostudy.submission.context.AppConfig;
+import uk.ac.ebi.biostudy.submission.stubs.ProxyStub;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -25,7 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static uk.ac.ebi.biostudy.submission.AppContext.getConfig;
+import static uk.ac.ebi.biostudy.submission.context.AppContext.getConfig;
 
 @WebServlet("/raw/*")
 public class ProxyServlet extends HttpServlet {
@@ -37,7 +38,9 @@ public class ProxyServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         AppConfig config = getConfig(getServletContext());
-        proxy = new Proxy(config.getServerUrl(), source -> source.replace("/raw", ""));
+        proxy = config.isOfflineModeOn() ?
+                new ProxyStub() :
+                new RemoteProxy(config.getServerUrl(), source -> source.replace("/raw", ""));
     }
 
     @Override

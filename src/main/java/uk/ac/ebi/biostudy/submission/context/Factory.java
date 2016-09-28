@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.proxy;
+package uk.ac.ebi.biostudy.submission.context;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
+import javax.servlet.ServletContext;
 
-public interface Proxy {
-    void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
+interface Factory<T> {
 
-    void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
+    T create(ServletContext context);
+
+    void destroy();
 }

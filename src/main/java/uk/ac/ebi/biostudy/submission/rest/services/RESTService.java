@@ -17,6 +17,7 @@
 package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.apache.http.client.utils.URIBuilder;
+import org.glassfish.jersey.server.ManagedAsync;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +29,8 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -53,9 +56,14 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmissions(@Context UserSession userSession) throws BioStudiesClientException, IOException {
+    public void getSubmissions(@Context UserSession userSession, @Suspended final AsyncResponse async) {
         logger.debug("getSubmissions(userSession={})", userSession);
-        return service.listSubmissions(userSession).toString();
+        service.getSubmissionsRx(userSession)
+                .subscribe(submissions -> {
+                    JSONObject obj = new JSONObject();
+                    obj.put("submissions", submissions);
+                    async.resume(obj.toString());
+                }, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -215,8 +223,8 @@ public class RESTService {
     @GET
     @Path("/pubMedSearch/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String pubMedSearch(@Context UserSession userSession,  @PathParam("id") String id) {
-        logger.debug("pubMedSearch(userSession={}, id={})", userSession, id);
+    public String pubMedSearch(@Context UserSession userSession, @PathParam("id") String id) {
+        logger.debug("pubMedSearch(userSession={}, ID={})", userSession, id);
         return service.pubMedSearch(id).toString();
     }
 

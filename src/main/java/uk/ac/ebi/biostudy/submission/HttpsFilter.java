@@ -27,7 +27,7 @@ import java.io.IOException;
 
 import static java.lang.Boolean.parseBoolean;
 
-@WebFilter("/*")
+@WebFilter(value = "/*", asyncSupported = true)
 public class HttpsFilter implements Filter {
 
     private static final String FILTER_DISABLED = "uk.ac.ebi.biostudy.submission.HTTPS_FILTER_DISABLED";
