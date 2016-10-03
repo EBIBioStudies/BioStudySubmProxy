@@ -92,12 +92,7 @@ public class RESTService {
     public String signup(String str) throws BioStudiesClientException, IOException {
         logger.debug("signup(str={})", str);
         try {
-            JSONObject obj = toJson(str);
-            URI path = new URI(obj.getString("path"));
-            URI activationUrl = buildAppUrl(path);
-
-            obj.put("activationURL", activationUrl.toString() + "/{KEY}");
-            obj.remove("path");
+            JSONObject obj = updateApplPath(str, "activationURL");
             return service.singUp(obj).toString();
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
@@ -111,16 +106,35 @@ public class RESTService {
     public String passwordResetRequest(String str) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(str={})", str);
         try {
-            JSONObject obj = toJson(str);
-            URI path = new URI(obj.getString("path"));
-            URI passwordResetUrl = buildAppUrl(path);
-
-            obj.put("resetURL", passwordResetUrl.toString() + "/{KEY}");
-            obj.remove("path");
+            JSONObject obj = updateApplPath(str, "resetURL");
             return service.passwordResetRequest(obj).toString();
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
+    }
+
+    @POST
+    @Path("/auth/resendActLink")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String resendActivationLink(String str) throws BioStudiesClientException, IOException {
+        logger.debug("passwordResetRequest(str={})", str);
+        try {
+            JSONObject obj = updateApplPath(str, "activationURL");
+            return service.resendActivationLink(obj).toString();
+        } catch (URISyntaxException e) {
+            throw new IOException("Bad url syntax");
+        }
+    }
+
+    private JSONObject updateApplPath(String json, String paramName) throws URISyntaxException {
+        JSONObject obj = toJson(json);
+        URI path = new URI(obj.getString("path"));
+        URI actUrl = buildAppUrl(path);
+
+        obj.put(paramName, actUrl.toString() + "/{KEY}");
+        obj.remove("path");
+        return obj;
     }
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
