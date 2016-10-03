@@ -108,6 +108,10 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return baseTarget.path("/auth/passrstreq");
         }
 
+        WebTarget resendActivationLinkReq() {
+            return baseTarget.path("/auth/retryact");
+        }
+
         WebTarget deleteModifiedSubmissionReq(String sessionId, String acc) {
             return baseTarget.path("/userdata/set")
                     .queryParam(SESSION_PARAM, sessionId)
@@ -253,6 +257,13 @@ public class BioStudiesRestClient implements BioStudiesClient {
         logger.debug("passwordResetRequest(obj={})", obj);
         return parseJSON(postJSON(
                 targets.passwordResetReq(), obj));
+    }
+
+    @Override
+    public JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException {
+        logger.debug("resendActivationLink(obj={})", obj);
+        return parseJSON(postJSON(
+                targets.resendActivationLinkReq(), obj));
     }
 
     public JSONObject signIn(String username, String password) throws BioStudiesClientException, IOException {

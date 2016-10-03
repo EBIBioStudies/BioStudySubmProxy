@@ -178,6 +178,11 @@ public class SubmissionService {
         return bsclient.passwordResetRequest(obj);
     }
 
+    public JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException {
+        logger.debug("resendActivationLink(obj={})", obj);
+        return bsclient.resendActivationLink(obj);
+    }
+
     public JSONObject pubMedSearch(String id) {
         logger.debug("pubMedSearch(ID={})", id);
         try {

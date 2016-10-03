@@ -181,6 +181,11 @@ public class BioStudiesClientStub implements BioStudiesClient {
         return null;
     }
 
+    @Override
+    public JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException {
+        return null;
+    }
+
     private static void checkSessionId(String s) throws BioStudiesClientException {
         if (s == null || !s.equals(Session.ID)) {
             throw new BioStudiesClientException(401, ContentType.TEXT_PLAIN.toString(), "Unauthorized");
