@@ -57,4 +57,6 @@ public interface BioStudiesClient extends Closeable {
     JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException;
 
     JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException;
+
+    JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException;
 }
