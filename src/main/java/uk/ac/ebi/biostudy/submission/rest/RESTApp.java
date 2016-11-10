@@ -18,6 +18,7 @@ package uk.ac.ebi.biostudy.submission.rest;
 
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.process.internal.RequestScoped;
 import org.glassfish.jersey.server.ResourceConfig;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
@@ -36,6 +37,7 @@ public class RESTApp extends ResourceConfig {
         register(AuthenticationFilter.class);
         register(BioStudiesClientExceptionMapper.class);
         register(ExceptionLogger.class);
+        register(MultiPartFeature.class);
         register(new AbstractBinder() {
             @Override
             protected void configure() {

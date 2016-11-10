@@ -17,7 +17,9 @@
 package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.glassfish.jersey.server.ManagedAsync;
+import org.glassfish.jersey.media.multipart.FormDataBodyPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +35,11 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
+import javax.ws.rs.core.Response;
+import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.List;
 
 /**
  * @author Olga Melnichuk
@@ -251,4 +255,51 @@ public class RESTService {
         obj.put("status", value ? "OK" : "FAILED");
         return obj;
     }
+
+    @RolesAllowed("AUTHENTICATED")
+    @POST
+    @Path("/fileUpload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Response uploadFile(FormDataMultiPart formParams) {
+        List<FormDataBodyPart> parts = formParams.getFields("file");
+        for (FormDataBodyPart part : parts) {
+            FormDataContentDisposition file = part.getFormDataContentDisposition();
+            String uploadedFileLocation = "/tmp/" + file.getFileName();
+            writeToFile(part.getEntityAs(InputStream.class), uploadedFileLocation);
+            System.out.println("File uploaded to : " + uploadedFileLocation);
+        }
+        return Response.status(200).entity("all done").build();
+    }
+
+    // save uploaded file to new location
+    private void writeToFile(InputStream uploadedInputStream, String uploadedFileLocation) {
+        OutputStream out = null;
+        try {
+            int read = 0;
+            byte[] bytes = new byte[1024];
+
+            out = new FileOutputStream(new File(uploadedFileLocation));
+            while ((read = uploadedInputStream.read(bytes)) != -1) {
+                out.write(bytes, 0, read);
+            }
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            closeSilently(out);
+            closeSilently(uploadedInputStream);
+        }
+    }
+
+    private void closeSilently(Closeable closeable) {
+        try {
+            if (closeable != null) {
+                closeable.close();
+            }
+        } catch (IOException e) {
+            // do nothing
+        }
+    }
+
 }
