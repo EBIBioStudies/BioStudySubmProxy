@@ -168,22 +168,22 @@ public class BioStudiesClientStub implements BioStudiesClient {
 
     @Override
     public JSONObject signUp(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     @Override
     public JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     @Override
     public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     @Override
     public JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     private static void checkSessionId(String s) throws BioStudiesClientException {
