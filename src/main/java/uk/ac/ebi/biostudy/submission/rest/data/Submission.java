@@ -74,7 +74,7 @@ public class Submission {
     }
 
     private static JSONArray attributes(JSONObject obj) {
-        return obj.getJSONArray("attributes");
+        return obj.has("attributes") ? obj.getJSONArray("attributes") : new JSONArray();
     }
 
     private static String attributeValue(JSONArray attrs, String attrName) {
