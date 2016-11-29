@@ -20,6 +20,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +32,6 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -60,14 +59,15 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getSubmissions(@Context UserSession userSession, @Suspended final AsyncResponse async) {
-        logger.debug("getSubmissions(userSession={})", userSession);
-        service.getSubmissionsRx(userSession)
-                .subscribe(submissions -> {
-                    JSONObject obj = new JSONObject();
-                    obj.put("submissions", submissions);
-                    async.resume(obj.toString());
-                }, async::resume);
+    public String getSubmissions(@QueryParam("offset") int offset,
+                                 @QueryParam("limit") int limit,
+                                 @Context UserSession userSession)
+            throws BioStudiesClientException, IOException {
+        logger.debug("getSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
+        JSONArray submissions = service.getSubmissions(userSession, offset, limit);
+        JSONObject obj = new JSONObject();
+        obj.put("submissions", submissions);
+        return obj.toString();
     }
 
     @RolesAllowed("AUTHENTICATED")

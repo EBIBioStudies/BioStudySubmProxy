@@ -27,9 +27,11 @@ import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
 import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.*;
@@ -122,27 +124,32 @@ public class SubmissionService {
         return sbm == null || bsclient.deleteSubmission(acc, userSession.getSessid());
     }
 
-    @SuppressWarnings("unused") // keeping the sync version for a while
-    public JSONObject getSubmissions(UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("getSubmissions(userSession={})", userSession);
-        List<JSONObject> submitted = transformSubmitted(bsclient.getSubmissions(userSession.getSessid()));
-        logger.debug("transformed submitted: {}", submitted);
-        List<JSONObject> modified = transformModified(bsclient.getModifiedSubmissions(userSession.getSessid()));
-        logger.debug("transformed modified: {}", modified);
-        JSONObject obj = new JSONObject();
-        obj.put("submissions", merge(modified, submitted));
-        logger.debug("getSubmissions(): result={}", obj);
-        return obj;
+
+    public JSONArray getSubmissions(UserSession userSession, int offset, int limit) throws BioStudiesClientException, IOException {
+        String sessId = userSession.getSessid();
+        List<JSONObject> tmodified = transformModified(bsclient.getModifiedSubmissions(sessId));
+        tmodified = tmodified.stream().skip(offset).limit(limit).collect(Collectors.toList());
+
+        int newLimit = limit - tmodified.size();
+        int newOffset = offset - tmodified.size();
+        newOffset = newOffset < 0 ? 0 : newOffset;
+
+        List<JSONObject> tsubmitted = new ArrayList<>();
+        if (newLimit > 0) {
+            tsubmitted = transformSubmitted(bsclient.getSubmissions(sessId, newOffset, newLimit));
+        }
+        return merge(tmodified, tsubmitted);
     }
 
-    public Observable<JSONArray> getSubmissionsRx(UserSession userSession) {
+    @SuppressWarnings("unused")
+    public Observable<JSONArray> getSubmissionsRx(UserSession userSession, int offset, int limit) {
         logger.debug("getSubmissionsRx(userSession={})", userSession);
         Observable<List<JSONObject>> modified = bsclient
                 .getModifiedSubmissionsRx(userSession.getSessid())
                 .map(SubmissionList::transformModified);
 
         Observable<List<JSONObject>> submitted = bsclient
-                .getSubmissionsRx(userSession.getSessid())
+                .getSubmissionsRx(userSession.getSessid(), offset, limit)
                 .map(SubmissionList::transformSubmitted);
 
         return Observable.zip(modified, submitted, SubmissionList::merge).take(1);

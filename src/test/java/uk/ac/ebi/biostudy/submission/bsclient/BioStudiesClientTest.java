@@ -44,7 +44,7 @@ public class BioStudiesClientTest {
         assertNotNull(obj);
 
         String sessionId = obj.getString("sessid");
-        JSONArray submissions = bsclient.getSubmissions(sessionId);
+        JSONArray submissions = bsclient.getSubmissions(sessionId, 0, 10);
         assertNotNull(submissions);
 
         JSONObject submission = bsclient.getSubmission("S-STA2", sessionId);

@@ -68,9 +68,11 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .queryParam(SESSION_PARAM, sessionId);
         }
 
-        WebTarget getSubmissionsReq(String sessionId) {
+        WebTarget getSubmissionsReq(String sessionId, int offset, int limit) {
             return baseTarget.path("/sbmlist")
-                    .queryParam(SESSION_PARAM, sessionId);
+                    .queryParam(SESSION_PARAM, sessionId)
+                    .queryParam("offset", offset)
+                    .queryParam("limit", limit);
         }
 
         WebTarget deleteSubmissionReq(String sessionId, String acc) {
@@ -192,10 +194,10 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 targets.getSubmissionReq(sessionId, acc)));
     }
 
-    public JSONArray getSubmissions(String sessionId) throws BioStudiesClientException, IOException {
+    public JSONArray getSubmissions(String sessionId, int offset, int limit) throws BioStudiesClientException, IOException {
         logger.debug("getSubmissions(sessionId={})", sessionId);
         JSONObject obj = parseJSON(get(
-                targets.getSubmissionsReq(sessionId)));
+                targets.getSubmissionsReq(sessionId, offset, limit)));
         if (obj.has("status")) {
             String status = obj.getString("status");
             logger.debug("in-json status: " + status);
@@ -207,9 +209,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
         return new JSONArray();
     }
 
-    public Observable<JSONArray> getSubmissionsRx(String sessionId) {
+    public Observable<JSONArray> getSubmissionsRx(String sessionId, int offset, int limit) {
         logger.debug("getSubmissionsRx(sessionId={})", sessionId);
-        return getRx(targets.getSubmissionsReq(sessionId))
+        return getRx(targets.getSubmissionsReq(sessionId, offset, limit))
                 .map(respBody -> {
                     JSONObject obj = parseJSON(respBody);
                     if (obj.has("status")) {
