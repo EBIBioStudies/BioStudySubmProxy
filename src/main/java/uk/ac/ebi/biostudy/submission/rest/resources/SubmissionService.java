@@ -15,6 +15,7 @@
  */
 package uk.ac.ebi.biostudy.submission.rest.resources;
 
+import org.glassfish.jersey.media.multipart.FormDataMultiPart;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -26,6 +27,7 @@ import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
 import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
