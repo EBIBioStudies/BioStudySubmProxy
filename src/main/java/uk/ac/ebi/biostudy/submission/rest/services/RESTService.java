@@ -226,10 +226,10 @@ public class RESTService {
     @DELETE
     @Path("/files/delete")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
+    public String deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
             throws BioStudiesClientException, IOException {
         logger.debug("deleteFile(userSession={}, file={})", userSession, file);
-        service.deleteFile(userSession, file);
+        return service.deleteFile(userSession, file).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
