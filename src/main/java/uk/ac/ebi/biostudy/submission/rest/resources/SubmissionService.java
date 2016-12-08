@@ -130,6 +130,7 @@ public class SubmissionService {
     public JSONArray getSubmissions(UserSession userSession, int offset, int limit) throws BioStudiesClientException, IOException {
         String sessId = userSession.getSessid();
         List<JSONObject> tmodified = transformModified(bsclient.getModifiedSubmissions(sessId));
+        tmodified.sort(byModificationDate);
         tmodified = tmodified.stream().skip(offset).limit(limit).collect(Collectors.toList());
 
         int newLimit = limit - tmodified.size();
