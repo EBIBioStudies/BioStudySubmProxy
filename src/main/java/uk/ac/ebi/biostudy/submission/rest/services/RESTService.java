@@ -138,11 +138,7 @@ public class RESTService {
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
         logger.debug("buildAppUrl(path={})", path);
-        String reqUrl = request.getHeader("origin");
-        if (reqUrl == null) {
-            reqUrl = request.getRequestURI();
-        }
-        URI uri = new URI(reqUrl);
+        URI uri = new URI(request.getRequestURL().toString());
         URIBuilder uriBuilder = new URIBuilder()
                 .setScheme(uri.getScheme())
                 .setHost(uri.getHost())
