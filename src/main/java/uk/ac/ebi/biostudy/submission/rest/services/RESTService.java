@@ -175,7 +175,7 @@ public class RESTService {
     }
 
     @RolesAllowed("AUTHENTICATED")
-    @POST
+    @GET
     @Path("/submission/edit/{acc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
