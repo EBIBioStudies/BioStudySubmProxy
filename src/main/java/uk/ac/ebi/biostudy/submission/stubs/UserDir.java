@@ -19,6 +19,7 @@ package uk.ac.ebi.biostudy.submission.stubs;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
 import java.nio.file.DirectoryStream;
@@ -40,6 +41,12 @@ class UserDir {
             array.put(transform(dir));
         }
         return array;
+    }
+
+    boolean deleteFile(String fileName) {
+        Path path = dir.resolve(fileName);
+        File f = path.toFile();
+        return !f.exists() || f.delete();
     }
 
     private JSONObject transform(Path path) throws IOException {

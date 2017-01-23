@@ -17,7 +17,7 @@
 package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.glassfish.jersey.server.ManagedAsync;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +29,6 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
-import javax.ws.rs.container.AsyncResponse;
-import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -56,14 +54,15 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getSubmissions(@Context UserSession userSession, @Suspended final AsyncResponse async) {
-        logger.debug("getSubmissions(userSession={})", userSession);
-        service.getSubmissionsRx(userSession)
-                .subscribe(submissions -> {
-                    JSONObject obj = new JSONObject();
-                    obj.put("submissions", submissions);
-                    async.resume(obj.toString());
-                }, async::resume);
+    public String getSubmissions(@QueryParam("offset") int offset,
+                                 @QueryParam("limit") int limit,
+                                 @Context UserSession userSession)
+            throws BioStudiesClientException, IOException {
+        logger.debug("getSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
+        JSONArray submissions = service.getSubmissions(userSession, offset, limit);
+        JSONObject obj = new JSONObject();
+        obj.put("submissions", submissions);
+        return obj.toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -139,11 +138,7 @@ public class RESTService {
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
         logger.debug("buildAppUrl(path={})", path);
-        String reqUrl = request.getHeader("origin");
-        if (reqUrl == null) {
-            reqUrl = request.getRequestURI();
-        }
-        URI uri = new URI(reqUrl);
+        URI uri = new URI(request.getRequestURL().toString());
         URIBuilder uriBuilder = new URIBuilder()
                 .setScheme(uri.getScheme())
                 .setHost(uri.getHost())
@@ -180,7 +175,7 @@ public class RESTService {
     }
 
     @RolesAllowed("AUTHENTICATED")
-    @POST
+    @GET
     @Path("/submission/edit/{acc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -201,7 +196,7 @@ public class RESTService {
     }
 
     @RolesAllowed("AUTHENTICATED")
-    @PUT
+    @POST
     @Path("/submission/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -227,10 +222,10 @@ public class RESTService {
     @DELETE
     @Path("/files/delete")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
+    public String deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
             throws BioStudiesClientException, IOException {
         logger.debug("deleteFile(userSession={}, file={})", userSession, file);
-        service.deleteFile(userSession, file);
+        return service.deleteFile(userSession, file).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")

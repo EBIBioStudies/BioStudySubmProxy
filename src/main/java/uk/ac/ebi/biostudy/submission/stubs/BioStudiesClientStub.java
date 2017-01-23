@@ -98,19 +98,23 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
-    public JSONArray getSubmissions(String sessid) throws BioStudiesClientException, IOException {
+    public JSONArray getSubmissions(String sessid, int offset, int limit) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
 
         final JSONArray array = new JSONArray();
-        submitted.values().stream().map(s ->
-                new JSONObject()
-                        .put("accno", accno(s))
-                        .put("rtime", releaseDateAttributeInSeconds(s))
-                        .put("ctime", "")
-                        .put("mtime", "")
-                        .put("title", titleAttribute(s))
-                        .put("version", "1")
-        ).forEach(array::put);
+        submitted.values()
+                .stream()
+                .map(s ->
+                        new JSONObject()
+                                .put("accno", accno(s))
+                                .put("rtime", releaseDateAttributeInSeconds(s))
+                                .put("ctime", "")
+                                .put("mtime", "")
+                                .put("title", titleAttribute(s))
+                                .put("version", "1")
+                )
+                .skip(offset)
+                .limit(limit).forEach(array::put);
         return array;
     }
 
@@ -136,11 +140,11 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
-    public Observable<JSONArray> getSubmissionsRx(String sessid) {
+    public Observable<JSONArray> getSubmissionsRx(String sessid, int offset, int limit) {
         return Observable.just(sessid)
                 .map(id -> {
                     try {
-                        return getSubmissions(id);
+                        return getSubmissions(id, offset, limit);
                     } catch (BioStudiesClientException | IOException e) {
                         throw Exceptions.propagate(e);
                     }
@@ -158,7 +162,11 @@ public class BioStudiesClientStub implements BioStudiesClient {
 
     @Override
     public JSONObject deleteFile(String file, String sessid) throws BioStudiesClientException, IOException {
-        return null;
+        checkSessionId(sessid);
+
+        boolean res = userDir.deleteFile(file);
+        return  new JSONObject()
+                .put("status", res ? "OK" : "FAILED");
     }
 
     @Override
@@ -168,22 +176,22 @@ public class BioStudiesClientStub implements BioStudiesClient {
 
     @Override
     public JSONObject signUp(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     @Override
     public JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     @Override
     public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     @Override
     public JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException {
-        return null;
+        return new JSONObject();
     }
 
     private static void checkSessionId(String s) throws BioStudiesClientException {

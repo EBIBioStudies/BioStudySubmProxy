@@ -65,7 +65,7 @@ public class SubmissionList {
         }
     }
 
-    private static Comparator<JSONObject> byModificationDate = (o1, o2) -> {
+    public static Comparator<JSONObject> byModificationDate = (o1, o2) -> {
         String m1 = MODIFICATION_DATE.get(o1);
         String m2 = MODIFICATION_DATE.get(o2);
         Long l1 = m1.isEmpty() ? null : parseLong(m1);
