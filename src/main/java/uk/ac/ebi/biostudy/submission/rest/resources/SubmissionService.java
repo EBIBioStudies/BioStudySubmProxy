@@ -156,9 +156,9 @@ public class SubmissionService {
         return Observable.zip(modified, submitted, SubmissionList::merge).take(1);
     }
 
-    public JSONObject getFilesDir(UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("getFilesDir(userSession={})", userSession);
-        return bsclient.getFilesDir(userSession.getSessid());
+    public JSONObject getFilesDir(UserSession userSession, String path, int depth, boolean showArchives) throws BioStudiesClientException, IOException {
+        logger.debug("getFilesDir(userSession={, path={}, depth={}, showArchives={})", userSession, path, depth, showArchives);
+        return bsclient.getFilesDir(path, depth, showArchives, userSession.getSessid());
     }
 
     public JSONObject deleteFile(UserSession userSession, String file)

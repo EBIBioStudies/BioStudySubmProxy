@@ -46,7 +46,7 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<JSONArray> getSubmissionsRx(String sessid, int offset, int limit);
 
-    JSONObject getFilesDir(String sessid) throws BioStudiesClientException, IOException;
+    JSONObject getFilesDir(String path, int depth, boolean showArchives, String sessid) throws BioStudiesClientException, IOException;
 
     JSONObject deleteFile(String file, String sessid) throws BioStudiesClientException, IOException;
 

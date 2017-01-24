@@ -79,9 +79,12 @@ public class RESTService {
     @GET
     @Path("/files/dir")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getFileDir(@Context UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("getFileDir(userSession={})", userSession);
-        return service.getFilesDir(userSession).toString();
+    public String getFileDir(@QueryParam("path") String path,
+                             @QueryParam("depth") int depth,
+                             @QueryParam("showArchives") boolean showArchives,
+                             @Context UserSession userSession) throws BioStudiesClientException, IOException {
+        logger.debug("getFileDir(userSession={}, path={}, depth={}, showArchives={})", userSession, path, depth, showArchives);
+        return service.getFilesDir(userSession, path, depth, showArchives).toString();
     }
 
     @POST
