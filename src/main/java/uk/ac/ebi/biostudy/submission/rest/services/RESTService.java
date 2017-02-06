@@ -52,17 +52,26 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @GET
-    @Path("/submissions")
+    @Path("/submittedSubmissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmissions(@QueryParam("offset") int offset,
-                                 @QueryParam("limit") int limit,
-                                 @Context UserSession userSession)
+    public String getSubmittedSubmissions(@QueryParam("offset") int offset,
+                                          @QueryParam("limit") int limit,
+                                          @Context UserSession userSession)
             throws BioStudiesClientException, IOException {
-        logger.debug("getSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
-        JSONArray submissions = service.getSubmissions(userSession, offset, limit);
-        JSONObject obj = new JSONObject();
-        obj.put("submissions", submissions);
-        return obj.toString();
+        logger.debug("getSubmittedSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
+        return service.getSubmittedSubmissions(userSession, offset, limit);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @GET
+    @Path("/modifiedSubmissions")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getModifiedSubmissions(@QueryParam("offset") int offset,
+                                         @QueryParam("limit") int limit,
+                                         @Context UserSession userSession)
+            throws BioStudiesClientException, IOException {
+        logger.debug("getModifiedSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
+        return service.getModifiedSubmissions(userSession, offset, limit);
     }
 
     @RolesAllowed("AUTHENTICATED")
