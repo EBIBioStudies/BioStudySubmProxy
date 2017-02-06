@@ -38,13 +38,9 @@ public interface BioStudiesClient extends Closeable {
 
     boolean deleteSubmission(String acc, String sessid) throws BioStudiesClientException, IOException;
 
-    JSONArray getSubmissions(String sessid, int offset, int limit) throws BioStudiesClientException, IOException;
+    String getSubmissions(String sessid, int offset, int limit) throws BioStudiesClientException, IOException;
 
     JSONArray getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
-
-    Observable<JSONArray> getModifiedSubmissionsRx(String sessid);
-
-    Observable<JSONArray> getSubmissionsRx(String sessid, int offset, int limit);
 
     JSONObject getFilesDir(String sessid) throws BioStudiesClientException, IOException;
 

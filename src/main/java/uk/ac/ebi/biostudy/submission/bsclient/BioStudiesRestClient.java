@@ -194,34 +194,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 targets.getSubmissionReq(sessionId, acc)));
     }
 
-    public JSONArray getSubmissions(String sessionId, int offset, int limit) throws BioStudiesClientException, IOException {
+    public String getSubmissions(String sessionId, int offset, int limit) throws BioStudiesClientException, IOException {
         logger.debug("getSubmissions(sessionId={})", sessionId);
-        JSONObject obj = parseJSON(get(
-                targets.getSubmissionsReq(sessionId, offset, limit)));
-        if (obj.has("status")) {
-            String status = obj.getString("status");
-            logger.debug("in-json status: " + status);
-            if (status.equals("OK")) {
-                return obj.getJSONArray("submissions");
-            }
-        }
-        logger.warn("not getting status in response");
-        return new JSONArray();
-    }
-
-    public Observable<JSONArray> getSubmissionsRx(String sessionId, int offset, int limit) {
-        logger.debug("getSubmissionsRx(sessionId={})", sessionId);
-        return getRx(targets.getSubmissionsReq(sessionId, offset, limit))
-                .map(respBody -> {
-                    JSONObject obj = parseJSON(respBody);
-                    if (obj.has("status")) {
-                        String status = obj.getString("status");
-                        if (status.equals("OK")) {
-                            return obj.getJSONArray("submissions");
-                        }
-                    }
-                    return new JSONArray();
-                });
+        return get(targets.getSubmissionsReq(sessionId, offset, limit));
     }
 
     public boolean deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
@@ -303,12 +278,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
         logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
         return parseJSONArray(get(
                 targets.getModifiedSubmissionsReq(sessionId)));
-    }
-
-    public Observable<JSONArray> getModifiedSubmissionsRx(String sessionId) {
-        logger.debug("getModifiedSubmissionsRx(sessionId={})", sessionId);
-        return getRx(targets.getModifiedSubmissionsReq(sessionId))
-                .map(BioStudiesRestClient::parseJSONArray);
     }
 
     private static String get(WebTarget target) throws BioStudiesClientException, IOException {

@@ -92,11 +92,12 @@ public class SubmissionList {
     public static List<JSONObject> transformModified(JSONArray array) {
         return transform(array, obj -> {
             String acc = accno(obj);
+            boolean isTmp = Submission.isGeneratedAccession(acc);
             JSONObject d = data(obj);
             String title = titleAttribute(d);
             Long rtime = releaseDateAttributeInSeconds(d);
             Long mtime = obj.getLong("changed");
-            return listItem(acc, title, rtime, mtime, NEW);
+            return listItem(acc, title, rtime, mtime, isTmp ? NEW : MODIFIED);
         });
     }
 

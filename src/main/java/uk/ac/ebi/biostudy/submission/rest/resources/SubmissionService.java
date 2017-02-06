@@ -125,35 +125,20 @@ public class SubmissionService {
     }
 
 
-    public JSONArray getSubmissions(UserSession userSession, int offset, int limit) throws BioStudiesClientException, IOException {
+    public String getSubmittedSubmissions(UserSession userSession, int offset, int limit) throws BioStudiesClientException, IOException {
+        String sessId = userSession.getSessid();
+        return bsclient.getSubmissions(sessId, offset, limit);
+    }
+
+    public String getModifiedSubmissions(UserSession userSession, int offset, int limit) throws BioStudiesClientException, IOException {
         String sessId = userSession.getSessid();
         List<JSONObject> tmodified = transformModified(bsclient.getModifiedSubmissions(sessId));
         tmodified.sort(byModificationDate);
         tmodified = tmodified.stream().skip(offset).limit(limit).collect(Collectors.toList());
 
-        int newLimit = limit - tmodified.size();
-        int newOffset = offset - tmodified.size();
-        newOffset = newOffset < 0 ? 0 : newOffset;
-
-        List<JSONObject> tsubmitted = new ArrayList<>();
-        if (newLimit > 0) {
-            tsubmitted = transformSubmitted(bsclient.getSubmissions(sessId, newOffset, newLimit));
-        }
-        return merge(tmodified, tsubmitted);
-    }
-
-    @SuppressWarnings("unused")
-    public Observable<JSONArray> getSubmissionsRx(UserSession userSession, int offset, int limit) {
-        logger.debug("getSubmissionsRx(userSession={})", userSession);
-        Observable<List<JSONObject>> modified = bsclient
-                .getModifiedSubmissionsRx(userSession.getSessid())
-                .map(SubmissionList::transformModified);
-
-        Observable<List<JSONObject>> submitted = bsclient
-                .getSubmissionsRx(userSession.getSessid(), offset, limit)
-                .map(SubmissionList::transformSubmitted);
-
-        return Observable.zip(modified, submitted, SubmissionList::merge).take(1);
+        JSONObject obj = new JSONObject();
+        obj.put("submissions", tmodified);
+        return obj.toString();
     }
 
     public JSONObject getFilesDir(UserSession userSession) throws BioStudiesClientException, IOException {
