@@ -98,7 +98,7 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
-    public JSONArray getSubmissions(String sessid, int offset, int limit) throws BioStudiesClientException, IOException {
+    public String getSubmissions(String sessid, int offset, int limit) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
 
         final JSONArray array = new JSONArray();
@@ -115,7 +115,7 @@ public class BioStudiesClientStub implements BioStudiesClient {
                 )
                 .skip(offset)
                 .limit(limit).forEach(array::put);
-        return array;
+        return array.toString();
     }
 
     @Override
@@ -125,30 +125,6 @@ public class BioStudiesClientStub implements BioStudiesClient {
         final JSONArray array = new JSONArray();
         modified.values().forEach(array::put);
         return array;
-    }
-
-    @Override
-    public Observable<JSONArray> getModifiedSubmissionsRx(String sessid) {
-        return Observable.just(sessid)
-                .map(id -> {
-                    try {
-                        return getModifiedSubmissions(id);
-                    } catch (BioStudiesClientException | IOException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                });
-    }
-
-    @Override
-    public Observable<JSONArray> getSubmissionsRx(String sessid, int offset, int limit) {
-        return Observable.just(sessid)
-                .map(id -> {
-                    try {
-                        return getSubmissions(id, offset, limit);
-                    } catch (BioStudiesClientException | IOException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                });
     }
 
     @Override
