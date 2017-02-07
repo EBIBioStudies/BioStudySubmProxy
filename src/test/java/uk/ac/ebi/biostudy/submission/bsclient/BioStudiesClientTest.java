@@ -50,7 +50,7 @@ public class BioStudiesClientTest {
         JSONObject submission = bsclient.getSubmission("S-STA2", sessionId);
         assertNotNull(submission);
 
-        JSONObject filesDir = bsclient.getFilesDir(sessionId);
+        JSONObject filesDir = bsclient.getFilesDir("/User", 1, true, sessionId);
         assertNotNull(filesDir);
     }
 
