@@ -92,8 +92,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
         WebTarget deleteFileReq(String sessionId, String file) {
             return baseTarget.path("/dir")
                     .queryParam(SESSION_PARAM, sessionId)
-                    .queryParam("command", "delete")
-                    .queryParam("file", file);
+                    .queryParam("command", "rm")
+                    .queryParam("path", file);
         }
 
         WebTarget signInReq() {
