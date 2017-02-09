@@ -37,7 +37,10 @@ class UserDir {
 
     JSONArray list(String path, int depth) throws IOException {
         if (root != null) {
-            return list(root.resolve(path.replaceAll("^/", "")), depth);
+            Path p = root.resolve(path.replaceAll("^/", ""));
+            if (p.toFile().exists()) {
+                return list(p, depth);
+            }
         }
         return new JSONArray();
     }
