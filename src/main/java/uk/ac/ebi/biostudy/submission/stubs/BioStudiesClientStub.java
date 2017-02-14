@@ -113,7 +113,10 @@ public class BioStudiesClientStub implements BioStudiesClient {
                 )
                 .skip(offset)
                 .limit(limit).forEach(array::put);
-        return array.toString();
+
+        final JSONObject obj = new JSONObject();
+        obj.put("submissions", array);
+        return obj.toString();
     }
 
     @Override
