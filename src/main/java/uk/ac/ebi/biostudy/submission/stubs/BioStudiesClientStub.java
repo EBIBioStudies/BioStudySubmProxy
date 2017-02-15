@@ -137,10 +137,10 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
-    public JSONObject deleteFile(String file, String sessid) throws BioStudiesClientException, IOException {
+    public JSONObject deleteFile(String path, String sessid) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
 
-        boolean res = userDir.deleteFile(file);
+        boolean res = userDir.deleteFile(path);
         return  new JSONObject()
                 .put("status", res ? "OK" : "FAILED");
     }

@@ -46,7 +46,7 @@ class UserDir {
     }
 
     boolean deleteFile(String filePath) {
-        Path path = root.resolve(filePath);
+        Path path = root.resolve(filePath.replaceAll("^/", ""));
         File f = path.toFile();
         return !f.exists() || f.delete();
     }
