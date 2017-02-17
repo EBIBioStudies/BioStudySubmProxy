@@ -30,10 +30,12 @@ public class RESTUploadService {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Response uploadFile(FormDataMultiPart formParams) {
         if (this.isOfflineModeOn()) {
+            FormDataBodyPart p = formParams.getField("path");
+            String path = p.getValue();
             List<FormDataBodyPart> parts = formParams.getFields("file");
             for (FormDataBodyPart part : parts) {
                 FormDataContentDisposition file = part.getFormDataContentDisposition();
-                String uploadedFileLocation = getUserDir().resolve(file.getFileName()).toString();
+                String uploadedFileLocation = getUserDir(path).resolve(file.getFileName()).toString();
                 writeToFile(part.getEntityAs(InputStream.class), uploadedFileLocation);
                 System.out.println("File uploaded to : " + uploadedFileLocation);
             }
@@ -45,8 +47,8 @@ public class RESTUploadService {
         return AppContext.getConfig(this.context).isOfflineModeOn();
     }
 
-    private java.nio.file.Path getUserDir() {
-        return AppContext.getConfig(this.context).getUserDir();
+    private java.nio.file.Path getUserDir(String relPath) {
+        return AppContext.getConfig(this.context).getUserDir().resolve(relPath.replaceAll("^/", ""));
     }
 
     // save uploaded file to new location

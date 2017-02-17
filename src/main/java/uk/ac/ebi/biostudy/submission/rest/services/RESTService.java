@@ -88,9 +88,12 @@ public class RESTService {
     @GET
     @Path("/files/dir")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getFileDir(@Context UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("getFileDir(userSession={})", userSession);
-        return service.getFilesDir(userSession).toString();
+    public String getFileDir(@QueryParam("path") String path,
+                             @QueryParam("depth") int depth,
+                             @QueryParam("showArchive") boolean showArchive,
+                             @Context UserSession userSession) throws BioStudiesClientException, IOException {
+        logger.debug("getFileDir(userSession={}, path={}, depth={}, showArchive={})", userSession, path, depth, showArchive);
+        return service.getFilesDir(userSession, path, depth, showArchive).toString();
     }
 
     @POST
@@ -231,10 +234,10 @@ public class RESTService {
     @DELETE
     @Path("/files/delete")
     @Produces(MediaType.APPLICATION_JSON)
-    public String deleteFile(@Context UserSession userSession, @QueryParam("file") String file)
+    public String deleteFile(@Context UserSession userSession, @QueryParam("path") String path)
             throws BioStudiesClientException, IOException {
-        logger.debug("deleteFile(userSession={}, file={})", userSession, file);
-        return service.deleteFile(userSession, file).toString();
+        logger.debug("deleteFile(userSession={}, path={})", userSession, path);
+        return service.deleteFile(userSession, path).toString();
     }
 
     @RolesAllowed("AUTHENTICATED")

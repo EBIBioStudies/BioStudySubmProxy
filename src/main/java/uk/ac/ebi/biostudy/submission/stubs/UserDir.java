@@ -29,44 +29,46 @@ import java.nio.file.Path;
 
 class UserDir {
 
-    private final Path dir;
+    private final Path root;
 
-    UserDir(Path dir) {
-        this.dir = dir;
+    UserDir(Path root) {
+        this.root = root;
     }
 
-    JSONArray list() throws IOException {
-        JSONArray array = new JSONArray();
-        if (dir != null) {
-            array.put(transform(dir));
+    JSONArray list(String path, int depth) throws IOException {
+        if (root != null) {
+            Path p = root.resolve(path.replaceAll("^/", ""));
+            if (p.toFile().exists()) {
+                return list(p, depth);
+            }
         }
-        return array;
+        return new JSONArray();
     }
 
-    boolean deleteFile(String fileName) {
-        Path path = dir.resolve(fileName);
+    boolean deleteFile(String filePath) {
+        Path path = root.resolve(filePath.replaceAll("^/", ""));
         File f = path.toFile();
         return !f.exists() || f.delete();
     }
 
-    private JSONObject transform(Path path) throws IOException {
+    private JSONObject transform(Path path, int depth) throws IOException {
         boolean isDir = path.toFile().isDirectory();
 
         JSONObject obj = new JSONObject();
         obj.put("name", path.getFileName().toString());
-        obj.put("path", path.toAbsolutePath().toString());
+        obj.put("path", "/" + path.subpath(root.getNameCount(), path.getNameCount()).toString());
         obj.put("type", isDir ? "DIR" : "FILE");
-        if (isDir) {
-            obj.put("files", list(path));
+        if (isDir && depth > 0) {
+            obj.put("files", list(path, depth));
         }
         return obj;
     }
 
-    private JSONArray list(Path path) throws IOException {
+    private JSONArray list(Path path, int depth) throws IOException {
         final JSONArray array = new JSONArray();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
             for (Path entry : stream) {
-                array.put(transform(entry));
+                array.put(transform(entry, depth - 1));
             }
         } catch (DirectoryIteratorException ex) {
             throw ex.getCause();

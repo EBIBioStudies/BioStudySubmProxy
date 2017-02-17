@@ -44,13 +44,13 @@ public class BioStudiesClientTest {
         assertNotNull(obj);
 
         String sessionId = obj.getString("sessid");
-        JSONArray submissions = bsclient.getSubmissions(sessionId, 0, 10);
+        String submissions = bsclient.getSubmissions(sessionId, 0, 10);
         assertNotNull(submissions);
 
         JSONObject submission = bsclient.getSubmission("S-STA2", sessionId);
         assertNotNull(submission);
 
-        JSONObject filesDir = bsclient.getFilesDir(sessionId);
+        JSONObject filesDir = bsclient.getFilesDir("/User", 1, true, sessionId);
         assertNotNull(filesDir);
     }
 
