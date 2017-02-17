@@ -81,16 +81,19 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .queryParam("id", acc);
         }
 
-        WebTarget getFilesDirReq(String sessionId) {
+        WebTarget getFilesDirReq(String path, int depth, boolean showArchive, String sessionId) {
             return baseTarget.path("/dir")
-                    .queryParam(SESSION_PARAM, sessionId);
+                    .queryParam(SESSION_PARAM, sessionId)
+                    .queryParam("path", path)
+                    .queryParam("depth", depth)
+                    .queryParam("showArchive", showArchive);
         }
 
         WebTarget deleteFileReq(String sessionId, String file) {
             return baseTarget.path("/dir")
                     .queryParam(SESSION_PARAM, sessionId)
-                    .queryParam("command", "delete")
-                    .queryParam("file", file);
+                    .queryParam("command", "rm")
+                    .queryParam("path", file);
         }
 
         WebTarget signInReq() {
@@ -205,9 +208,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
         return resp.has("level") && resp.getString("level").equalsIgnoreCase("success");
     }
 
-    public JSONObject getFilesDir(String sessionId) throws BioStudiesClientException, IOException {
-        logger.debug("getFilesDir(sessionId={})", sessionId);
-        return parseJSON(get(targets.getFilesDirReq(sessionId)));
+    public JSONObject getFilesDir(String path, int depth, boolean showArchive, String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
+        return parseJSON(get(targets.getFilesDirReq(path, depth, showArchive, sessionId)));
     }
 
     public JSONObject deleteFile(String file, String sessionId) throws BioStudiesClientException, IOException {

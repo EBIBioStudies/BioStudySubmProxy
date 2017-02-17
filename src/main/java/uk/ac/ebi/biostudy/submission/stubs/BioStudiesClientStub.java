@@ -19,8 +19,6 @@ package uk.ac.ebi.biostudy.submission.stubs;
 import org.apache.http.entity.ContentType;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import rx.Observable;
-import rx.exceptions.Exceptions;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 
@@ -115,7 +113,10 @@ public class BioStudiesClientStub implements BioStudiesClient {
                 )
                 .skip(offset)
                 .limit(limit).forEach(array::put);
-        return array.toString();
+
+        final JSONObject obj = new JSONObject();
+        obj.put("submissions", array);
+        return obj.toString();
     }
 
     @Override
@@ -128,19 +129,18 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
-    public JSONObject getFilesDir(String sessid) throws BioStudiesClientException, IOException {
+    public JSONObject getFilesDir(String path, int depth, boolean showArchive, String sessid) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
-
         return new JSONObject()
                 .put("status", "OK")
-                .put("files", userDir.list());
+                .put("files", userDir.list(path, depth)); // showArchive??
     }
 
     @Override
-    public JSONObject deleteFile(String file, String sessid) throws BioStudiesClientException, IOException {
+    public JSONObject deleteFile(String path, String sessid) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
 
-        boolean res = userDir.deleteFile(file);
+        boolean res = userDir.deleteFile(path);
         return  new JSONObject()
                 .put("status", res ? "OK" : "FAILED");
     }

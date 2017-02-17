@@ -141,15 +141,15 @@ public class SubmissionService {
         return obj.toString();
     }
 
-    public JSONObject getFilesDir(UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("getFilesDir(userSession={})", userSession);
-        return bsclient.getFilesDir(userSession.getSessid());
+    public JSONObject getFilesDir(UserSession userSession, String path, int depth, boolean showArchive) throws BioStudiesClientException, IOException {
+        logger.debug("getFilesDir(userSession={, path={}, depth={}, showArchive={})", userSession, path, depth, showArchive);
+        return bsclient.getFilesDir(path, depth, showArchive, userSession.getSessid());
     }
 
-    public JSONObject deleteFile(UserSession userSession, String file)
+    public JSONObject deleteFile(UserSession userSession, String path)
             throws BioStudiesClientException, IOException {
-        logger.debug("deleteFile(userSession={}, file={})", userSession, file);
-        return bsclient.deleteFile(file, userSession.getSessid());
+        logger.debug("deleteFile(userSession={}, path={})", userSession, path);
+        return bsclient.deleteFile(path, userSession.getSessid());
     }
 
     public JSONObject singOut(UserSession userSession) throws BioStudiesClientException, IOException {
