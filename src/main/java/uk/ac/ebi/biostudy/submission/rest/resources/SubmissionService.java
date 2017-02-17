@@ -141,9 +141,9 @@ public class SubmissionService {
         return obj.toString();
     }
 
-    public JSONObject getFilesDir(UserSession userSession, String path, int depth, boolean showArchives) throws BioStudiesClientException, IOException {
-        logger.debug("getFilesDir(userSession={, path={}, depth={}, showArchives={})", userSession, path, depth, showArchives);
-        return bsclient.getFilesDir(path, depth, showArchives, userSession.getSessid());
+    public JSONObject getFilesDir(UserSession userSession, String path, int depth, boolean showArchive) throws BioStudiesClientException, IOException {
+        logger.debug("getFilesDir(userSession={, path={}, depth={}, showArchive={})", userSession, path, depth, showArchive);
+        return bsclient.getFilesDir(path, depth, showArchive, userSession.getSessid());
     }
 
     public JSONObject deleteFile(UserSession userSession, String path)

@@ -129,11 +129,11 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
-    public JSONObject getFilesDir(String path, int depth, boolean showArchives, String sessid) throws BioStudiesClientException, IOException {
+    public JSONObject getFilesDir(String path, int depth, boolean showArchive, String sessid) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
         return new JSONObject()
                 .put("status", "OK")
-                .put("files", userDir.list(path, depth)); // showArchives??
+                .put("files", userDir.list(path, depth)); // showArchive??
     }
 
     @Override
