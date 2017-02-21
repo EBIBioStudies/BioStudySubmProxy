@@ -16,7 +16,6 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assume;
 import org.junit.Test;
@@ -25,6 +24,7 @@ import uk.ac.ebi.biostudy.submission.TestEnvironment;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -44,7 +44,7 @@ public class BioStudiesClientTest {
         assertNotNull(obj);
 
         String sessionId = obj.getString("sessid");
-        String submissions = bsclient.getSubmissions(sessionId, 0, 10);
+        String submissions = bsclient.getSubmissions(sessionId, 0, 10, new HashMap<>());
         assertNotNull(submissions);
 
         JSONObject submission = bsclient.getSubmission("S-STA2", sessionId);

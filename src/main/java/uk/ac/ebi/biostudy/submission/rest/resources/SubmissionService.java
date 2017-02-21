@@ -15,19 +15,15 @@
  */
 package uk.ac.ebi.biostudy.submission.rest.resources;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
-import uk.ac.ebi.biostudy.submission.rest.data.SubmissionList;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -125,16 +121,22 @@ public class SubmissionService {
     }
 
 
-    public String getSubmittedSubmissions(UserSession userSession, int offset, int limit) throws BioStudiesClientException, IOException {
+    public String getSubmittedSubmissions(UserSession userSession, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException {
         String sessId = userSession.getSessid();
-        return bsclient.getSubmissions(sessId, offset, limit);
+        return bsclient.getSubmissions(sessId, offset, limit, paramMap);
     }
 
-    public String getModifiedSubmissions(UserSession userSession, int offset, int limit) throws BioStudiesClientException, IOException {
+    public String getModifiedSubmissions(UserSession userSession, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException {
+        SubmFilterParams params = SubmFilterParams.fromMap(paramMap);
         String sessId = userSession.getSessid();
         List<JSONObject> tmodified = transformModified(bsclient.getModifiedSubmissions(sessId));
         tmodified.sort(byModificationDate);
-        tmodified = tmodified.stream().skip(offset).limit(limit).collect(Collectors.toList());
+        tmodified = tmodified
+                .stream()
+                .filter(params.asPredicate())
+                .skip(offset)
+                .limit(limit)
+                .collect(Collectors.toList());
 
         JSONObject obj = new JSONObject();
         obj.put("submissions", tmodified);

@@ -30,6 +30,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 
 /**
  * @author Olga Melnichuk
@@ -68,11 +69,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .queryParam(SESSION_PARAM, sessionId);
         }
 
-        WebTarget getSubmissionsReq(String sessionId, int offset, int limit) {
-            return baseTarget.path("/sbmlist")
+        WebTarget getSubmissionsReq(String sessionId, int offset, int limit, Map<String, String> moreParams) {
+            WebTarget t = baseTarget.path("/sbmlist")
                     .queryParam(SESSION_PARAM, sessionId)
                     .queryParam("offset", offset)
                     .queryParam("limit", limit);
+            for (Map.Entry<String, String>entry: moreParams.entrySet()) {
+                   t = t.queryParam(entry.getKey(), entry.getValue());
+            }
+            return t;
         }
 
         WebTarget deleteSubmissionReq(String sessionId, String acc) {
@@ -197,9 +202,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 targets.getSubmissionReq(sessionId, acc)));
     }
 
-    public String getSubmissions(String sessionId, int offset, int limit) throws BioStudiesClientException, IOException {
+    public String getSubmissions(String sessionId, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException {
         logger.debug("getSubmissions(sessionId={})", sessionId);
-        return get(targets.getSubmissionsReq(sessionId, offset, limit));
+        return get(targets.getSubmissionsReq(sessionId, offset, limit, paramMap));
     }
 
     public boolean deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {

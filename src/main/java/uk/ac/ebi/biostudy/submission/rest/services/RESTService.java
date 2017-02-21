@@ -17,7 +17,6 @@
 package uk.ac.ebi.biostudy.submission.rest.services;
 
 import org.apache.http.client.utils.URIBuilder;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +33,8 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Olga Melnichuk
@@ -52,26 +53,32 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @GET
-    @Path("/submittedSubmissions")
+    @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmittedSubmissions(@QueryParam("offset") int offset,
+    public String getSubmissions(@QueryParam("offset") int offset,
                                           @QueryParam("limit") int limit,
+                                          @QueryParam("submitted") boolean submitted,
+                                          @QueryParam("accNo") String accNoFilter,
+                                          @QueryParam("rTimeFrom") Long rTimeFromFilter,
+                                          @QueryParam("rTimeTo") Long rTimeToFilter,
                                           @Context UserSession userSession)
             throws BioStudiesClientException, IOException {
-        logger.debug("getSubmittedSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
-        return service.getSubmittedSubmissions(userSession, offset, limit);
-    }
 
-    @RolesAllowed("AUTHENTICATED")
-    @GET
-    @Path("/modifiedSubmissions")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String getModifiedSubmissions(@QueryParam("offset") int offset,
-                                         @QueryParam("limit") int limit,
-                                         @Context UserSession userSession)
-            throws BioStudiesClientException, IOException {
-        logger.debug("getModifiedSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
-        return service.getModifiedSubmissions(userSession, offset, limit);
+        Map<String, String> params = new HashMap<>();
+        if (accNoFilter != null) {
+            params.put("accNo", accNoFilter);
+        }
+        if (rTimeFromFilter != null) {
+            params.put("rTimeFrom", rTimeFromFilter.toString());
+        }
+        if (rTimeToFilter != null) {
+            params.put("rTimeToFilter", rTimeToFilter.toString());
+        }
+
+        logger.debug("getSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
+        return submitted ?
+                service.getSubmittedSubmissions(userSession, offset, limit, params) :
+                service.getModifiedSubmissions(userSession, offset, limit, params);
     }
 
     @RolesAllowed("AUTHENTICATED")
