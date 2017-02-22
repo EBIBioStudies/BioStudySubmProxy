@@ -32,7 +32,7 @@ public class ReleaseDateFilter implements Predicate<JSONObject> {
 
     @Override
     public boolean test(JSONObject jsonObject) {
-        Long rtime = jsonObject.getLong("rtime");
-        return predicate.test(rtime);
+        String rtime = jsonObject.getString("rtime");
+        return !rtime.isEmpty() && predicate.test(Long.parseLong(rtime));
     }
 }
