@@ -72,7 +72,7 @@ public class RESTService {
             params.put("rTimeFrom", rTimeFromFilter.toString());
         }
         if (rTimeToFilter != null) {
-            params.put("rTimeToFilter", rTimeToFilter.toString());
+            params.put("rTimeTo", rTimeToFilter.toString());
         }
 
         logger.debug("getSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
