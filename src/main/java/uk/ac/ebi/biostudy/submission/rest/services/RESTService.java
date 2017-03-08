@@ -61,6 +61,7 @@ public class RESTService {
                                           @QueryParam("accNo") String accNoFilter,
                                           @QueryParam("rTimeFrom") Long rTimeFromFilter,
                                           @QueryParam("rTimeTo") Long rTimeToFilter,
+                                          @QueryParam("keywords") String titleFilter,
                                           @Context UserSession userSession)
             throws BioStudiesClientException, IOException {
 
@@ -73,6 +74,9 @@ public class RESTService {
         }
         if (rTimeToFilter != null) {
             params.put("rTimeTo", rTimeToFilter.toString());
+        }
+        if (titleFilter != null) {
+            params.put("keywords", titleFilter);
         }
 
         logger.debug("getSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);

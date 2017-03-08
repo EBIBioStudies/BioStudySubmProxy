@@ -10,11 +10,11 @@ import java.util.regex.Pattern;
 /**
  * @author Olga Melnichuk
  */
-public class AccNoFilter implements Predicate<JSONObject> {
+public class AccnoFilter implements Predicate<JSONObject> {
 
     private Pattern pattern;
 
-    private AccNoFilter(Pattern pattern) {
+    private AccnoFilter(Pattern pattern) {
         this.pattern = pattern;
     }
 
@@ -28,7 +28,7 @@ public class AccNoFilter implements Predicate<JSONObject> {
         if (accNoPattern == null || accNoPattern.isEmpty()) {
             throw new IllegalArgumentException("Pattern should not be empty");
         }
-        return new AccNoFilter(Pattern.compile(fromWildcard(accNoPattern)));
+        return new AccnoFilter(Pattern.compile(fromWildcard(accNoPattern)));
     }
 
     static String fromWildcard(String wildcard) {

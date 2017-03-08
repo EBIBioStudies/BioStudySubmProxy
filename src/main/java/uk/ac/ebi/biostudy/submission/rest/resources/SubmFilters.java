@@ -11,7 +11,7 @@ enum SubmFilters implements SubmFilter {
     accNo {
         @Override
         public Predicate<JSONObject> create(String value) {
-            return AccNoFilter.fromPattern(value);
+            return AccnoFilter.fromPattern(value);
         }
     },
     rTimeFrom {
@@ -24,6 +24,12 @@ enum SubmFilters implements SubmFilter {
         @Override
         public Predicate<JSONObject> create(String value) {
             return ReleaseDateFilter.to(Long.parseLong(value));
+        }
+    },
+    keywords {
+        @Override
+        public Predicate<JSONObject> create(String value) {
+            return TitleFilter.fromKeywords(value);
         }
     };
 }
