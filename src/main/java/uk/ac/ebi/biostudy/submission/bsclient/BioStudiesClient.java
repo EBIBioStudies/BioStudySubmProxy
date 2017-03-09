@@ -21,6 +21,7 @@ import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Map;
 
 public interface BioStudiesClient extends Closeable {
     JSONObject getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException;
@@ -37,7 +38,7 @@ public interface BioStudiesClient extends Closeable {
 
     boolean deleteSubmission(String acc, String sessid) throws BioStudiesClientException, IOException;
 
-    String getSubmissions(String sessid, int offset, int limit) throws BioStudiesClientException, IOException;
+    String getSubmissions(String sessid, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
 
     JSONArray getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
 

@@ -80,14 +80,14 @@ public class SubmissionList {
         return l2.compareTo(l1);
     };
 
-    public static List<JSONObject> transformSubmitted(JSONArray array) {
+   /* public static List<JSONObject> transformSubmitted(JSONArray array) {
         return transform(array, obj -> {
             String accno = obj.getString("accno");
             String title = obj.getString("title");
             Long rtime = obj.getLong("rtime");
             return listItem(accno, title, rtime, null, SUBMITTED);
         });
-    }
+    }*/
 
     public static List<JSONObject> transformModified(JSONArray array) {
         return transform(array, obj -> {
@@ -101,7 +101,7 @@ public class SubmissionList {
         });
     }
 
-    public static JSONArray merge(List<JSONObject> temporary, List<JSONObject> submitted) {
+  /*  public static JSONArray merge(List<JSONObject> temporary, List<JSONObject> submitted) {
         Map<String, JSONObject> copies = new HashMap<>();
         List<JSONObject> merged = new ArrayList<>();
         for (JSONObject item : temporary) {
@@ -138,7 +138,7 @@ public class SubmissionList {
             result.put(obj);
         }
         return result;
-    }
+    }*/
 
     private static JSONObject listItem(String accno, String title, Long releaseDate, Long modificationDate, SubmissionStatus status) {
         JSONObject obj = new JSONObject();

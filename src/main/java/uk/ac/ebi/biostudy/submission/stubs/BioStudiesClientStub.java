@@ -21,9 +21,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudy.submission.rest.resources.SubmFilterParams;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -96,9 +98,10 @@ public class BioStudiesClientStub implements BioStudiesClient {
     }
 
     @Override
-    public String getSubmissions(String sessid, int offset, int limit) throws BioStudiesClientException, IOException {
+    public String getSubmissions(String sessid, int offset, int limit, Map<String, String> filterParams) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
 
+        SubmFilterParams params = SubmFilterParams.fromMap(filterParams);
         final JSONArray array = new JSONArray();
         submitted.values()
                 .stream()
@@ -111,6 +114,7 @@ public class BioStudiesClientStub implements BioStudiesClient {
                                 .put("title", titleAttribute(s))
                                 .put("version", "1")
                 )
+                .filter(params.asPredicate())
                 .skip(offset)
                 .limit(limit).forEach(array::put);
 
