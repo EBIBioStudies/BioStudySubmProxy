@@ -22,39 +22,52 @@ import org.junit.Test;
 import uk.ac.ebi.biostudy.submission.TestEnvironment;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 
 import static org.junit.Assert.assertNotNull;
 
 /**
- * TODO: make it a proper test
- *
  * @author Olga Melnichuk
  */
 public class BioStudiesClientTest {
 
     @Test
-    public void test() throws URISyntaxException, IOException, BioStudiesClientException {
-        Assume.assumeTrue(TestEnvironment.hasValidServerUrl());
+    public void authTest() throws URISyntaxException, IOException, BioStudiesClientException {
+        if (!TestEnvironment.hasValidServerUrl()) {
+            return;
+        }
 
-        BioStudiesClient bsclient = new BioStudiesRestClient(getServerUrl());
+        URI uri = getServerUrl();
+        if (! isReachable(uri.toURL())) {
+            return;
+        }
+        BioStudiesClient bsclient = new BioStudiesRestClient(uri);
         JSONObject obj = bsclient.signIn(new JSONObject().put("login", "demo").put("password", "demo"));
         assertNotNull(obj);
 
         String sessionId = obj.getString("sessid");
         String submissions = bsclient.getSubmissions(sessionId, 0, 10, new HashMap<>());
         assertNotNull(submissions);
-
-        JSONObject submission = bsclient.getSubmission("S-STA2", sessionId);
-        assertNotNull(submission);
-
-        JSONObject filesDir = bsclient.getFilesDir("/User", 1, true, sessionId);
-        assertNotNull(filesDir);
     }
 
     private static URI getServerUrl() throws IOException {
         return TestEnvironment.getServerUrl();
+    }
+
+    private static boolean isReachable(URL url) {
+        try {
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+            int respCode = connection.getResponseCode();
+            return respCode >= 200 && respCode < 400;
+        } catch (IOException e) {
+            //e.printStackTrace();
+            return false;
+        }
     }
 }
