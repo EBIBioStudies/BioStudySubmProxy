@@ -6,13 +6,13 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.bmuschko:gradle-tomcat-plugin:2.2.4'
+        classpath 'org.akhikhl.gretty:gretty:+'
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'war'
-apply plugin: 'com.bmuschko.tomcat'
+apply plugin: 'org.akhikhl.gretty'
 
 repositories {
     mavenCentral()
@@ -33,9 +33,6 @@ processTestResources {
             "BS_SERVER_URL_4TESTS": bsBackendUrl_4tests
     ]
 }
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
 
 dependencies {
     compile group: 'org.apache.httpcomponents', version: '4.5.2', name: 'httpmime'
@@ -64,11 +61,6 @@ dependencies {
     testCompile group: 'org.mockito', name: 'mockito-all', version: '2.0.2-beta'
 
     providedCompile "javax.servlet:javax.servlet-api:3.0.1"
-
-    def tomcatVersion = '7.0.59'
-    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
-            "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}",
-            "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
 }
 
 test {
@@ -83,13 +75,14 @@ war {
     from 'src/main/webapp/'
 }
 
-tomcat {
-    httpPort = 9180
-    //httpsPort = 9181
-    //enableSSL = true
+gretty {
+    servletContainer = 'tomcat7'
+    httpPort = 10280
+    httpsPort = 10281
+    httpsEnabled = true
     contextPath = 'proxy'
+    jvmArgs = ['-Duk.ac.ebi.biostudy.submission.HTTPS_FILTER_DISABLED=true']
 }
-
 
 defaultTasks 'clean', 'build'
 

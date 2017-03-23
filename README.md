@@ -13,7 +13,7 @@ cp gradle_sample.properties gradle.properties
 
 `gradle_sample.properties` file contains an example of properties that have to be set.
 
-##### Prebuild the client app (JS, CSS, HTML etc)
+##### Pre-build the client app (JS, CSS, HTML etc)
 Copy the client part to WebContent directory. 
 
 ##### Build the project
@@ -22,4 +22,9 @@ Copy the client part to WebContent directory.
 gradle clean build war
 ```
 
+##### Run war locally
+
+```
+gradle appRunWar
+```
 
