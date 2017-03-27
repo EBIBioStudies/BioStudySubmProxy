@@ -108,6 +108,11 @@ public class SubmissionService {
         return result;
     }
 
+    public JSONObject directSubmit(UserSession userSession, boolean create, JSONObject obj) throws IOException, BioStudiesClientException {
+        return create ? this.bsclient.submitNew(obj, userSession.getSessid()) :
+                this.bsclient.submitUpdated(obj, userSession.getSessid());
+    }
+
     public boolean deleteSubmission(final UserSession userSession, final String acc)
             throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(userSession={}, acc={})", userSession, acc);

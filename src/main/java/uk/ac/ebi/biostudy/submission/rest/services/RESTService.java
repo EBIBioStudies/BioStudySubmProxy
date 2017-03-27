@@ -230,6 +230,17 @@ public class RESTService {
     }
 
     @RolesAllowed("AUTHENTICATED")
+    @POST
+    @Path("/submission/direct")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String directSubmit(@Context UserSession userSession, @QueryParam("create") Boolean create, String str)
+            throws BioStudiesClientException, IOException {
+        logger.debug("directSubmit(userSession={}, create={}, str={})", userSession, create, str);
+        return service.directSubmit(userSession, create != null && create, toJson(str)).toString();
+    }
+
+    @RolesAllowed("AUTHENTICATED")
     @DELETE
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
