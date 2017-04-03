@@ -40,6 +40,8 @@ public interface BioStudiesClient extends Closeable {
 
     String getSubmissions(String sessid, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
 
+    String getProjects(String sessid) throws BioStudiesClientException, IOException;
+
     JSONArray getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
 
     JSONObject getFilesDir(String path, int depth, boolean showArchive, String sessid) throws BioStudiesClientException, IOException;

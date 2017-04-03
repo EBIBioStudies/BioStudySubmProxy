@@ -123,6 +123,12 @@ public class BioStudiesClientStub implements BioStudiesClient {
         return obj.toString();
     }
 
+    @Override()
+    public String getProjects(String sessid) throws BioStudiesClientException, IOException {
+        checkSessionId(sessid);
+        return (new JSONArray()).toString();
+    }
+
     @Override
     public JSONArray getModifiedSubmissions(String sessid) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);

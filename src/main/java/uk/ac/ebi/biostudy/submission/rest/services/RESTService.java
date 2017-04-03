@@ -56,13 +56,13 @@ public class RESTService {
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
     public String getSubmissions(@QueryParam("offset") int offset,
-                                          @QueryParam("limit") int limit,
-                                          @QueryParam("submitted") boolean submitted,
-                                          @QueryParam("accNo") String accNoFilter,
-                                          @QueryParam("rTimeFrom") Long rTimeFromFilter,
-                                          @QueryParam("rTimeTo") Long rTimeToFilter,
-                                          @QueryParam("keywords") String titleFilter,
-                                          @Context UserSession userSession)
+                                 @QueryParam("limit") int limit,
+                                 @QueryParam("submitted") boolean submitted,
+                                 @QueryParam("accNo") String accNoFilter,
+                                 @QueryParam("rTimeFrom") Long rTimeFromFilter,
+                                 @QueryParam("rTimeTo") Long rTimeToFilter,
+                                 @QueryParam("keywords") String titleFilter,
+                                 @Context UserSession userSession)
             throws BioStudiesClientException, IOException {
 
         Map<String, String> params = new HashMap<>();
@@ -83,6 +83,15 @@ public class RESTService {
         return submitted ?
                 service.getSubmittedSubmissions(userSession, offset, limit, params) :
                 service.getModifiedSubmissions(userSession, offset, limit, params);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @GET
+    @Path("/projects")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getProjects(@Context UserSession userSession)
+            throws BioStudiesClientException, IOException {
+        return service.getProjects(userSession);
     }
 
     @RolesAllowed("AUTHENTICATED")

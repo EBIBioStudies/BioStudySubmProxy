@@ -80,6 +80,13 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return t;
         }
 
+        WebTarget getProjectsReq(String sessionId) {
+            return baseTarget.path("/atthost")
+                    .queryParam(SESSION_PARAM, sessionId)
+                    .queryParam("type", "Project")
+                    .queryParam("format", "json");
+        }
+
         WebTarget deleteSubmissionReq(String sessionId, String acc) {
             return baseTarget.path("/submit/delete")
                     .queryParam(SESSION_PARAM, sessionId)
@@ -205,6 +212,11 @@ public class BioStudiesRestClient implements BioStudiesClient {
     public String getSubmissions(String sessionId, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException {
         logger.debug("getSubmissions(sessionId={})", sessionId);
         return get(targets.getSubmissionsReq(sessionId, offset, limit, paramMap));
+    }
+
+    public String getProjects(String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("getProjects(sessionId={})", sessionId);
+        return get(targets.getProjectsReq(sessionId));
     }
 
     public boolean deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
