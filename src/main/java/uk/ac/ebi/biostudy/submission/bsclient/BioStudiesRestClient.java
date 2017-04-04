@@ -30,7 +30,11 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author Olga Melnichuk
@@ -74,8 +78,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .queryParam(SESSION_PARAM, sessionId)
                     .queryParam("offset", offset)
                     .queryParam("limit", limit);
-            for (Map.Entry<String, String>entry: moreParams.entrySet()) {
-                   t = t.queryParam(entry.getKey(), entry.getValue());
+            for (Map.Entry<String, String> entry : moreParams.entrySet()) {
+                t = t.queryParam(entry.getKey(), entry.getValue());
             }
             return t;
         }
@@ -182,13 +186,60 @@ public class BioStudiesRestClient implements BioStudiesClient {
             throws BioStudiesClientException, IOException {
         logger.debug("submitNew(obj={}, sessionId={})", obj, sessionId);
         JSONObject copy = new JSONObject(obj.toString());
-        copy.put("accno", "!{S-BSST}");
+        copy.put("accno", accnoTemplate(new MyJSONObject(copy), sessionId));
         JSONArray array = new JSONArray();
         array.put(copy);
         JSONObject submissions = new JSONObject();
         submissions.put("submissions", array);
         return parseJSON(postJSON(
                 targets.createSubmissionReq(sessionId), submissions));
+    }
+
+    private String accnoTemplate(MyJSONObject subm, String sessionId) throws IOException, BioStudiesClientException {
+        final String defaultTmpl = "!{S-BSST}";
+
+        Optional<MyJSONArray> opt = subm.getJSONArray("attributes");
+        if (!opt.isPresent()) {
+            return defaultTmpl;
+        }
+        MyJSONArray attrs = opt.get();
+        if (attrs.length() == 0) {
+            return defaultTmpl;
+        }
+        List<Optional<String>> attachTo = attrs.getMyJSONObjects()
+                .filter(obj -> {
+                    Optional<String> name = obj.getString("name");
+                    return name.isPresent() && name.get().equalsIgnoreCase("attachto");
+                })
+                .map(obj -> obj.getString("value"))
+                .collect(Collectors.toList());
+        if (attachTo.size() != 1) {
+            return defaultTmpl;
+        }
+        Optional<String> accno = attachTo.get(0);
+        if (!accno.isPresent()) {
+            return defaultTmpl;
+        }
+        Optional<String> accnoTmpl = projectAccNoTemplate(accno.get(), sessionId);
+        return accnoTmpl.orElse(defaultTmpl);
+    }
+
+    private Optional<String> projectAccNoTemplate(String accno, String sessionId) throws IOException, BioStudiesClientException {
+        MyJSONObject proj = new MyJSONObject(getSubmission(accno, sessionId));
+        Optional<MyJSONArray> projAttrs = proj.getJSONArray("attributes");
+        if (!projAttrs.isPresent()) {
+            return Optional.empty();
+        }
+
+        List<Optional<String>> templates = projAttrs.get()
+                .getMyJSONObjects()
+                .filter(obj -> {
+                    Optional<String> name = obj.getString("name");
+                    return name.isPresent() && name.get().equalsIgnoreCase("accnotemplate");
+                })
+                .map(obj -> obj.getString("value"))
+                .collect(Collectors.toList());
+        return templates.isEmpty() ? Optional.empty() : templates.get(0);
     }
 
     public JSONObject submitUpdated(JSONObject obj, String sessionId)
