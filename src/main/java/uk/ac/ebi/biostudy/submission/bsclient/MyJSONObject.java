@@ -16,21 +16,22 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jersey.repackaged.com.google.common.collect.Lists;
 import org.json.JSONObject;
 
 import java.util.Optional;
 
 class MyJSONObject {
-    private final JSONObject obj;
+    private final ObjectNode obj;
 
-    public MyJSONObject(JSONObject obj) {
+    public MyJSONObject(ObjectNode obj) {
         this.obj = obj;
     }
 
     Optional<MyJSONArray> getJSONArray(final String key) {
-        Optional<String> realKey = getRealKey(key);
-        return realKey.map(s -> new MyJSONArray(obj.getJSONArray(s)));
+        Optional<String> propName = getRealKey(key);
+        return propName.map(s -> new MyJSONArray(obj.get(propName)));
     }
 
     public Optional<String> getString(String key) {
@@ -40,9 +41,9 @@ class MyJSONObject {
 
     private Optional<String> getRealKey(String key) {
         return Lists
-                .newArrayList(obj.keys())
+                .newArrayList(obj.fieldNames())
                 .stream()
-                .filter(k -> ((String) k).equalsIgnoreCase(key))
+                .filter(k -> (k).equalsIgnoreCase(key))
                 .findFirst();
     }
 }

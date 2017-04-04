@@ -16,15 +16,16 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.json.JSONArray;
 
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class MyJSONArray {
-    private final JSONArray arr;
+    private final JsonNode arr;
 
-    public MyJSONArray(JSONArray arr) {
+    public MyJSONArray(JsonNode arr) {
         this.arr = arr;
     }
 

@@ -50,7 +50,7 @@ public interface BioStudiesClient extends Closeable {
 
     JSONObject signOut(String sessid) throws BioStudiesClientException, IOException;
 
-    JSONObject signUp(JSONObject obj) throws BioStudiesClientException, IOException;
+    String signUp(JSONObject obj) throws BioStudiesClientException, IOException;
 
     JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException;
 
