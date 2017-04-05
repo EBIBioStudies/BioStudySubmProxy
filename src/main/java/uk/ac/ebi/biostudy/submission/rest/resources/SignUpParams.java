@@ -14,26 +14,40 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.bsclient;
+package uk.ac.ebi.biostudy.submission.rest.resources;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import org.json.JSONArray;
+/**
+ * @author olkin
+ */
+public class SignUpParams {
+    private String username;
+    private String password;
+    private String email;
+    private String orcid;
+    private String captcha;
+    private String path;
 
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-public class MyJSONArray {
-    private final JsonNode arr;
-
-    public MyJSONArray(JsonNode arr) {
-        this.arr = arr;
+    public String getUsername() {
+        return username;
     }
 
-    public int length() {
-        return arr.size();
+    public String getPassword() {
+        return password;
     }
 
-    public Stream<MyJSONObject> getMyJSONObjects() {
-        return IntStream.range(0, arr.size()).mapToObj(i -> new MyJSONObject(arr.get(i)));
+    public String getEmail() {
+        return email;
+    }
+
+    public String getOrcid() {
+        return orcid;
+    }
+
+    public String getCaptcha() {
+        return captcha;
+    }
+
+    public String getPath() {
+        return path;
     }
 }

@@ -22,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.resources.EmailPathCaptchaParams;
+import uk.ac.ebi.biostudy.submission.rest.resources.SignUpParams;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
 
 import javax.annotation.security.RolesAllowed;
@@ -101,7 +103,7 @@ public class RESTService {
     public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
             throws BioStudiesClientException, IOException {
         logger.debug("getSubmission(userSession={}, acc={}, origin={})", userSession, acc, origin);
-        return service.getSubmission(userSession, acc, origin).toString();
+        return service.getSubmission(userSession, acc, origin).json().toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -113,18 +115,18 @@ public class RESTService {
                              @QueryParam("showArchive") boolean showArchive,
                              @Context UserSession userSession) throws BioStudiesClientException, IOException {
         logger.debug("getFileDir(userSession={}, path={}, depth={}, showArchive={})", userSession, path, depth, showArchive);
-        return service.getFilesDir(userSession, path, depth, showArchive).toString();
+        return service.getFilesDir(userSession, path, depth, showArchive);
     }
 
     @POST
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String signup(String str) throws BioStudiesClientException, IOException {
-        logger.debug("signup(str={})", str);
+    public String signup(SignUpParams par) throws BioStudiesClientException, IOException {
+        logger.debug("signup(form={})", par);
         try {
-            JSONObject obj = updateApplPath(str, "activationURL");
-            return service.singUp(obj).toString();
+           // JSONObject obj = updateApplPath(str, "activationURL");
+            return service.signUp(par, getActivationUrl(par.getPath()));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
@@ -134,11 +136,11 @@ public class RESTService {
     @Path("/auth/passrstreq")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String passwordResetRequest(String str) throws BioStudiesClientException, IOException {
-        logger.debug("passwordResetRequest(str={})", str);
+    public String passwordResetRequest(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
+        logger.debug("passwordResetRequest(str={})", par);
         try {
-            JSONObject obj = updateApplPath(str, "resetURL");
-            return service.passwordResetRequest(obj).toString();
+            //JSONObject obj = updateApplPath(str, "resetURL");
+            return service.passwordResetRequest(par, getActivationUrl(par.getPath()));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
@@ -148,24 +150,19 @@ public class RESTService {
     @Path("/auth/resendActLink")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String resendActivationLink(String str) throws BioStudiesClientException, IOException {
-        logger.debug("passwordResetRequest(str={})", str);
+    public String resendActivationLink(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
+        logger.debug("passwordResetRequest(str={})", par);
         try {
-            JSONObject obj = updateApplPath(str, "activationURL");
-            return service.resendActivationLink(obj).toString();
+            //JSONObject obj = updateApplPath(str, "activationURL");
+            return service.resendActivationLink(par, getActivationUrl(par.getPath()));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
     }
 
-    private JSONObject updateApplPath(String json, String paramName) throws URISyntaxException {
-        JSONObject obj = toJson(json);
-        URI path = new URI(obj.getString("path"));
-        URI actUrl = buildAppUrl(path);
-
-        obj.put(paramName, actUrl.toString() + "/{KEY}");
-        obj.remove("path");
-        return obj;
+    private String getActivationUrl(String path) throws URISyntaxException {
+        URI actUrl = buildAppUrl(new URI(path));
+        return actUrl.toString() + "/{KEY}";
     }
 
     private URI buildAppUrl(URI path) throws URISyntaxException {
@@ -190,9 +187,9 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public String signout(@Context UserSession userSession) throws BioStudiesClientException, IOException {
         logger.info("signout(userSession={})", userSession);
-        JSONObject obj = service.singOut(userSession);
+        String resp = service.signOut(userSession);
         request.getSession(false).invalidate();
-        return obj.toString();
+        return resp;
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -203,7 +200,7 @@ public class RESTService {
     public String createSubmission(@Context UserSession userSession, String str)
             throws IOException, BioStudiesClientException {
         logger.debug("createSubmission(userSession={}, str={})", userSession, str);
-        return service.createSubmission(userSession, toJson(str)).toString();
+        return service.createSubmission(userSession, str).json().toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -214,7 +211,7 @@ public class RESTService {
     public String editSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
         logger.debug("editSubmission(userSession={}, acc={})", userSession, acc);
-        return service.editSubmission(userSession, acc).toString();
+        return service.editSubmission(userSession, acc);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -224,7 +221,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public void saveSubmission(@Context UserSession userSession, String str) throws IOException, BioStudiesClientException {
         logger.debug("saveSubmission(userSession={}, str={})", userSession, str);
-        service.saveSubmission(userSession, toJson(str));
+        service.saveSubmission(userSession, str);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -235,7 +232,7 @@ public class RESTService {
     public String submitSubmission(@Context UserSession userSession, String str)
             throws BioStudiesClientException, IOException {
         logger.debug("submitSubmission(userSession={}, str={})", userSession, str);
-        return service.submitSubmission(userSession, toJson(str)).toString();
+        return service.submitSubmission(userSession, str);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -246,7 +243,7 @@ public class RESTService {
     public String directSubmit(@Context UserSession userSession, @QueryParam("create") Boolean create, String str)
             throws BioStudiesClientException, IOException {
         logger.debug("directSubmit(userSession={}, create={}, str={})", userSession, create, str);
-        return service.directSubmit(userSession, create != null && create, toJson(str)).toString();
+        return service.directSubmit(userSession, create != null && create, str);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -268,7 +265,7 @@ public class RESTService {
     public String deleteFile(@Context UserSession userSession, @QueryParam("path") String path)
             throws BioStudiesClientException, IOException {
         logger.debug("deleteFile(userSession={}, path={})", userSession, path);
-        return service.deleteFile(userSession, path).toString();
+        return service.deleteFile(userSession, path);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -277,11 +274,7 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public String pubMedSearch(@Context UserSession userSession, @PathParam("id") String id) {
         logger.debug("pubMedSearch(userSession={}, ID={})", userSession, id);
-        return service.pubMedSearch(id).toString();
-    }
-
-    private static JSONObject toJson(String str) {
-        return new JSONObject(str);
+        return service.pubMedSearch(id);
     }
 
     private static JSONObject statusObj(boolean value) {

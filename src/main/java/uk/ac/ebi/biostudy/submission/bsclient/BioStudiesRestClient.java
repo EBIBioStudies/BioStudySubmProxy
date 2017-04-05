@@ -16,16 +16,10 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.glassfish.jersey.client.rx.rxjava.RxObservable;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import rx.Observable;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.*;
@@ -34,11 +28,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author Olga Melnichuk
@@ -186,19 +176,18 @@ public class BioStudiesRestClient implements BioStudiesClient {
         rsClient.close();
     }
 
-    public JSONObject submitNew(JsonNode obj, String sessionId)
-            throws BioStudiesClientException, IOException {
+    public String submitNew(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("submitNew(obj={}, sessionId={})", obj, sessionId);
-        ObjectNode copy = obj.deepCopy();
+       /* ObjectNode copy = obj.deepCopy();
         copy.put("accno", accnoTemplate(new MyJSONObject(copy), sessionId));
         JSONArray array = new JSONArray();
         array.put(copy);
         JSONObject submissions = new JSONObject();
-        submissions.put("submissions", array);
-        return postJSON(targets.createSubmissionReq(sessionId), submissions);
+        submissions.put("submissions", array);*/
+        return postJSON(targets.createSubmissionReq(sessionId), obj);
     }
 
-    private String accnoTemplate(MyJSONObject subm, String sessionId) throws IOException, BioStudiesClientException {
+   /* private String accnoTemplate(MyJSONObject subm, String sessionId) throws IOException, BioStudiesClientException {
         final String defaultTmpl = "!{S-BSST}";
 
         Optional<MyJSONArray> opt = subm.getJSONArray("attributes");
@@ -244,14 +233,14 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 .collect(Collectors.toList());
         return templates.isEmpty() ? Optional.empty() : templates.get(0);
     }
-
-    public String submitUpdated(JsonNode obj, String sessionId) throws BioStudiesClientException, IOException {
+*/
+    public String submitUpdated(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
-        ArrayNode array = JsonNodeFactory.instance.arrayNode();
+/*        ArrayNode array = JsonNodeFactory.instance.arrayNode();
         array.add(obj);
         ObjectNode submissions = JsonNodeFactory.instance.objectNode();
-        submissions.set("submissions", array);
-        return postJSON(targets.updateSubmissionReq(sessionId), submissions);
+        submissions.set("submissions", array);*/
+        return postJSON(targets.updateSubmissionReq(sessionId), obj);
     }
 
     public String getSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
@@ -285,106 +274,66 @@ public class BioStudiesRestClient implements BioStudiesClient {
         return get(targets.deleteFileReq(sessionId, file));
     }
 
-    public String signOut(String sessionId) throws BioStudiesClientException, IOException {
+    public String signOut(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("signOut(sessionId={})", sessionId);
-        ObjectNode obj = JsonNodeFactory.instance.objectNode();
-        obj.put("sessid", sessionId);
+        //ObjectNode obj = JsonNodeFactory.instance.objectNode();
+        //obj.put("sessid", sessionId);
         return postJSON(targets.signOutReq(sessionId), obj);
     }
 
-    public String signUp(JsonNode obj) throws BioStudiesClientException, IOException {
+    public String signUp(String obj) throws BioStudiesClientException, IOException {
         logger.debug("signUp(obj={})", obj);
         return postJSON(targets.signUpReq(), obj);
     }
 
-    public JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException {
+    public String passwordResetRequest(String obj) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(obj={})", obj);
-        return parseJSON(postJSON(
-                targets.passwordResetReq(), obj));
+        return postJSON(targets.passwordResetReq(), obj);
     }
 
     @Override
-    public JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException {
+    public String resendActivationLink(String obj) throws BioStudiesClientException, IOException {
         logger.debug("resendActivationLink(obj={})", obj);
-        return parseJSON(postJSON(
-                targets.resendActivationLinkReq(), obj));
+        return postJSON(targets.resendActivationLinkReq(), obj);
     }
 
-    public JSONObject signIn(String username, String password) throws BioStudiesClientException, IOException {
+    public String signIn(String username, String password) throws BioStudiesClientException, IOException {
         logger.debug("signIn(username={}, password=...)", username);
-        JSONObject obj = new JSONObject();
+        ObjectNode obj = JsonNodeFactory.instance.objectNode();
         obj.put("login", username);
         obj.put("password", password);
-        return signIn(obj);
+        return signIn(obj.toString());
     }
 
-    public JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException {
+    public String signIn(String obj) throws BioStudiesClientException, IOException {
         logger.debug("signIn(obj={})", obj);
-        return parseJSON(postJSON(
-                targets.signInReq(), obj));
+        return postJSON(targets.signInReq(), obj);
     }
 
-    public JSONObject getModifiedSubmission(String acc, String sessionId) throws IOException, BioStudiesClientException {
+    public String getModifiedSubmission(String acc, String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return parseJSON(get(targets.getModifiedSubmissionReq(sessionId, acc)));
+        return get(targets.getModifiedSubmissionReq(sessionId, acc));
     }
 
-    public void saveModifiedSubmission(JSONObject obj, String acc, String sessionId) throws IOException, BioStudiesClientException {
+    public String saveModifiedSubmission(String obj, String acc, String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
-        postForm(
+        return postForm(
                 targets.saveModifiedSubmissionReq(sessionId),
-                targets.saveModifiedSubmissionForm(acc, obj.toString()));
+                targets.saveModifiedSubmissionForm(acc, obj));
     }
 
-    public void deleteModifiedSubmission(String acc, String sessionId) throws IOException, BioStudiesClientException {
+    public String deleteModifiedSubmission(String acc, String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        post(targets.deleteModifiedSubmissionReq(sessionId, acc));
+        return postJSON(targets.deleteModifiedSubmissionReq(sessionId, acc), null);
     }
 
-    public JSONArray getModifiedSubmissions(String sessionId) throws IOException, BioStudiesClientException {
+    public String getModifiedSubmissions(String sessionId) throws IOException, BioStudiesClientException {
         logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
-        return parseJSONArray(get(
-                targets.getModifiedSubmissionsReq(sessionId)));
+        return get(targets.getModifiedSubmissionsReq(sessionId));
     }
 
-    private static String get(WebTarget target) throws BioStudiesClientException, IOException {
-        Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-        Response resp = null;
-        try {
-            resp = builder.get();
-            return readResponse(resp);
-        } catch (ProcessingException e) {
-            throw new IOException(e);
-        } finally {
-            if (resp != null)
-                resp.close();
-        }
-    }
-
-    private static Observable<String> getRx(WebTarget target) {
-        return RxObservable.from(target)
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                .rx()
-                .get()
-                .onErrorReturn(throwable -> {
-                    logger.error("getRx(...) error", throwable);
-                    return null;
-                })
-                .flatMap(resp -> {
-                    try {
-                        return Observable.just(readResponse(resp));
-                    } catch (BioStudiesClientException | IOException e) {
-                        return Observable.error(e);
-                    }
-                });
-    }
-
-    private static String post(WebTarget target) throws BioStudiesClientException, IOException {
-        return postJSON(target, null);
-    }
-
-    private static String postJSON(WebTarget target, JsonNode data) throws BioStudiesClientException, IOException {
-        return post(target, Entity.json(data == null ? null : data.asText()));
+    private static String postJSON(WebTarget target, String data) throws BioStudiesClientException, IOException {
+        return post(target, Entity.json(data));
     }
 
     private static String postForm(WebTarget target, Form data) throws BioStudiesClientException, IOException {
@@ -404,6 +353,20 @@ public class BioStudiesRestClient implements BioStudiesClient {
         }
     }
 
+    private static String get(WebTarget target) throws BioStudiesClientException, IOException {
+        Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
+        Response resp = null;
+        try {
+            resp = builder.get();
+            return readResponse(resp);
+        } catch (ProcessingException e) {
+            throw new IOException(e);
+        } finally {
+            if (resp != null)
+                resp.close();
+        }
+    }
+
     private static String readResponse(Response resp) throws BioStudiesClientException, IOException {
         if (resp == null) {
             throw new IOException("null response; see logs for details");
@@ -418,13 +381,5 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return body;
         }
         throw new BioStudiesClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
-    }
-
-    private static JSONObject parseJSON(String str) {
-        return str == null || str.isEmpty() ? null : new JSONObject(str);
-    }
-
-    private static JSONArray parseJSONArray(String str) {
-        return new JSONArray(str);
     }
 }

@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.bsclient;
+package uk.ac.ebi.biostudy.submission.rest.resources;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.json.JSONArray;
 
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-public class MyJSONArray {
-    private final JsonNode arr;
-
-    public MyJSONArray(JsonNode arr) {
-        this.arr = arr;
-    }
-
-    public int length() {
-        return arr.size();
-    }
-
-    public Stream<MyJSONObject> getMyJSONObjects() {
-        return IntStream.range(0, arr.size()).mapToObj(i -> new MyJSONObject(arr.get(i)));
+/**
+ * @author olkin
+ */
+public class PageTabUtils {
+    public static String accno(JsonNode subm) {
+        return subm.get("accno").asText();
     }
 }

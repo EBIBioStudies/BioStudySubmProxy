@@ -16,27 +16,26 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import jersey.repackaged.com.google.common.collect.Lists;
-import org.json.JSONObject;
 
 import java.util.Optional;
 
 class MyJSONObject {
-    private final ObjectNode obj;
+    private final JsonNode obj;
 
-    public MyJSONObject(ObjectNode obj) {
+    public MyJSONObject(JsonNode obj) {
         this.obj = obj;
     }
 
     Optional<MyJSONArray> getJSONArray(final String key) {
         Optional<String> propName = getRealKey(key);
-        return propName.map(s -> new MyJSONArray(obj.get(propName)));
+        return propName.map(s -> new MyJSONArray(obj.get(s)));
     }
 
     public Optional<String> getString(String key) {
         Optional<String> realKey = getRealKey(key);
-        return realKey.map(obj::getString);
+        return realKey.map(s -> obj.get(s).asText());
     }
 
     private Optional<String> getRealKey(String key) {

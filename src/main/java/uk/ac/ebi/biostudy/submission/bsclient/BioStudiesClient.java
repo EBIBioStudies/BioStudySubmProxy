@@ -16,45 +16,42 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Map;
 
 public interface BioStudiesClient extends Closeable {
-    JSONObject getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException;
+    String getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException;
 
-    JSONObject getSubmission(String accno, String sessid) throws BioStudiesClientException, IOException;
+    String getSubmission(String accno, String sessid) throws BioStudiesClientException, IOException;
 
-    void saveModifiedSubmission(JSONObject modified, String accno, String sessid) throws IOException, BioStudiesClientException;
+    String saveModifiedSubmission(String modified, String accno, String sessid) throws IOException, BioStudiesClientException;
 
-    JSONObject submitNew(JSONObject sbm, String sessid) throws BioStudiesClientException, IOException;
+    String submitNew(String sbm, String sessid) throws BioStudiesClientException, IOException;
 
-    JSONObject submitUpdated(JSONObject sbm, String sessid) throws BioStudiesClientException, IOException;
+    String submitUpdated(String sbm, String sessid) throws BioStudiesClientException, IOException;
 
-    void deleteModifiedSubmission(String acc, String sessid) throws IOException, BioStudiesClientException;
+    String deleteModifiedSubmission(String acc, String sessid) throws IOException, BioStudiesClientException;
 
-    boolean deleteSubmission(String acc, String sessid) throws BioStudiesClientException, IOException;
+    String deleteSubmission(String acc, String sessid) throws BioStudiesClientException, IOException;
 
     String getSubmissions(String sessid, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
 
     String getProjects(String sessid) throws BioStudiesClientException, IOException;
 
-    JSONArray getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
+    String getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
 
-    JSONObject getFilesDir(String path, int depth, boolean showArchive, String sessid) throws BioStudiesClientException, IOException;
+    String getFilesDir(String path, int depth, boolean showArchive, String sessid) throws BioStudiesClientException, IOException;
 
-    JSONObject deleteFile(String file, String sessid) throws BioStudiesClientException, IOException;
+    String deleteFile(String file, String sessid) throws BioStudiesClientException, IOException;
 
-    JSONObject signOut(String sessid) throws BioStudiesClientException, IOException;
+    String signOut(String obj, String sessid) throws BioStudiesClientException, IOException;
 
-    String signUp(JSONObject obj) throws BioStudiesClientException, IOException;
+    String signUp(String obj) throws BioStudiesClientException, IOException;
 
-    JSONObject signIn(JSONObject obj) throws BioStudiesClientException, IOException;
+    String signIn(String obj) throws BioStudiesClientException, IOException;
 
-    JSONObject passwordResetRequest(JSONObject obj) throws BioStudiesClientException, IOException;
+    String passwordResetRequest(String obj) throws BioStudiesClientException, IOException;
 
-    JSONObject resendActivationLink(JSONObject obj) throws BioStudiesClientException, IOException;
+    String resendActivationLink(String obj) throws BioStudiesClientException, IOException;
 }
