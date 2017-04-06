@@ -15,24 +15,32 @@
  */
 package uk.ac.ebi.biostudy.submission.rest.resources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.europepmc.EuropePmcClient;
+import uk.ac.ebi.biostudy.submission.rest.data.ModifiedSubmission;
+import uk.ac.ebi.biostudy.submission.rest.data.SubmissionListItem;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
+import uk.ac.ebi.biostudy.submission.rest.resources.params.EmailPathCaptchaParams;
+import uk.ac.ebi.biostudy.submission.rest.resources.params.SignUpParams;
+import uk.ac.ebi.biostudy.submission.rest.resources.params.SubmFilterParams;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
-import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionList.*;
+import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionListItem.byMTime;
 
 public class SubmissionService {
 
@@ -107,7 +115,9 @@ public class SubmissionService {
                 bsclient.submitNew(data, userSession.getSessid()) :
                 bsclient.submitUpdated(data, userSession.getSessid());
 
-        String status = result.getString("status");
+        //TODO: better way to read BioStudies API response
+        JsonNode resultNode = new ObjectMapper().readTree(result);
+        String status = resultNode.get("status").asText();
         if (status.equals("OK")) {
             deleteSubmission(userSession, modified.getAccno());
         }
@@ -148,17 +158,31 @@ public class SubmissionService {
             throws BioStudiesClientException, IOException {
         SubmFilterParams params = SubmFilterParams.fromMap(paramMap);
         String sessId = userSession.getSessid();
-        List<JSONObject> tmodified = transformModified(bsclient.getModifiedSubmissions(sessId));
-        tmodified.sort(byModificationDate);
-        tmodified = tmodified
+
+        JsonNode json = new ObjectMapper().readTree(bsclient.getModifiedSubmissions(sessId));
+        List<SubmissionListItem> submList = new ArrayList<>();
+
+        if (json.isArray()) {
+            json.forEach((JsonNode node) -> {
+                try {
+                    submList.add(SubmissionListItem.from(ModifiedSubmission.convert(node)));
+                } catch (JsonProcessingException e) {
+                   logger.error("Converting modified submissions error", e);
+                }
+            });
+        }
+
+        submList.sort(byMTime());
+        List<SubmissionListItem> filtered =
+                submList
                 .stream()
                 .filter(params.asPredicate())
                 .skip(offset)
                 .limit(limit)
                 .collect(Collectors.toList());
 
-        JSONObject obj = new JSONObject();
-        obj.put("submissions", tmodified);
+        ObjectNode obj = JsonNodeFactory.instance.objectNode();
+        obj.set("submissions", new ObjectMapper().valueToTree(filtered));
         return obj.toString();
     }
 
@@ -179,56 +203,72 @@ public class SubmissionService {
 
     public String signOut(UserSession userSession) throws BioStudiesClientException, IOException {
         logger.debug("signOut(userSession={})", userSession);
-        return bsclient.signOut(userSession.getSessid());
-    }
-
-    public String signUp(String obj) throws BioStudiesClientException, IOException {
-        logger.debug("signUp(obj={})", obj);
-        return bsclient.signUp(obj);
+        ObjectNode obj = JsonNodeFactory.instance.objectNode();
+        obj.put("sessid", userSession.getSessid());
+        return bsclient.signOut(obj.toString(), userSession.getSessid());
     }
 
     public String signIn(String obj) throws BioStudiesClientException, IOException {
         return bsclient.signIn(obj);
     }
 
-    public String passwordResetRequest(String obj) throws BioStudiesClientException, IOException {
-        logger.debug("passwordResetRequest(obj={})", obj);
-        return bsclient.passwordResetRequest(obj);
+    public String signUp(SignUpParams params) throws BioStudiesClientException, IOException {
+        logger.debug("signUp(obj={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("username", params.getUsername());
+        json.put("password", params.getPassword());
+        json.put("email", params.getEmail());
+        json.put("recaptcha2-response", params.getCaptcha());
+        json.put("activationURL", params.getPath());
+        ArrayNode aux = JsonNodeFactory.instance.arrayNode();
+        aux.add("orcid:" + (params.hasOrcid() ? params.getOrcid() : ""));
+        json.set("aux", aux);
+        return bsclient.signUp(json.toString());
     }
 
-    public String resendActivationLink(String obj) throws BioStudiesClientException, IOException {
-        logger.debug("resendActivationLink(obj={})", obj);
-        return bsclient.resendActivationLink(obj);
+    public String passwordResetRequest(EmailPathCaptchaParams params) throws BioStudiesClientException, IOException {
+        logger.debug("passwordResetRequest(obj={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("email", params.getEmail());
+        json.put("recaptcha2-response", params.getCaptcha());
+        json.put("resetURL", params.getPath());
+        return bsclient.passwordResetRequest(json.toString());
+    }
+
+    public String resendActivationLink(EmailPathCaptchaParams params) throws BioStudiesClientException, IOException {
+        logger.debug("resendActivationLink(obj={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("email", params.getEmail());
+        json.put("recaptcha2-response", params.getCaptcha());
+        json.put("activationURL", params.getPath());
+        return bsclient.resendActivationLink(json.toString());
     }
 
     public String pubMedSearch(String id) {
         logger.debug("pubMedSearch(ID={})", id);
-        try {
-            JSONObject res = europePmc.pubMedSearch(id);
+        ObjectNode result = JsonNodeFactory.instance.objectNode();
 
-            int hitCount = res.getInt("hitCount");
-            JSONObject data = new JSONObject();
+        try {
+            JsonNode resp = new ObjectMapper().readTree(europePmc.pubMedSearch(id));
+
+            int hitCount = resp.path("hitCount").asInt();
+            ObjectNode data = JsonNodeFactory.instance.objectNode();
 
             if (hitCount >= 1) {
-                final JSONObject publ = res.getJSONObject("resultList").getJSONArray("result").getJSONObject(0);
-                europePmcAttributes.entrySet().stream().forEach(entry -> {
-                            if (publ.has(entry.getKey())) {
-                                data.put(entry.getValue(), publ.getString(entry.getKey()));
-                            }
-                        }
-                );
+                final JsonNode publ = resp.path("resultList").path("result").get(0);
+                europePmcAttributes.forEach((key, value) -> {
+                    if (publ.has(key)) {
+                        data.put(value, publ.get(key).asText(""));
+                    }
+                });
             }
-            JSONObject obj = new JSONObject();
-            obj.put("status", "OK");
-            obj.put("data", data);
-            return obj;
+            result.put("status", "OK");
+            result.set("data", data);
         } catch (IOException e) {
             logger.warn("EuropePMC call for ID={} failed: {}", id, e);
-            return fail("EuropePMC error");
+            result.put("status", "FAIL");
+            result.set("data", JsonNodeFactory.instance.objectNode());
         }
-    }
-
-    private static JSONObject fail(String message) {
-        return new JSONObject().put("status", "FAIL").put("message", message);
+        return result.toString();
     }
 }

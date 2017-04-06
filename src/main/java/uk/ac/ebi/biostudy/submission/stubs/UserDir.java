@@ -16,9 +16,6 @@
 
 package uk.ac.ebi.biostudy.submission.stubs;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
@@ -29,7 +26,7 @@ import java.nio.file.Path;
 
 class UserDir {
 
-    private final Path root;
+  /*  private final Path root;
 
     UserDir(Path root) {
         this.root = root;
@@ -74,5 +71,5 @@ class UserDir {
             throw ex.getCause();
         }
         return array;
-    }
+    }*/
 }

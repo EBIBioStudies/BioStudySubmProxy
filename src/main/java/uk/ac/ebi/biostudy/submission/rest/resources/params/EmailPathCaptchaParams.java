@@ -14,15 +14,28 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.rest.resources;
-
-import com.fasterxml.jackson.databind.JsonNode;
+package uk.ac.ebi.biostudy.submission.rest.resources.params;
 
 /**
  * @author olkin
  */
-public class PageTabUtils {
-    public static String accno(JsonNode subm) {
-        return subm.get("accno").asText();
+public class EmailPathCaptchaParams extends WithPath<EmailPathCaptchaParams> {
+    private String email;
+    private String captcha;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getCaptcha() {
+        return captcha;
+    }
+
+    @Override
+    EmailPathCaptchaParams copyAll() {
+        EmailPathCaptchaParams p = new EmailPathCaptchaParams();
+        p.email = email;
+        p.captcha = captcha;
+        return p;
     }
 }

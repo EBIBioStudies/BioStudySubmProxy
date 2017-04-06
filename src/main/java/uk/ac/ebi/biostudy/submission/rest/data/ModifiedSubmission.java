@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.rest.resources;
+package uk.ac.ebi.biostudy.submission.rest.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
-import static uk.ac.ebi.biostudy.submission.rest.resources.PageTabUtils.accno;
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.accno;
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.rtimeInSeconds;
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.title;
 
 /**
  * @author olkin
@@ -39,6 +42,10 @@ public class ModifiedSubmission {
 
     @JsonProperty("data")
     private JsonNode data;
+
+    @SuppressWarnings("unused")
+    public ModifiedSubmission() {
+    }
 
     public ModifiedSubmission(String accession, long changed, JsonNode data) {
         this.accession = accession;
@@ -84,5 +91,21 @@ public class ModifiedSubmission {
 
     public boolean isNew() {
         return  accession.startsWith(ACCNO_PREFIX);
+    }
+
+    public static ModifiedSubmission convert(JsonNode node) throws JsonProcessingException {
+        return new ObjectMapper().treeToValue(node, ModifiedSubmission.class);
+    }
+
+    public String getTitle() {
+        return title(this.data);
+    }
+
+    public Long getRTimeInSeconds() {
+        return rtimeInSeconds(this.data);
+    }
+
+    public Long getMTimeInSeconds() {
+        return changed / 1000;
     }
 }

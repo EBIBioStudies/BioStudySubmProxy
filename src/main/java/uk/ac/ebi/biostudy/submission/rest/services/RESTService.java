@@ -16,15 +16,17 @@
 
 package uk.ac.ebi.biostudy.submission.rest.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.http.client.utils.URIBuilder;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudy.submission.rest.data.UserSession;
-import uk.ac.ebi.biostudy.submission.rest.resources.EmailPathCaptchaParams;
-import uk.ac.ebi.biostudy.submission.rest.resources.SignUpParams;
 import uk.ac.ebi.biostudy.submission.rest.resources.SubmissionService;
+import uk.ac.ebi.biostudy.submission.rest.resources.params.EmailPathCaptchaParams;
+import uk.ac.ebi.biostudy.submission.rest.resources.params.SignUpParams;
 
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
@@ -51,7 +53,6 @@ public class RESTService {
 
     @Inject
     private SubmissionService service;
-
 
     @RolesAllowed("AUTHENTICATED")
     @GET
@@ -125,8 +126,7 @@ public class RESTService {
     public String signup(SignUpParams par) throws BioStudiesClientException, IOException {
         logger.debug("signup(form={})", par);
         try {
-           // JSONObject obj = updateApplPath(str, "activationURL");
-            return service.signUp(par, getActivationUrl(par.getPath()));
+            return service.signUp(par.setPath(getApplUrl(par.getPath())));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
@@ -139,8 +139,7 @@ public class RESTService {
     public String passwordResetRequest(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(str={})", par);
         try {
-            //JSONObject obj = updateApplPath(str, "resetURL");
-            return service.passwordResetRequest(par, getActivationUrl(par.getPath()));
+            return service.passwordResetRequest(par.setPath(getApplUrl(par.getPath())));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
@@ -153,19 +152,18 @@ public class RESTService {
     public String resendActivationLink(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(str={})", par);
         try {
-            //JSONObject obj = updateApplPath(str, "activationURL");
-            return service.resendActivationLink(par, getActivationUrl(par.getPath()));
+            return service.resendActivationLink(par.setPath(getApplUrl(par.getPath())));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
     }
 
-    private String getActivationUrl(String path) throws URISyntaxException {
-        URI actUrl = buildAppUrl(new URI(path));
+    private String getApplUrl(String path) throws URISyntaxException {
+        URI actUrl = buildApplUrl(new URI(path));
         return actUrl.toString() + "/{KEY}";
     }
 
-    private URI buildAppUrl(URI path) throws URISyntaxException {
+    private URI buildApplUrl(URI path) throws URISyntaxException {
         logger.debug("buildAppUrl(path={})", path);
         URI uri = new URI(request.getRequestURL().toString());
         URIBuilder uriBuilder = new URIBuilder()
@@ -277,9 +275,9 @@ public class RESTService {
         return service.pubMedSearch(id);
     }
 
-    private static JSONObject statusObj(boolean value) {
-        JSONObject obj = new JSONObject();
-        obj.put("status", value ? "OK" : "FAILED");
-        return obj;
+    private static JsonNode statusObj(boolean value) {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();;
+        node.put("status", value ? "OK" : "FAILED");
+        return node;
     }
 }

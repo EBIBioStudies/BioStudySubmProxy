@@ -16,23 +16,8 @@
 
 package uk.ac.ebi.biostudy.submission.stubs;
 
-import org.apache.http.entity.ContentType;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClient;
-import uk.ac.ebi.biostudy.submission.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudy.submission.rest.resources.SubmFilterParams;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static uk.ac.ebi.biostudy.submission.rest.data.Submission.*;
-
-public class BioStudiesClientStub implements BioStudiesClient {
+public class BioStudiesClientStub /*implements BioStudiesClient*/ {
+/*
 
     private final AtomicInteger counter = new AtomicInteger(0);
     private final ConcurrentMap<String, JSONObject> modified = new ConcurrentHashMap<>();
@@ -185,5 +170,6 @@ public class BioStudiesClientStub implements BioStudiesClient {
             throw new BioStudiesClientException(401, ContentType.TEXT_PLAIN.toString(), "Unauthorized");
         }
     }
+*/
 
 }

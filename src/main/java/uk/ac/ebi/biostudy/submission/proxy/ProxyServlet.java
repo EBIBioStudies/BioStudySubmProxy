@@ -17,7 +17,6 @@
 package uk.ac.ebi.biostudy.submission.proxy;
 
 import uk.ac.ebi.biostudy.submission.context.AppConfig;
-import uk.ac.ebi.biostudy.submission.stubs.ProxyStub;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -38,8 +37,8 @@ public class ProxyServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         AppConfig config = getConfig(getServletContext());
-        proxy = config.isOfflineModeOn() ?
-                new ProxyStub() :
+        proxy =/* config.isOfflineModeOn() ?
+                new ProxyStub() :*/
                 new RemoteProxy(config.getServerUrl(), source -> source.replace("/raw", ""));
     }
 

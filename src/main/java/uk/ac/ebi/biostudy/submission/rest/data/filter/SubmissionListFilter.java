@@ -14,25 +14,15 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.rest.resources;
+package uk.ac.ebi.biostudy.submission.rest.data.filter;
+
+import uk.ac.ebi.biostudy.submission.rest.data.SubmissionListItem;
+
+import java.util.function.Predicate;
 
 /**
- * @author olkin
+ * @author Olga Melnichuk
  */
-public class EmailPathCaptchaParams {
-    private String email;
-    private String path;
-    private String captcha;
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public String getCaptcha() {
-        return captcha;
-    }
+public interface SubmissionListFilter {
+    Predicate<SubmissionListItem> create(String value);
 }

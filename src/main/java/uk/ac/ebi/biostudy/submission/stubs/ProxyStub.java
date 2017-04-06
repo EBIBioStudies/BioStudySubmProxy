@@ -17,7 +17,6 @@
 package uk.ac.ebi.biostudy.submission.stubs;
 
 
-import org.json.JSONObject;
 import uk.ac.ebi.biostudy.submission.proxy.Proxy;
 
 import javax.servlet.ServletException;
@@ -29,9 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class ProxyStub implements Proxy {
+public class ProxyStub /*implements Proxy*/ {
 
-    private static Map<String, JSONObject> paths = new HashMap<String, JSONObject>() {
+  /*  private static Map<String, JSONObject> paths = new HashMap<String, JSONObject>() {
         {
             put("/auth/signin", new JSONObject()
                     .put("status", "OK")
@@ -69,7 +68,7 @@ public class ProxyStub implements Proxy {
 
     private void responseWith404(HttpServletResponse resp) throws IOException {
         resp.sendError(HttpServletResponse.SC_NOT_FOUND);
-    }
+    }*/
 
 
 }

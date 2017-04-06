@@ -34,10 +34,9 @@ class BioStudiesClientFactory implements Factory<BioStudiesClient> {
     @Override
     public BioStudiesClient create(ServletContext context) {
         AppConfig config = AppContext.getConfig(context);
-        bsClient = config.isOfflineModeOn() ?
-                new BioStudiesClientStub(config.getUserDir()) :
-                new BioStudiesRestClient(config.getServerUrl());
-        return bsClient;
+        //bsClient = config.isOfflineModeOn() ?
+        //        new BioStudiesClientStub(config.getUserDir()) :
+        return new BioStudiesRestClient(config.getServerUrl());
     }
 
     @Override

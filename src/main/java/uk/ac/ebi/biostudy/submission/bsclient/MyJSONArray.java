@@ -17,7 +17,6 @@
 package uk.ac.ebi.biostudy.submission.bsclient;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.json.JSONArray;
 
 import java.util.stream.IntStream;
 import java.util.stream.Stream;

@@ -176,15 +176,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
         rsClient.close();
     }
 
-    public String submitNew(String obj, String sessionId) throws BioStudiesClientException, IOException {
-        logger.debug("submitNew(obj={}, sessionId={})", obj, sessionId);
+    public String submitNew(String subm, String sessionId) throws BioStudiesClientException, IOException {
+        logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
        /* ObjectNode copy = obj.deepCopy();
         copy.put("accno", accnoTemplate(new MyJSONObject(copy), sessionId));
         JSONArray array = new JSONArray();
         array.put(copy);
         JSONObject submissions = new JSONObject();
         submissions.put("submissions", array);*/
-        return postJSON(targets.createSubmissionReq(sessionId), obj);
+        return postJSON(targets.createSubmissionReq(sessionId), subm);
     }
 
    /* private String accnoTemplate(MyJSONObject subm, String sessionId) throws IOException, BioStudiesClientException {
@@ -261,7 +261,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     public String deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
         return get(targets.deleteSubmissionReq(sessionId, acc));
-        //return resp.has("level") && resp.getString("level").equalsIgnoreCase("success");
     }
 
     public String getFilesDir(String path, int depth, boolean showArchive, String sessionId) throws BioStudiesClientException, IOException {
@@ -276,8 +275,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     public String signOut(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("signOut(sessionId={})", sessionId);
-        //ObjectNode obj = JsonNodeFactory.instance.objectNode();
-        //obj.put("sessid", sessionId);
         return postJSON(targets.signOutReq(sessionId), obj);
     }
 

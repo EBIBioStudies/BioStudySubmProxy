@@ -14,40 +14,23 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudy.submission.rest.resources;
+package uk.ac.ebi.biostudy.submission.rest.resources.params;
 
 /**
  * @author olkin
  */
-public class SignUpParams {
-    private String username;
-    private String password;
-    private String email;
-    private String orcid;
-    private String captcha;
+abstract class WithPath<T extends WithPath> {
     private String path;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getOrcid() {
-        return orcid;
-    }
-
-    public String getCaptcha() {
-        return captcha;
-    }
 
     public String getPath() {
         return path;
     }
+
+    public T setPath(String newPath) {
+        T copy = this.copyAll();
+        ((WithPath) copy).path = newPath;
+        return copy;
+    }
+
+    abstract T copyAll();
 }
