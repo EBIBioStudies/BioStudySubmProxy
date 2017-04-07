@@ -27,7 +27,7 @@ public final class UserSession {
         this.sessid = sessid;
     }
 
-    public String getSessid() {
+    public String id() {
         return sessid;
     }
 

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author olkin
@@ -37,16 +38,24 @@ public class PageTabUtils {
 
     private static final DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
-    public static String accno(JsonNode subm) {
+    public static String accnoField(JsonNode subm) {
         return subm.get("accno").asText();
     }
 
-    public static String title(JsonNode subm) {
-        return attributeValue(attributes(subm), "title");
+    public static String titleAttr(JsonNode subm) {
+        return first(attributeValues(attributes(subm), "title"), "");
     }
 
-    public static Long rtimeInSeconds(JsonNode subm) {
-        return seconds(attributeValue(attributes(subm), "releaseDate"));
+    public static Long rtimeInSecondsAttr(JsonNode subm) {
+        return toSeconds(first(attributeValues(attributes(subm), "releaseDate"), ""));
+    }
+
+    public static List<String> attachToAttr(JsonNode subm) {
+        return attributeValues(attributes(subm), "attachTo");
+    }
+
+    public static String accnoTemplateAttr(JsonNode subm) {
+        return first(attributeValues(attributes(subm), "accnotemplate"), "");
     }
 
     private static List<JsonNode> attributes(JsonNode node) {
@@ -64,12 +73,15 @@ public class PageTabUtils {
         return list;
     }
 
-    private static String attributeValue(List<JsonNode> attributes, String attrName) {
-        Optional<String> opt = attributes.stream()
+    private static List<String> attributeValues(List<JsonNode> attributes, String attrName) {
+        return attributes.stream()
                 .filter(node -> getAttrName(node).equalsIgnoreCase(attrName))
                 .map(node -> getAttrValue(node))
-                .findFirst();
-        return opt.orElse("");
+                .collect(Collectors.toList());
+    }
+
+    private static <T> T first(List<T> list, T defaultValue) {
+        return list.isEmpty() ? defaultValue : list.get(0);
     }
 
     private static String getAttrName(JsonNode node) {
@@ -89,7 +101,7 @@ public class PageTabUtils {
         return name.map(s -> node.get(s).asText()).orElse("");
     }
 
-    private static Long seconds(String value) {
+    private static Long toSeconds(String value) {
         try {
             if (value != null && !value.isEmpty()) {
                 return format.parse(value).getTime() / 1000;

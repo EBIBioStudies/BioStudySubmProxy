@@ -40,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.accnoTemplateAttr;
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.attachToAttr;
 import static uk.ac.ebi.biostudy.submission.rest.data.SubmissionListItem.byMTime;
 
 public class SubmissionService {
@@ -66,98 +68,142 @@ public class SubmissionService {
         this.europePmc = new EuropePmcClient();
     }
 
-    public ModifiedSubmission getSubmission(final UserSession userSession, final String accno, boolean origin)
+    public ModifiedSubmission getSubmission(final String accno, boolean origin, final UserSession session)
             throws BioStudiesClientException, IOException {
-        logger.debug("getSubmission(userSession={}, accno={}, origin={})", userSession, accno, origin);
+        logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno, origin);
         if (!origin) {
-            String resp = bsclient.getModifiedSubmission(accno, userSession.getSessid());
+            String resp = bsclient.getModifiedSubmission(accno, session.id());
             if (resp != null) {
                 return ModifiedSubmission.parse(resp);
             }
         }
-        return ModifiedSubmission.wrap(bsclient.getSubmission(accno, userSession.getSessid()));
+        return ModifiedSubmission.wrap(bsclient.getSubmission(accno, session.id()));
     }
 
-    public ModifiedSubmission createSubmission(UserSession userSession, String subm) throws IOException, BioStudiesClientException {
-        logger.debug("createSubmission(userSession={})", userSession);
+    public ModifiedSubmission createSubmission(String subm, UserSession session) throws IOException, BioStudiesClientException {
+        logger.debug("createSubmission(session={})", session);
         ModifiedSubmission modified = ModifiedSubmission.wrap(subm);
-        saveSubmission(userSession, modified);
+        saveSubmission(modified, session);
         return modified;
     }
 
-    public void saveSubmission(UserSession userSession, String subm) throws IOException, BioStudiesClientException {
-        this.saveSubmission(userSession, ModifiedSubmission.parse(subm));
+    public void saveSubmission(String subm, UserSession session) throws IOException, BioStudiesClientException {
+        this.saveSubmission(ModifiedSubmission.parse(subm), session);
     }
 
-    public void saveSubmission(UserSession userSession, ModifiedSubmission subm) throws IOException, BioStudiesClientException {
-        logger.debug("saveSubmission(userSession={}, obj={})", userSession, subm);
-        bsclient.saveModifiedSubmission(subm.update().json().toString(), subm.getAccno(), userSession.getSessid());
+    private void saveSubmission(ModifiedSubmission subm, UserSession session) throws IOException, BioStudiesClientException {
+        logger.debug("saveSubmission(session={}, obj={})", session, subm);
+        bsclient.saveModifiedSubmission(subm.update().json().toString(), subm.getAccno(), session.id());
     }
 
-    public String editSubmission(final UserSession userSession, final String accno)
+    public String editSubmission(String accno, UserSession session)
             throws BioStudiesClientException, IOException {
-        logger.debug("editSubmission(userSession={}, accno={})", userSession, accno);
-        String sbm = bsclient.getModifiedSubmission(accno, userSession.getSessid());
+        logger.debug("editSubmission(session={}, accnoAttr={})", session, accno);
+        String sbm = bsclient.getModifiedSubmission(accno, session.id());
         if (sbm == null) {
             logger.debug("no temporary copy; creating one...");
-            ModifiedSubmission modified = getSubmission(userSession, accno, true);
-            saveSubmission(userSession, modified);
+            ModifiedSubmission modified = getSubmission(accno, true, session);
+            saveSubmission(modified, session);
             return modified.json().toString();
         }
         return sbm;
     }
 
-    public String submitSubmission(UserSession userSession, String subm) throws IOException, BioStudiesClientException {
-        logger.debug("submitSubmission(userSession={}, obj={})", userSession, subm);
+    public String submitModified(String subm, UserSession session) throws IOException, BioStudiesClientException {
+        logger.debug("submitSubmission(session={}, obj={})", session, subm);
         ModifiedSubmission modified = ModifiedSubmission.parse(subm);
-        String data = modified.getData().toString();
-        String result = modified.isNew() ?
-                bsclient.submitNew(data, userSession.getSessid()) :
-                bsclient.submitUpdated(data, userSession.getSessid());
+        String result = submit(modified.isNew(), modified.getData(), session);
 
         //TODO: better way to read BioStudies API response
         JsonNode resultNode = new ObjectMapper().readTree(result);
         String status = resultNode.get("status").asText();
         if (status.equals("OK")) {
-            deleteSubmission(userSession, modified.getAccno());
+            deleteSubmission(modified.getAccno(), session);
         }
         return result;
     }
 
-    public String directSubmit(UserSession userSession, boolean create, String obj) throws IOException, BioStudiesClientException {
-        return create ? this.bsclient.submitNew(obj, userSession.getSessid()) :
-                this.bsclient.submitUpdated(obj, userSession.getSessid());
+    public String submitPlain(boolean create, String subm, UserSession session) throws IOException, BioStudiesClientException {
+        JsonNode node = new ObjectMapper().readTree(subm);
+        return submit(create, node, session);
     }
 
-    public boolean deleteSubmission(final UserSession userSession, final String acc)
+    private String submit(boolean create, JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
+        return create ? submitNew(subm, session) : submitExisted(subm, session);
+    }
+
+    private String submitNew(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
+        ObjectNode copy = subm.deepCopy();
+        copy.put("accno", accnoTemplate(copy, session));
+
+        ArrayNode array = JsonNodeFactory.instance.arrayNode();
+        array.add(copy);
+
+        ObjectNode submissions = JsonNodeFactory.instance.objectNode();
+        submissions.set("submissions", array);
+
+        return bsclient.submitNew(submissions.toString(), session.id());
+    }
+
+    private String submitExisted(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
+        ArrayNode array = JsonNodeFactory.instance.arrayNode();
+        array.add(subm);
+
+        ObjectNode submissions = JsonNodeFactory.instance.objectNode();
+        submissions.set("submissions", array);
+        return bsclient.submitUpdated(submissions.toString(), session.id());
+    }
+
+    private String accnoTemplate(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
+        final String defaultTmpl = "!{S-BSST}";
+
+        List<String> accessions = attachToAttr(subm);
+        if (accessions.size() != 1) {
+            return defaultTmpl;
+        }
+
+        String accno = accessions.get(0);
+        if (accno == null || accno.isEmpty()) {
+            return defaultTmpl;
+        }
+        String accnoTmpl = projectAccnoTemplate(accno, session);
+        return accnoTmpl == null || accno.isEmpty() ? defaultTmpl : accnoTmpl;
+    }
+
+    private String projectAccnoTemplate(String accno, UserSession session) throws IOException, BioStudiesClientException {
+        ModifiedSubmission proj = getSubmission(accno, true, session);
+        return accnoTemplateAttr(proj.getData());
+    }
+
+    public boolean deleteSubmission(String acc, UserSession session)
             throws BioStudiesClientException, IOException {
-        logger.debug("deleteSubmission(userSession={}, acc={})", userSession, acc);
-        String sbm = bsclient.getModifiedSubmission(acc, userSession.getSessid());
+        logger.debug("deleteSubmission(session={}, acc={})", session, acc);
+        String sbm = bsclient.getModifiedSubmission(acc, session.id());
         if (sbm != null) {
-            bsclient.deleteModifiedSubmission(acc, userSession.getSessid());
+            bsclient.deleteModifiedSubmission(acc, session.id());
             return true;
         }
-        sbm = bsclient.getSubmission(acc, userSession.getSessid());
+        sbm = bsclient.getSubmission(acc, session.id());
         //TODO do it better way
         if (sbm == null) {
             return true;
         }
-        String resp = bsclient.deleteSubmission(acc, userSession.getSessid());
+        String resp = bsclient.deleteSubmission(acc, session.id());
         JsonNode json = new ObjectMapper().readTree(resp);
         String level = json.get("level").asText();
         return level.equalsIgnoreCase("success");
     }
 
-    public String getSubmittedSubmissions(UserSession userSession, int offset, int limit, Map<String, String> paramMap)
+    public String getSubmittedSubmissions(int offset, int limit, Map<String, String> paramMap, UserSession session)
             throws BioStudiesClientException, IOException {
-        String sessId = userSession.getSessid();
+        String sessId = session.id();
         return bsclient.getSubmissions(sessId, offset, limit, paramMap);
     }
 
-    public String getModifiedSubmissions(UserSession userSession, int offset, int limit, Map<String, String> paramMap)
+    public String getModifiedSubmissions(int offset, int limit, Map<String, String> paramMap, UserSession session)
             throws BioStudiesClientException, IOException {
         SubmFilterParams params = SubmFilterParams.fromMap(paramMap);
-        String sessId = userSession.getSessid();
+        String sessId = session.id();
 
         JsonNode json = new ObjectMapper().readTree(bsclient.getModifiedSubmissions(sessId));
         List<SubmissionListItem> submList = new ArrayList<>();
@@ -167,7 +213,7 @@ public class SubmissionService {
                 try {
                     submList.add(SubmissionListItem.from(ModifiedSubmission.convert(node)));
                 } catch (JsonProcessingException e) {
-                   logger.error("Converting modified submissions error", e);
+                    logger.error("Converting modified submissions error", e);
                 }
             });
         }
@@ -175,37 +221,37 @@ public class SubmissionService {
         submList.sort(byMTime());
         List<SubmissionListItem> filtered =
                 submList
-                .stream()
-                .filter(params.asPredicate())
-                .skip(offset)
-                .limit(limit)
-                .collect(Collectors.toList());
+                        .stream()
+                        .filter(params.asPredicate())
+                        .skip(offset)
+                        .limit(limit)
+                        .collect(Collectors.toList());
 
         ObjectNode obj = JsonNodeFactory.instance.objectNode();
         obj.set("submissions", new ObjectMapper().valueToTree(filtered));
         return obj.toString();
     }
 
-    public String getProjects(UserSession userSession) throws BioStudiesClientException, IOException {
-        return bsclient.getProjects(userSession.getSessid());
+    public String getProjects(UserSession session) throws BioStudiesClientException, IOException {
+        return bsclient.getProjects(session.id());
     }
 
-    public String getFilesDir(UserSession userSession, String path, int depth, boolean showArchive) throws BioStudiesClientException, IOException {
-        logger.debug("getFilesDir(userSession={, path={}, depth={}, showArchive={})", userSession, path, depth, showArchive);
-        return bsclient.getFilesDir(path, depth, showArchive, userSession.getSessid());
+    public String getFilesDir(String path, int depth, boolean showArchive, UserSession session) throws BioStudiesClientException, IOException {
+        logger.debug("getFilesDir(session={}, path={}, depth={}, showArchive={})", session, path, depth, showArchive);
+        return bsclient.getFilesDir(path, depth, showArchive, session.id());
     }
 
-    public String deleteFile(UserSession userSession, String path)
+    public String deleteFile(String path, UserSession session)
             throws BioStudiesClientException, IOException {
-        logger.debug("deleteFile(userSession={}, path={})", userSession, path);
-        return bsclient.deleteFile(path, userSession.getSessid());
+        logger.debug("deleteFile(session={}, path={})", session, path);
+        return bsclient.deleteFile(path, session.id());
     }
 
-    public String signOut(UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("signOut(userSession={})", userSession);
+    public String signOut(UserSession session) throws BioStudiesClientException, IOException {
+        logger.debug("signOut(session={})", session);
         ObjectNode obj = JsonNodeFactory.instance.objectNode();
-        obj.put("sessid", userSession.getSessid());
-        return bsclient.signOut(obj.toString(), userSession.getSessid());
+        obj.put("sessid", session.id());
+        return bsclient.signOut(obj.toString(), session.id());
     }
 
     public String signIn(String obj) throws BioStudiesClientException, IOException {

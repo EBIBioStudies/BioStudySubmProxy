@@ -34,29 +34,29 @@ public class BioStudiesClientStub /*implements BioStudiesClient*/ {
     }
 
     @Override
-    public JSONObject getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException {
+    public JSONObject getModifiedSubmission(String accnoAttr, String sessid) throws IOException, BioStudiesClientException {
         checkSessionId(sessid);
-        return modified.get(accno);
+        return modified.get(accnoAttr);
     }
 
     @Override
-    public JSONObject getSubmission(String accno, String sessid) throws BioStudiesClientException, IOException {
+    public JSONObject getSubmission(String accnoAttr, String sessid) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
-        return submitted.get(accno);
+        return submitted.get(accnoAttr);
     }
 
     @Override
-    public void saveModifiedSubmission(JSONObject sbm, String accno, String sessid) throws IOException, BioStudiesClientException {
+    public void saveModifiedSubmission(JSONObject sbm, String accnoAttr, String sessid) throws IOException, BioStudiesClientException {
         checkSessionId(sessid);
-        modified.put(accno, sbm);
+        modified.put(accnoAttr, sbm);
     }
 
     @Override
     public JSONObject submitNew(JSONObject sbm, String sessid) throws BioStudiesClientException, IOException {
         checkSessionId(sessid);
-        String accno = "SBM-" + counter.addAndGet(1);
-        sbm.put("accno", accno);
-        submitted.put(accno, sbm);
+        String accnoAttr = "SBM-" + counter.addAndGet(1);
+        sbm.put("accno", accnoAttr);
+        submitted.put(accnoAttr, sbm);
         return new JSONObject()
                 .put("status", "OK");
     }
@@ -92,7 +92,7 @@ public class BioStudiesClientStub /*implements BioStudiesClient*/ {
                 .stream()
                 .map(s ->
                         new JSONObject()
-                                .put("accno", accno(s))
+                                .put("accno", accnoAttr(s))
                                 .put("rtime", releaseDateAttributeInSeconds(s))
                                 .put("ctime", "")
                                 .put("mtime", "")

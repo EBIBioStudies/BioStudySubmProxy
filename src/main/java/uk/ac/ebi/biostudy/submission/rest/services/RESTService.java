@@ -65,7 +65,7 @@ public class RESTService {
                                  @QueryParam("rTimeFrom") Long rTimeFromFilter,
                                  @QueryParam("rTimeTo") Long rTimeToFilter,
                                  @QueryParam("keywords") String titleFilter,
-                                 @Context UserSession userSession)
+                                 @Context UserSession session)
             throws BioStudiesClientException, IOException {
 
         Map<String, String> params = new HashMap<>();
@@ -82,29 +82,29 @@ public class RESTService {
             params.put("keywords", titleFilter);
         }
 
-        logger.debug("getSubmissions(userSession={}, offset={}, limit={})", userSession, offset, limit);
+        logger.debug("getSubmissions(session={}, offset={}, limit={})", session, offset, limit);
         return submitted ?
-                service.getSubmittedSubmissions(userSession, offset, limit, params) :
-                service.getModifiedSubmissions(userSession, offset, limit, params);
+                service.getSubmittedSubmissions(offset, limit, params, session) :
+                service.getModifiedSubmissions(offset, limit, params, session);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @GET
     @Path("/projects")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getProjects(@Context UserSession userSession)
+    public String getProjects(@Context UserSession session)
             throws BioStudiesClientException, IOException {
-        return service.getProjects(userSession);
+        return service.getProjects(session);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @GET
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmission(@Context UserSession userSession, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
+    public String getSubmission(@Context UserSession session, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
             throws BioStudiesClientException, IOException {
-        logger.debug("getSubmission(userSession={}, acc={}, origin={})", userSession, acc, origin);
-        return service.getSubmission(userSession, acc, origin).json().toString();
+        logger.debug("getSubmission(session={}, acc={}, origin={})", session, acc, origin);
+        return service.getSubmission(acc, origin, session).json().toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -114,9 +114,9 @@ public class RESTService {
     public String getFileDir(@QueryParam("path") String path,
                              @QueryParam("depth") int depth,
                              @QueryParam("showArchive") boolean showArchive,
-                             @Context UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.debug("getFileDir(userSession={}, path={}, depth={}, showArchive={})", userSession, path, depth, showArchive);
-        return service.getFilesDir(userSession, path, depth, showArchive);
+                             @Context UserSession session) throws BioStudiesClientException, IOException {
+        logger.debug("getFileDir(session={}, path={}, depth={}, showArchive={})", session, path, depth, showArchive);
+        return service.getFilesDir(path, depth, showArchive, session);
     }
 
     @POST
@@ -183,9 +183,9 @@ public class RESTService {
     @POST
     @Path("/auth/signout")
     @Produces(MediaType.APPLICATION_JSON)
-    public String signout(@Context UserSession userSession) throws BioStudiesClientException, IOException {
-        logger.info("signout(userSession={})", userSession);
-        String resp = service.signOut(userSession);
+    public String signout(@Context UserSession session) throws BioStudiesClientException, IOException {
+        logger.info("signout(session={})", session);
+        String resp = service.signOut(session);
         request.getSession(false).invalidate();
         return resp;
     }
@@ -195,10 +195,10 @@ public class RESTService {
     @Path("/submission/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String createSubmission(@Context UserSession userSession, String str)
+    public String createSubmission(@Context UserSession session, String str)
             throws IOException, BioStudiesClientException {
-        logger.debug("createSubmission(userSession={}, str={})", userSession, str);
-        return service.createSubmission(userSession, str).json().toString();
+        logger.debug("createSubmission(session={}, str={})", session, str);
+        return service.createSubmission(str, session).json().toString();
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -206,10 +206,10 @@ public class RESTService {
     @Path("/submission/edit/{acc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String editSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+    public String editSubmission(@Context UserSession session, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
-        logger.debug("editSubmission(userSession={}, acc={})", userSession, acc);
-        return service.editSubmission(userSession, acc);
+        logger.debug("editSubmission(session={}, acc={})", session, acc);
+        return service.editSubmission(acc, session);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -217,9 +217,9 @@ public class RESTService {
     @Path("/submission/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void saveSubmission(@Context UserSession userSession, String str) throws IOException, BioStudiesClientException {
-        logger.debug("saveSubmission(userSession={}, str={})", userSession, str);
-        service.saveSubmission(userSession, str);
+    public void saveSubmission(@Context UserSession session, String str) throws IOException, BioStudiesClientException {
+        logger.debug("saveSubmission(session={}, str={})", session, str);
+        service.saveSubmission(str, session);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -227,10 +227,10 @@ public class RESTService {
     @Path("/submission/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String submitSubmission(@Context UserSession userSession, String str)
+    public String submitSubmission(@Context UserSession session, String str)
             throws BioStudiesClientException, IOException {
-        logger.debug("submitSubmission(userSession={}, str={})", userSession, str);
-        return service.submitSubmission(userSession, str);
+        logger.debug("submitSubmission(session={}, str={})", session, str);
+        return service.submitModified(str, session);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -238,20 +238,20 @@ public class RESTService {
     @Path("/submission/direct")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String directSubmit(@Context UserSession userSession, @QueryParam("create") Boolean create, String str)
+    public String directSubmit(@Context UserSession session, @QueryParam("create") Boolean create, String str)
             throws BioStudiesClientException, IOException {
-        logger.debug("directSubmit(userSession={}, create={}, str={})", userSession, create, str);
-        return service.directSubmit(userSession, create != null && create, str);
+        logger.debug("directSubmit(session={}, create={}, str={})", session, create, str);
+        return service.submitPlain(create != null && create, str, session);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @DELETE
     @Path("/submission/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String deleteSubmission(@Context UserSession userSession, @PathParam("acc") String acc)
+    public String deleteSubmission(@Context UserSession session, @PathParam("acc") String acc)
             throws IOException, BioStudiesClientException {
-        logger.debug("deleteSubmission(userSession={}, acc={})", userSession, acc);
-        boolean deleted = service.deleteSubmission(userSession, acc);
+        logger.debug("deleteSubmission(session={}, acc={})", session, acc);
+        boolean deleted = service.deleteSubmission(acc, session);
         logger.debug("deleteSubmission(): {}", deleted);
         return statusObj(deleted).toString();
     }
@@ -260,23 +260,23 @@ public class RESTService {
     @DELETE
     @Path("/files/delete")
     @Produces(MediaType.APPLICATION_JSON)
-    public String deleteFile(@Context UserSession userSession, @QueryParam("path") String path)
+    public String deleteFile(@Context UserSession session, @QueryParam("path") String path)
             throws BioStudiesClientException, IOException {
-        logger.debug("deleteFile(userSession={}, path={})", userSession, path);
-        return service.deleteFile(userSession, path);
+        logger.debug("deleteFile(session={}, path={})", session, path);
+        return service.deleteFile(path, session);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @GET
     @Path("/pubMedSearch/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String pubMedSearch(@Context UserSession userSession, @PathParam("id") String id) {
-        logger.debug("pubMedSearch(userSession={}, ID={})", userSession, id);
+    public String pubMedSearch(@Context UserSession session, @PathParam("id") String id) {
+        logger.debug("pubMedSearch(session={}, ID={})", session, id);
         return service.pubMedSearch(id);
     }
 
     private static JsonNode statusObj(boolean value) {
-        ObjectNode node = JsonNodeFactory.instance.objectNode();;
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
         node.put("status", value ? "OK" : "FAILED");
         return node;
     }

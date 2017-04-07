@@ -23,9 +23,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
-import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.accno;
-import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.rtimeInSeconds;
-import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.title;
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.accnoField;
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.rtimeInSecondsAttr;
+import static uk.ac.ebi.biostudy.submission.rest.data.PageTabUtils.titleAttr;
 
 /**
  * @author olkin
@@ -63,7 +63,7 @@ public class ModifiedSubmission {
 
     public static ModifiedSubmission wrap(String json) throws IOException {
         JsonNode subm = new ObjectMapper().readTree(json);
-        return new ModifiedSubmission(accession(accno(subm)), System.currentTimeMillis(), subm);
+        return new ModifiedSubmission(accession(accnoField(subm)), System.currentTimeMillis(), subm);
     }
 
     public JsonNode json() {
@@ -98,11 +98,11 @@ public class ModifiedSubmission {
     }
 
     public String getTitle() {
-        return title(this.data);
+        return titleAttr(this.data);
     }
 
     public Long getRTimeInSeconds() {
-        return rtimeInSeconds(this.data);
+        return rtimeInSecondsAttr(this.data);
     }
 
     public Long getMTimeInSeconds() {

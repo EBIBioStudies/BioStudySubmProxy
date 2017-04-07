@@ -16,6 +16,7 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
@@ -178,46 +179,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     public String submitNew(String subm, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
-       /* ObjectNode copy = obj.deepCopy();
-        copy.put("accno", accnoTemplate(new MyJSONObject(copy), sessionId));
-        JSONArray array = new JSONArray();
-        array.put(copy);
-        JSONObject submissions = new JSONObject();
-        submissions.put("submissions", array);*/
         return postJSON(targets.createSubmissionReq(sessionId), subm);
     }
 
-   /* private String accnoTemplate(MyJSONObject subm, String sessionId) throws IOException, BioStudiesClientException {
-        final String defaultTmpl = "!{S-BSST}";
-
-        Optional<MyJSONArray> opt = subm.getJSONArray("attributes");
-        if (!opt.isPresent()) {
-            return defaultTmpl;
-        }
-        MyJSONArray attrs = opt.get();
-        if (attrs.length() == 0) {
-            return defaultTmpl;
-        }
-        List<Optional<String>> attachTo = attrs.getMyJSONObjects()
-                .filter(obj -> {
-                    Optional<String> name = obj.getString("name");
-                    return name.isPresent() && name.get().equalsIgnoreCase("attachto");
-                })
-                .map(obj -> obj.getString("value"))
-                .collect(Collectors.toList());
-        if (attachTo.size() != 1) {
-            return defaultTmpl;
-        }
-        Optional<String> accno = attachTo.get(0);
-        if (!accno.isPresent()) {
-            return defaultTmpl;
-        }
-        Optional<String> accnoTmpl = projectAccNoTemplate(accno.get(), sessionId);
-        return accnoTmpl.orElse(defaultTmpl);
-    }
-
-    private Optional<String> projectAccNoTemplate(String accno, String sessionId) throws IOException, BioStudiesClientException {
-        MyJSONObject proj = new MyJSONObject(getSubmission(accno, sessionId));
+   /*
+    private Optional<String> projectAccNoTemplate(String accnoAttr, String sessionId) throws IOException, BioStudiesClientException {
+        MyJSONObject proj = new MyJSONObject(getSubmission(accnoAttr, sessionId));
         Optional<MyJSONArray> projAttrs = proj.getJSONArray("attributes");
         if (!projAttrs.isPresent()) {
             return Optional.empty();
@@ -236,10 +203,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
 */
     public String submitUpdated(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
-/*        ArrayNode array = JsonNodeFactory.instance.arrayNode();
-        array.add(obj);
-        ObjectNode submissions = JsonNodeFactory.instance.objectNode();
-        submissions.set("submissions", array);*/
         return postJSON(targets.updateSubmissionReq(sessionId), obj);
     }
 
