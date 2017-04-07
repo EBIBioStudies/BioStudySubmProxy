@@ -72,7 +72,7 @@ public class SubmissionService {
         logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno, origin);
         if (!origin) {
             String resp = bsclient.getModifiedSubmission(accno, session.id());
-            if (resp != null) {
+            if (!resp.isEmpty()) {
                 return ModifiedSubmission.parse(resp);
             }
         }
@@ -99,7 +99,7 @@ public class SubmissionService {
             throws BioStudiesClientException, IOException {
         logger.debug("editSubmission(session={}, accnoAttr={})", session, accno);
         String sbm = bsclient.getModifiedSubmission(accno, session.id());
-        if (sbm == null) {
+        if (sbm.isEmpty()) {
             logger.debug("no temporary copy; creating one...");
             ModifiedSubmission modified = getSubmission(accno, true, session);
             saveSubmission(modified, session);
@@ -178,13 +178,13 @@ public class SubmissionService {
             throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(session={}, acc={})", session, acc);
         String sbm = bsclient.getModifiedSubmission(acc, session.id());
-        if (sbm != null) {
+        if (!sbm.isEmpty()) {
             bsclient.deleteModifiedSubmission(acc, session.id());
             return true;
         }
         sbm = bsclient.getSubmission(acc, session.id());
         //TODO do it better way
-        if (sbm == null) {
+        if (sbm.isEmpty()) {
             return true;
         }
         String resp = bsclient.deleteSubmission(acc, session.id());
