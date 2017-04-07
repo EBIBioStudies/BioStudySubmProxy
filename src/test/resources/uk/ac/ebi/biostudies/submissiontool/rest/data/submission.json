@@ -1,0 +1,50 @@
+{
+  "accno": "S-BSST43",
+  "type": "submission",
+  "attributes": [
+    {
+      "name": "Title",
+      "value": "Submission Title"
+    },
+    {
+      "name": "ReleaseDate",
+      "value": "2017-04-19"
+    },
+    {
+      "name": "AccNoTemplate",
+      "value": "!{S-BSST}"
+    },
+    {
+      "name": "AttachTo",
+      "value": "A1"
+    },
+    {
+      "name": "AttachTo",
+      "value": "A2"
+    },
+    {
+      "name": "AttachTo",
+      "value": "A3"
+    }
+  ],
+  "section": {
+    "type": "Study",
+    "attributes": [
+      {
+        "name": "Title",
+        "value": "Study Title"
+      }
+    ],
+    "files": [
+      {
+        "path": "totoro.jpg",
+        "attributes": [
+          {
+            "name": "Description",
+            "value": ""
+          }
+        ]
+      }
+    ]
+  }
+}
