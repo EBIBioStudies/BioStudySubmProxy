@@ -16,8 +16,8 @@
 
 package uk.ac.ebi.biostudy.submission.bsclient;
 
-import org.json.JSONObject;
-import org.junit.Assume;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import uk.ac.ebi.biostudy.submission.TestEnvironment;
 
@@ -41,15 +41,18 @@ public class BioStudiesClientTest {
             return;
         }
 
+        ObjectMapper mapper = new ObjectMapper();
+
         URI uri = getServerUrl();
         if (! isReachable(uri.toURL())) {
             return;
         }
         BioStudiesClient bsclient = new BioStudiesRestClient(uri);
-        JSONObject obj = bsclient.signIn(new JSONObject().put("login", "demo").put("password", "demo"));
-        assertNotNull(obj);
+        String resp = bsclient.signIn(mapper.readTree("{\"login\":\"demo\", \"password\": \"demo\"}").toString());
+        assertNotNull(resp);
 
-        String sessionId = obj.getString("sessid");
+        JsonNode respNode = mapper.readTree(resp);
+        String sessionId = respNode.get("sessid").asText();
         String submissions = bsclient.getSubmissions(sessionId, 0, 10, new HashMap<>());
         assertNotNull(submissions);
     }
