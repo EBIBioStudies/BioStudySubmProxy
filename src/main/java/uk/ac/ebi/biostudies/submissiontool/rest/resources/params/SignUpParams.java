@@ -19,12 +19,13 @@ package uk.ac.ebi.biostudies.submissiontool.rest.resources.params;
 /**
  * @author olkin
  */
-public class SignUpParams extends WithPath<SignUpParams> {
+public class SignUpParams {
     private String username;
     private String password;
     private String email;
     private String orcid;
     private String captcha;
+    private String path;
 
     public String getUsername() {
         return username;
@@ -46,14 +47,18 @@ public class SignUpParams extends WithPath<SignUpParams> {
         return captcha;
     }
 
-    @Override
-    public SignUpParams copyAll() {
+    public String getPath() {
+        return path;
+    }
+
+    public SignUpParams withPath(String newPath) {
         SignUpParams p = new SignUpParams();
         p.username = username;
         p.password = password;
         p.email = email;
         p.orcid = orcid;
         p.captcha = captcha;
+        p.path = newPath;
         return p;
     }
 
@@ -65,7 +70,7 @@ public class SignUpParams extends WithPath<SignUpParams> {
                 ", email='" + email + '\'' +
                 ", orcid='" + orcid + '\'' +
                 ", captcha='" + captcha + '\'' +
-                ", path='" + getPath() + '\'' +
+                ", path='" + path + '\'' +
                 '}';
     }
 

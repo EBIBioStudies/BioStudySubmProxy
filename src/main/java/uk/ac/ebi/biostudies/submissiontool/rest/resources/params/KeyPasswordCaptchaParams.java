@@ -19,37 +19,29 @@ package uk.ac.ebi.biostudies.submissiontool.rest.resources.params;
 /**
  * @author olkin
  */
-public class EmailPathCaptchaParams {
-    private String email;
+public class KeyPasswordCaptchaParams {
+    private String key;
+    private String password;
     private String captcha;
-    private String path;
 
-    public String getEmail() {
-        return email;
+    public String getKey() {
+        return key;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public String getCaptcha() {
         return captcha;
     }
 
-    public String getPath() {
-        return path;
-    }
-
-    public EmailPathCaptchaParams withPath(String newPath) {
-        EmailPathCaptchaParams p = new EmailPathCaptchaParams();
-        p.email = email;
-        p.captcha = captcha;
-        p.path = newPath;
-        return p;
-    }
-
     @Override
     public String toString() {
-        return "EmailPathCaptchaParams{" +
-                "email='" + email + '\'' +
+        return "KeyPasswordCaptchaParams{" +
+                "key='" + key + '\'' +
+                ", password='" + password + '\'' +
                 ", captcha='" + captcha + '\'' +
-                ", path='" + path + '\'' +
                 '}';
     }
 }
