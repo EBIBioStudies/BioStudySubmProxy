@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
 
@@ -126,36 +127,54 @@ public class RESTService {
     public String signup(SignUpParams par) throws BioStudiesClientException, IOException {
         logger.debug("signup(form={})", par);
         try {
-            return service.signUp(par.setPath(getApplUrl(par.getPath())));
+            return service.signUp(par.withPath(getApplUrl(par.getPath())));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
     }
 
     @POST
-    @Path("/auth/passrstreq")
+    @Path("/auth/password/reset_request")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String passwordResetRequest(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(str={})", par);
         try {
-            return service.passwordResetRequest(par.setPath(getApplUrl(par.getPath())));
+            return service.passwordResetRequest(par.withPath(getApplUrl(par.getPath())));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
     }
 
     @POST
-    @Path("/auth/resendActLink")
+    @Path("/auth/password/reset")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String passwordReset(KeyPasswordCaptchaParams par) throws BioStudiesClientException, IOException {
+        logger.debug("passwordReset(str={})", par);
+        return service.passwordReset(par);
+    }
+
+    @POST
+    @Path("/auth/activation/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public String resendActivationLink(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
-        logger.debug("passwordResetRequest(str={})", par);
+        logger.debug("resendActivationLink(str={})", par);
         try {
-            return service.resendActivationLink(par.setPath(getApplUrl(par.getPath())));
+            return service.resendActivationLink(par.withPath(getApplUrl(par.getPath())));
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
+    }
+
+    @POST
+    @Path("/auth/activation/check/{key}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public String activate( @PathParam("key") String key) throws BioStudiesClientException, IOException {
+        logger.debug("activate(key={})", key);
+        return service.activate(key);
     }
 
     private String getApplUrl(String path) throws URISyntaxException {
