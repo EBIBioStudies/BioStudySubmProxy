@@ -119,8 +119,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .queryParam(SESSION_PARAM, sessionId);
         }
 
-        WebTarget passwordResetReq() {
+        WebTarget passwordResetReqReq() {
             return baseTarget.path("/auth/passrstreq");
+        }
+
+        WebTarget passwordResetReq() {
+            return baseTarget.path("/auth/passreset");
         }
 
         WebTarget resendActivationLinkReq() {
@@ -159,6 +163,10 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .queryParam(SESSION_PARAM, sessionId)
                     .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION);
         }
+
+        WebTarget activationReq(String key) {
+            return baseTarget.path("/auth/activate/" + key);
+        }
     }
 
     private static final Logger logger = LoggerFactory.getLogger(BioStudiesRestClient.class);
@@ -176,77 +184,75 @@ public class BioStudiesRestClient implements BioStudiesClient {
         rsClient.close();
     }
 
+    @Override
     public String submitNew(String subm, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
         return postJSON(targets.createSubmissionReq(sessionId), subm);
     }
 
-   /*
-    private Optional<String> projectAccNoTemplate(String accnoAttr, String sessionId) throws IOException, BioStudiesClientException {
-        MyJSONObject proj = new MyJSONObject(getSubmission(accnoAttr, sessionId));
-        Optional<MyJSONArray> projAttrs = proj.getJSONArray("attributes");
-        if (!projAttrs.isPresent()) {
-            return Optional.empty();
-        }
-
-        List<Optional<String>> templates = projAttrs.get()
-                .getMyJSONObjects()
-                .filter(obj -> {
-                    Optional<String> name = obj.getString("name");
-                    return name.isPresent() && name.get().equalsIgnoreCase("accnotemplate");
-                })
-                .map(obj -> obj.getString("value"))
-                .collect(Collectors.toList());
-        return templates.isEmpty() ? Optional.empty() : templates.get(0);
-    }
-*/
+    @Override
     public String submitUpdated(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
         return postJSON(targets.updateSubmissionReq(sessionId), obj);
     }
 
+    @Override
     public String getSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
         return get(targets.getSubmissionReq(sessionId, acc));
     }
 
+    @Override
     public String getSubmissions(String sessionId, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException {
         logger.debug("getSubmissions(sessionId={})", sessionId);
         return get(targets.getSubmissionsReq(sessionId, offset, limit, paramMap));
     }
 
+    @Override
     public String getProjects(String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("getProjects(sessionId={})", sessionId);
         return get(targets.getProjectsReq(sessionId));
     }
 
+    @Override
     public String deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
         return get(targets.deleteSubmissionReq(sessionId, acc));
     }
 
+    @Override
     public String getFilesDir(String path, int depth, boolean showArchive, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
         return get(targets.getFilesDirReq(path, depth, showArchive, sessionId));
     }
 
+    @Override
     public String deleteFile(String file, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
         return get(targets.deleteFileReq(sessionId, file));
     }
 
+    @Override
     public String signOut(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("signOut(sessionId={})", sessionId);
         return postJSON(targets.signOutReq(sessionId), obj);
     }
 
+    @Override
     public String signUp(String obj) throws BioStudiesClientException, IOException {
         logger.debug("signUp(obj={})", obj);
         return postJSON(targets.signUpReq(), obj);
     }
 
+    @Override
     public String passwordResetRequest(String obj) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(obj={})", obj);
+        return postJSON(targets.passwordResetReqReq(), obj);
+    }
+
+    @Override
+    public String passwordReset(String obj) throws BioStudiesClientException, IOException {
+        logger.debug("passwordReset(obj={})", obj);
         return postJSON(targets.passwordResetReq(), obj);
     }
 
@@ -254,6 +260,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
     public String resendActivationLink(String obj) throws BioStudiesClientException, IOException {
         logger.debug("resendActivationLink(obj={})", obj);
         return postJSON(targets.resendActivationLinkReq(), obj);
+    }
+
+    @Override
+    public String activate(String key) throws BioStudiesClientException, IOException {
+        logger.debug("resendActivationLink(obj={})", key);
+        return postJSON(targets.activationReq(key), "{}");
     }
 
     public String signIn(String username, String password) throws BioStudiesClientException, IOException {
@@ -264,29 +276,34 @@ public class BioStudiesRestClient implements BioStudiesClient {
         return signIn(obj.toString());
     }
 
+    @Override
     public String signIn(String obj) throws BioStudiesClientException, IOException {
         logger.debug("signIn(obj={})", obj);
         return postJSON(targets.signInReq(), obj);
     }
 
-    public String getModifiedSubmission(String acc, String sessionId) throws IOException, BioStudiesClientException {
+    @Override
+    public String getModifiedSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         return get(targets.getModifiedSubmissionReq(sessionId, acc));
     }
 
-    public String saveModifiedSubmission(String obj, String acc, String sessionId) throws IOException, BioStudiesClientException {
+    @Override
+    public String saveModifiedSubmission(String obj, String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
         return postForm(
                 targets.saveModifiedSubmissionReq(sessionId),
                 targets.saveModifiedSubmissionForm(acc, obj));
     }
 
-    public String deleteModifiedSubmission(String acc, String sessionId) throws IOException, BioStudiesClientException {
+    @Override
+    public String deleteModifiedSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         return postJSON(targets.deleteModifiedSubmissionReq(sessionId, acc), null);
     }
 
-    public String getModifiedSubmissions(String sessionId) throws IOException, BioStudiesClientException {
+    @Override
+    public String getModifiedSubmissions(String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
         return get(targets.getModifiedSubmissionsReq(sessionId));
     }

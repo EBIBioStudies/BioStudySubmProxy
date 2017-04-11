@@ -53,5 +53,9 @@ public interface BioStudiesClient extends Closeable {
 
     String passwordResetRequest(String obj) throws BioStudiesClientException, IOException;
 
+    String passwordReset(String obj) throws BioStudiesClientException, IOException;
+
     String resendActivationLink(String obj) throws BioStudiesClientException, IOException;
+
+    String activate(String key) throws BioStudiesClientException, IOException;
 }

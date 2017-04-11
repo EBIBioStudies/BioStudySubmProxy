@@ -17,21 +17,21 @@ package uk.ac.ebi.biostudies.submissiontool.rest.resources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
+import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePmcClient;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.ModifiedSubmission;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.PageTabUtils;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.SubmissionListItem;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
-import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
-import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePmcClient;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SubmFilterParams;
 
 import java.io.IOException;
@@ -280,13 +280,27 @@ public class SubmissionService {
         return bsclient.passwordResetRequest(json.toString());
     }
 
-    public String resendActivationLink(EmailPathCaptchaParams params) throws BioStudiesClientException, IOException {
-        logger.debug("resendActivationLink(obj={})", params);
+    public String passwordReset(KeyPasswordCaptchaParams params) throws IOException, BioStudiesClientException {
+        logger.debug("passwordReset(obj={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("key", params.getKey());
+        json.put("password", params.getPassword());
+        json.put("recaptcha2-response", params.getCaptcha());
+        return bsclient.passwordReset(json.toString());
+    }
+
+    public String resendActivationLink(EmailPathCaptchaParams params) throws IOException, BioStudiesClientException {
+        logger.debug("resendActivationLink(params={})", params);
         ObjectNode json = JsonNodeFactory.instance.objectNode();
         json.put("email", params.getEmail());
         json.put("recaptcha2-response", params.getCaptcha());
         json.put("activationURL", params.getPath());
         return bsclient.resendActivationLink(json.toString());
+    }
+
+    public String activate(String key) throws IOException, BioStudiesClientException {
+        logger.debug("activate(key={})", key);
+        return bsclient.activate(key);
     }
 
     public String pubMedSearch(String id) {
