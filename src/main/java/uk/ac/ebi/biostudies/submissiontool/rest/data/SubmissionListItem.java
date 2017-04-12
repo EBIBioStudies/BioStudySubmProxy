@@ -71,7 +71,7 @@ public class SubmissionListItem {
          return item;
     }
 
-    public static Comparator<SubmissionListItem> byMTime() {
+    public static Comparator<SubmissionListItem> sortByMTime() {
         return (o1, o2) -> {
             Long l1 = o1.mtimeInSeconds;
             Long l2 = o2.mtimeInSeconds;

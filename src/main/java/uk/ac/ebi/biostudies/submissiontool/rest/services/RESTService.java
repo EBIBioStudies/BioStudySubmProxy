@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
@@ -33,6 +34,8 @@ import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
@@ -59,14 +62,15 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmissions(@QueryParam("offset") int offset,
+    public void getSubmissions(@QueryParam("offset") int offset,
                                  @QueryParam("limit") int limit,
                                  @QueryParam("submitted") boolean submitted,
                                  @QueryParam("accNo") String accNoFilter,
                                  @QueryParam("rTimeFrom") Long rTimeFromFilter,
                                  @QueryParam("rTimeTo") Long rTimeToFilter,
                                  @QueryParam("keywords") String titleFilter,
-                                 @Context UserSession session)
+                                 @Context UserSession session,
+                                 @Suspended final AsyncResponse async)
             throws BioStudiesClientException, IOException {
 
         Map<String, String> params = new HashMap<>();
@@ -84,9 +88,10 @@ public class RESTService {
         }
 
         logger.debug("getSubmissions(session={}, offset={}, limit={})", session, offset, limit);
-        return submitted ?
-                service.getSubmittedSubmissions(offset, limit, params, session) :
-                service.getModifiedSubmissions(offset, limit, params, session);
+        (submitted ?
+                service.getSubmittedSubmissionsRx(offset, limit, params, session) :
+                service.getModifiedSubmissionsRx(offset, limit, params, session))
+        .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")

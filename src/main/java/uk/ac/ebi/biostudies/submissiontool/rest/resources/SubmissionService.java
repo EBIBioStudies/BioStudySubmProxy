@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+import rx.exceptions.Exceptions;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePmcClient;
@@ -35,11 +37,8 @@ import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SubmFilterParams;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
+import java.util.function.Predicate;
 
 import static uk.ac.ebi.biostudies.submissiontool.rest.data.Json.objectMapper;
 
@@ -193,13 +192,13 @@ public class SubmissionService {
         return level.equalsIgnoreCase("success");
     }
 
+/*
     public String getSubmittedSubmissions(int offset, int limit, Map<String, String> paramMap, UserSession session)
             throws BioStudiesClientException, IOException {
         String sessId = session.id();
         return bsclient.getSubmissions(sessId, offset, limit, paramMap);
     }
-
-    public String getModifiedSubmissions(int offset, int limit, Map<String, String> paramMap, UserSession session)
+      public String getModifiedSubmissions(int offset, int limit, Map<String, String> paramMap, UserSession session)
             throws BioStudiesClientException, IOException {
         SubmFilterParams params = SubmFilterParams.fromMap(paramMap);
         String sessId = session.id();
@@ -217,7 +216,7 @@ public class SubmissionService {
             });
         }
 
-        submList.sort(SubmissionListItem.byMTime());
+        submList.sort(SubmissionListItem.sortByMTime());
         List<SubmissionListItem> filtered =
                 submList
                         .stream()
@@ -229,6 +228,54 @@ public class SubmissionService {
         ObjectNode obj = JsonNodeFactory.instance.objectNode();
         obj.set("submissions", objectMapper().valueToTree(filtered));
         return obj.toString();
+    }
+
+*/
+    public Observable<String> getSubmittedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session)
+            throws BioStudiesClientException, IOException {
+        return bsclient.getSubmissionsRx(session.id(), offset, limit, paramMap);
+        // todo check status property ?
+    }
+
+    public Observable<String> getModifiedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session)
+            throws BioStudiesClientException, IOException {
+        SubmFilterParams params = SubmFilterParams.fromMap(paramMap);
+        Predicate<? super SubmissionListItem> predicate = params.asPredicate();
+
+        return bsclient.getModifiedSubmissionsRx(session.id())
+                .map((String resp) -> {
+                    try {
+                        return objectMapper().readTree(resp);
+                    } catch (IOException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                })
+                .flatMap(jsonNode -> {
+                        List<JsonNode> list = new ArrayList<>();
+                        if (jsonNode.isArray()) {
+                            jsonNode.iterator().forEachRemaining(list::add);
+                        }
+                        return Observable.from(list);
+                })
+                .map(jsonNode -> {
+                    try {
+                        return SubmissionListItem.from(ModifiedSubmission.convert(jsonNode));
+                    } catch (JsonProcessingException e) {
+                        logger.error("Converting modified submissions error", e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .sorted((item1, item2) -> SubmissionListItem.sortByMTime().compare(item1, item2))
+                .filter(predicate::test)
+                .skip(offset)
+                .limit(limit)
+                .toList()
+                .map((List<SubmissionListItem> items) -> {
+                    ObjectNode obj = JsonNodeFactory.instance.objectNode();
+                    obj.set("submissions", objectMapper().valueToTree(items));
+                    return obj.toString();
+                });
     }
 
     public String getProjects(UserSession session) throws BioStudiesClientException, IOException {

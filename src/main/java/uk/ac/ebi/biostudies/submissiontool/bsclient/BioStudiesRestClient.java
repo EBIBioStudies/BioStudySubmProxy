@@ -18,8 +18,10 @@ package uk.ac.ebi.biostudies.submissiontool.bsclient;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.glassfish.jersey.client.rx.rxjava.RxObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.*;
@@ -29,6 +31,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.Queue;
 
 /**
  * @author Olga Melnichuk
@@ -209,6 +212,11 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> getSubmissionsRx(String sessionId, int offset, int limit, Map<String, String> paramMap) {
+        return getRx(targets.getSubmissionsReq(sessionId, offset, limit, paramMap));
+    }
+
+    @Override
     public String getProjects(String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("getProjects(sessionId={})", sessionId);
         return get(targets.getProjectsReq(sessionId));
@@ -308,6 +316,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
         return get(targets.getModifiedSubmissionsReq(sessionId));
     }
 
+    @Override
+    public Observable<String> getModifiedSubmissionsRx(String sessionId) {
+        logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
+        return getRx(targets.getModifiedSubmissionsReq(sessionId));
+    }
+
     private static String postJSON(WebTarget target, String data) throws BioStudiesClientException, IOException {
         return post(target, Entity.json(data));
     }
@@ -343,6 +357,14 @@ public class BioStudiesRestClient implements BioStudiesClient {
         }
     }
 
+    private static Observable<String> getRx(WebTarget target) {
+        return RxObservable.from(target)
+                .request()
+                .rx()
+                .get()
+                .map(BioStudiesRestClient::readResponseRx);
+    }
+
     private static String readResponse(Response resp) throws BioStudiesClientException, IOException {
         if (resp == null) {
             throw new IOException("null response; see logs for details");
@@ -357,5 +379,22 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return body;
         }
         throw new BioStudiesClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+    }
+
+    private static String readResponseRx(Response resp) {
+        int statusCode = resp.getStatus();
+
+        String body = resp.readEntity(String.class);
+
+        MediaType mediaType = resp.getMediaType();
+        if (mediaType == null) {
+            logger.warn("Server responded with NULL content-type: " + resp.getLocation());
+        }
+
+        if (statusCode == 200) {
+            return body;
+        }
+        
+        throw new BioStudiesRxClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
     }
 }
