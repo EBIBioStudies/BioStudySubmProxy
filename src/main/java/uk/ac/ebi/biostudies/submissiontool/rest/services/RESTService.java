@@ -70,8 +70,7 @@ public class RESTService {
                                @QueryParam("rTimeTo") Long rTimeToFilter,
                                @QueryParam("keywords") String titleFilter,
                                @Context UserSession session,
-                               @Suspended final AsyncResponse async)
-            throws BioStudiesClientException, IOException {
+                               @Suspended AsyncResponse async) {
 
         Map<String, String> params = new HashMap<>();
         if (accNoFilter != null) {
@@ -96,22 +95,38 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @GET
-    @Path("/projects")
+    @Path("/submissions/{acc}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void getProjects(@Context UserSession session, @Suspended final AsyncResponse async)
-            throws BioStudiesClientException, IOException {
-        service.getProjectsRx(session)
+    public void getSubmission(@Context UserSession session,
+                              @PathParam("acc") String acc,
+                              @QueryParam("origin") boolean origin,
+                              @Suspended AsyncResponse async) {
+        logger.debug("getSubmission(session={}, acc={}, origin={})", session, acc, origin);
+        service.getSubmissionRx(acc, origin, session)
+                .subscribe(async::resume, async::resume);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @DELETE
+    @Path("/submissions/{acc}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void deleteSubmission(@Context UserSession session,
+                                 @PathParam("acc") String acc,
+                                 @Suspended AsyncResponse async) {
+        logger.debug("deleteSubmission(session={}, acc={})", session, acc);
+        service.deleteSubmissionRx(acc, session)
                 .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @GET
-    @Path("/submission/{acc}")
+    @Path("/projects")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSubmission(@Context UserSession session, @PathParam("acc") String acc, @QueryParam("origin") boolean origin)
-            throws BioStudiesClientException, IOException {
-        logger.debug("getSubmission(session={}, acc={}, origin={})", session, acc, origin);
-        return service.getSubmission(acc, origin, session).json().toString();
+    public void getProjects(@Context UserSession session,
+                            @Suspended AsyncResponse async) {
+        logger.debug("getProjects(session={})", session);
+        service.getProjectsRx(session)
+                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -231,10 +246,12 @@ public class RESTService {
     @Path("/submission/edit/{acc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String editSubmission(@Context UserSession session, @PathParam("acc") String acc)
-            throws IOException, BioStudiesClientException {
+    public void editSubmission(@Context UserSession session,
+                               @PathParam("acc") String acc,
+                               @Suspended AsyncResponse async) {
         logger.debug("editSubmission(session={}, acc={})", session, acc);
-        return service.editSubmission(acc, session);
+        service.getSubmissionRx(acc, false, session)
+                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -263,23 +280,16 @@ public class RESTService {
     @Path("/submission/direct")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String directSubmit(@Context UserSession session, @QueryParam("create") Boolean create, String str)
+    public void directSubmit(@Context UserSession session,
+                             @QueryParam("create") Boolean create,
+                             String subm,
+                             @Suspended AsyncResponse async)
             throws BioStudiesClientException, IOException {
-        logger.debug("directSubmit(session={}, create={}, str={})", session, create, str);
-        return service.submitPlain(create != null && create, str, session);
+        logger.debug("directSubmit(session={}, create={}, subm={})", session, create, subm);
+        service.submitPlainRx(create != null && create, subm, session)
+                .subscribe(async::resume, async::resume);
     }
 
-    @RolesAllowed("AUTHENTICATED")
-    @DELETE
-    @Path("/submission/{acc}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String deleteSubmission(@Context UserSession session, @PathParam("acc") String acc)
-            throws IOException, BioStudiesClientException {
-        logger.debug("deleteSubmission(session={}, acc={})", session, acc);
-        boolean deleted = service.deleteSubmission(acc, session);
-        logger.debug("deleteSubmission(): {}", deleted);
-        return statusObj(deleted).toString();
-    }
 
     @RolesAllowed("AUTHENTICATED")
     @DELETE

@@ -194,15 +194,34 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> submitNewRx(String subm, String sessionId) {
+        logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
+        return postJSONRx(targets.createSubmissionReq(sessionId), subm);
+    }
+
+
+    @Override
     public String submitUpdated(String obj, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
         return postJSON(targets.updateSubmissionReq(sessionId), obj);
     }
 
     @Override
+    public Observable<String> submitUpdatedRx(String obj, String sessionId) {
+        logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
+        return postJSONRx(targets.updateSubmissionReq(sessionId), obj);
+    }
+
+    @Override
     public String getSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
         return get(targets.getSubmissionReq(sessionId, acc));
+    }
+
+    @Override
+    public Observable<String> getSubmissionRx(String acc, String sessionId) {
+        logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
+        return getRx(targets.getSubmissionReq(sessionId, acc));
     }
 
     @Override
@@ -231,7 +250,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
     @Override
     public String deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
+        // WTF: why it is GET?
         return get(targets.deleteSubmissionReq(sessionId, acc));
+    }
+
+    @Override
+    public Observable<String> deleteSubmissionRx(String acc, String sessionId) {
+        logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
+        // WTF: why it is GET?
+        return getRx(targets.deleteSubmissionReq(sessionId, acc));
     }
 
     @Override
@@ -303,6 +330,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> getModifiedSubmissionRx(String acc, String sessionId) {
+        logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
+        return getRx(targets.getModifiedSubmissionReq(sessionId, acc));
+    }
+
+    @Override
     public String saveModifiedSubmission(String obj, String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
         return postForm(
@@ -314,6 +347,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
     public String deleteModifiedSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         return postJSON(targets.deleteModifiedSubmissionReq(sessionId, acc), null);
+    }
+
+    @Override
+    public Observable<String> deleteModifiedSubmissionRx(String acc, String sessionId) {
+        logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
+        return postJSONRx(targets.deleteModifiedSubmissionReq(sessionId, acc), null);
     }
 
     @Override
@@ -363,31 +402,27 @@ public class BioStudiesRestClient implements BioStudiesClient {
         }
     }
 
+    private static Observable<String> postJSONRx(WebTarget target, String data) {
+        return postRx(target, Entity.json(data));
+    }
+
+    private static Observable<String> postRx(WebTarget target, Entity entity) {
+        return RxObservable.from(target)
+                .request()
+                .rx()
+                .post(entity)
+                .map(BioStudiesRestClient::readResponse);
+    }
+
     private static Observable<String> getRx(WebTarget target) {
         return RxObservable.from(target)
                 .request()
                 .rx()
                 .get()
-                .map(BioStudiesRestClient::readResponseRx);
+                .map(BioStudiesRestClient::readResponse);
     }
 
-    private static String readResponse(Response resp) throws BioStudiesClientException, IOException {
-        if (resp == null) {
-            throw new IOException("null response; see logs for details");
-        }
-        String body = resp.readEntity(String.class);
-        MediaType mediaType = resp.getMediaType();
-        if (mediaType == null) {
-            logger.warn("Server responded with NULL content-type: " + resp.getLocation());
-        }
-        int statusCode = resp.getStatus();
-        if (statusCode == 200) {
-            return body;
-        }
-        throw new BioStudiesClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
-    }
-
-    private static String readResponseRx(Response resp) {
+    private static String readResponse(Response resp) {
         int statusCode = resp.getStatus();
 
         String body = resp.readEntity(String.class);

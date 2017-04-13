@@ -66,7 +66,35 @@ public class SubmissionService {
         this.europePmc = new EuropePmcClient();
     }
 
-    public ModifiedSubmission getSubmission(final String accno, boolean origin, final UserSession session)
+    public Observable<String> getSubmissionRx(String accno, boolean origin, UserSession session) {
+        logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno, origin);
+        if (!origin) {
+            return getModifiedRx(accno, session)
+                    .flatMap(resp -> resp.isEmpty() ? getWrappedOriginalRx(accno, session) : Observable.just(resp));
+        }
+        return getWrappedOriginalRx(accno, session);
+    }
+
+    private Observable<String> getModifiedRx(String accno, UserSession session) {
+        return bsclient.getModifiedSubmissionRx(accno, session.id());
+    }
+
+    private Observable<String> getOriginalRx(String accno, UserSession session) {
+        return bsclient.getSubmissionRx(accno, session.id());
+    }
+
+    private Observable<String> getWrappedOriginalRx(String accno, UserSession session) {
+        return getOriginalRx(accno, session)
+                .map(resp -> {
+                    try {
+                        return ModifiedSubmission.wrap(resp).json().toString();
+                    } catch (IOException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                });
+    }
+/*
+    public ModifiedSubmission getSubmission(final String accno, boolean origin, UserSession session)
             throws BioStudiesClientException, IOException {
         logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno, origin);
         if (!origin) {
@@ -77,6 +105,7 @@ public class SubmissionService {
         }
         return ModifiedSubmission.wrap(bsclient.getSubmission(accno, session.id()));
     }
+*/
 
     public ModifiedSubmission createSubmission(String subm, UserSession session) throws IOException, BioStudiesClientException {
         logger.debug("createSubmission(session={})", session);
@@ -94,7 +123,7 @@ public class SubmissionService {
         bsclient.saveModifiedSubmission(subm.update().json().toString(), subm.getAccno(), session.id());
     }
 
-    public String editSubmission(String accno, UserSession session)
+   /* public String editSubmission(String accno, UserSession session)
             throws BioStudiesClientException, IOException {
         logger.debug("editSubmission(session={}, accnoAttr={})", session, accno);
         String sbm = bsclient.getModifiedSubmission(accno, session.id());
@@ -105,9 +134,22 @@ public class SubmissionService {
             return modified.json().toString();
         }
         return sbm;
+    }*/
+
+    public Observable<String> submitModifiedRx(String subm, UserSession session) throws IOException {
+        logger.debug("submitSubmission(session={}, obj={})", session, subm);
+        ModifiedSubmission modified = ModifiedSubmission.parse(subm);
+        return submitRx(modified.isNew(), modified.getData(), session)
+                .map(resp -> {
+                    JsonNode resultNode = objectMapper().readTree(resp);
+                    String status = resultNode.get("status").asText();
+                    if (status.equals("OK")) {
+                        deleteSubmission(modified.getAccno(), session);
+                    }
+                });
     }
 
-    public String submitModified(String subm, UserSession session) throws IOException, BioStudiesClientException {
+    /*public String submitModified(String subm, UserSession session) throws IOException, BioStudiesClientException {
         logger.debug("submitSubmission(session={}, obj={})", session, subm);
         ModifiedSubmission modified = ModifiedSubmission.parse(subm);
         String result = submit(modified.isNew(), modified.getData(), session);
@@ -119,17 +161,51 @@ public class SubmissionService {
             deleteSubmission(modified.getAccno(), session);
         }
         return result;
+    }*/
+
+    public Observable<String> submitPlainRx(boolean create, String subm, UserSession session) throws IOException {
+        JsonNode node = objectMapper().readTree(subm);
+        return submitRx(create, node, session);
     }
 
-    public String submitPlain(boolean create, String subm, UserSession session) throws IOException, BioStudiesClientException {
+   /* public String submitPlain(boolean create, String subm, UserSession session) throws IOException, BioStudiesClientException {
         JsonNode node = objectMapper().readTree(subm);
         return submit(create, node, session);
+    }*/
+
+    private Observable<String> submitRx(boolean create, JsonNode subm, UserSession session) {
+        return create ? submitNewRx(subm, session) : submitExistedRx(subm, session);
     }
 
-    private String submit(boolean create, JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
+    /*private String submit(boolean create, JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
         return create ? submitNew(subm, session) : submitExisted(subm, session);
+    }*/
+
+    private Observable<String> submitNewRx(JsonNode subm, UserSession session) {
+        return accnoTemplateRx(subm, session)
+                .flatMap(accnoTmpl -> {
+                    ObjectNode copy = subm.deepCopy();
+                    copy.put("accno", accnoTmpl);
+
+                    ArrayNode array = JsonNodeFactory.instance.arrayNode();
+                    array.add(copy);
+
+                    ObjectNode submissions = JsonNodeFactory.instance.objectNode();
+                    submissions.set("submissions", array);
+                    return bsclient.submitNewRx(submissions.toString(), session.id());
+                });
     }
 
+    private Observable<String> submitExistedRx(JsonNode subm, UserSession session) {
+        ArrayNode array = JsonNodeFactory.instance.arrayNode();
+        array.add(subm);
+
+        ObjectNode submissions = JsonNodeFactory.instance.objectNode();
+        submissions.set("submissions", array);
+        return bsclient.submitUpdatedRx(submissions.toString(), session.id());
+    }
+
+/*
     private String submitNew(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
         ObjectNode copy = subm.deepCopy();
         copy.put("accno", accnoTemplate(copy, session));
@@ -141,7 +217,7 @@ public class SubmissionService {
         submissions.set("submissions", array);
 
         return bsclient.submitNew(submissions.toString(), session.id());
-    }
+    }*/
 
     private String submitExisted(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
         ArrayNode array = JsonNodeFactory.instance.arrayNode();
@@ -152,7 +228,7 @@ public class SubmissionService {
         return bsclient.submitUpdated(submissions.toString(), session.id());
     }
 
-    private String accnoTemplate(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
+    /*private String accnoTemplate(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
         final String defaultTmpl = "!{S-BSST}";
 
         List<String> accessions = PageTabUtils.attachToAttr(subm);
@@ -168,12 +244,41 @@ public class SubmissionService {
         return accnoTmpl == null || accno.isEmpty() ? defaultTmpl : accnoTmpl;
     }
 
+
     private String projectAccnoTemplate(String accno, UserSession session) throws IOException, BioStudiesClientException {
         ModifiedSubmission proj = getSubmission(accno, true, session);
         return PageTabUtils.accnoTemplateAttr(proj.getData());
+    }*/
+
+    private Observable<String> accnoTemplateRx(JsonNode subm, UserSession session) {
+        final Observable<String> defaultTmpl = Observable.just("!{S-BSST}");
+
+        List<String> accessions = PageTabUtils.attachToAttr(subm);
+        if (accessions.size() != 1) {
+            return defaultTmpl;
+        }
+
+        String accno = accessions.get(0);
+        if (accno == null || accno.isEmpty()) {
+            return defaultTmpl;
+        }
+        return projectAccnoTemplateRx(accno, session)
+                .flatMap(tmpl ->
+                        tmpl == null || tmpl.isEmpty() ? defaultTmpl : Observable.just(tmpl));
     }
 
-    public boolean deleteSubmission(String acc, UserSession session)
+    private Observable<String> projectAccnoTemplateRx(String accno, UserSession session) {
+        return getOriginalRx(accno, session)
+                .map(resp -> {
+                    try {
+                        return PageTabUtils.accnoTemplateAttr(objectMapper().readTree(resp));
+                    } catch (IOException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                });
+    }
+
+ /*   public boolean deleteSubmission(String acc, UserSession session)
             throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(session={}, acc={})", session, acc);
         String sbm = bsclient.getModifiedSubmission(acc, session.id());
@@ -190,9 +295,36 @@ public class SubmissionService {
         JsonNode json = objectMapper().readTree(resp);
         String level = json.get("level").asText();
         return level.equalsIgnoreCase("success");
+    }*/
+
+    public Observable<Boolean> deleteSubmissionRx(String accno, UserSession session) {
+        logger.debug("deleteSubmission(session={}, acc={})", session, accno);
+        return getModifiedRx(accno, session)
+                .flatMap(resp -> resp.isEmpty() ?
+                        deleteOriginalRx(accno, session) : deleteModifiedRx(accno, session)
+                );
     }
 
-/*
+    private Observable<Boolean> deleteOriginalRx(String accno, UserSession session) {
+        return bsclient.deleteSubmissionRx(accno, session.id())
+                .map(resp -> {
+                    try {
+                        JsonNode json = objectMapper().readTree(resp);
+                        String level = json.get("level").asText();
+                        return level.equalsIgnoreCase("success");
+
+                    } catch (IOException e) {
+                        throw Exceptions.propagate(e);
+                    }
+                });
+    }
+
+    private Observable<Boolean> deleteModifiedRx(String accno, UserSession session) {
+        return bsclient.deleteModifiedSubmissionRx(accno, session.id())
+                .map(resp -> true);
+    }
+
+    /*
     public String getSubmittedSubmissions(int offset, int limit, Map<String, String> paramMap, UserSession session)
             throws BioStudiesClientException, IOException {
         String sessId = session.id();
@@ -231,14 +363,12 @@ public class SubmissionService {
     }
 
 */
-    public Observable<String> getSubmittedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session)
-            throws BioStudiesClientException, IOException {
+    public Observable<String> getSubmittedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session) {
         return bsclient.getSubmissionsRx(session.id(), offset, limit, paramMap);
         // todo check status property ?
     }
 
-    public Observable<String> getModifiedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session)
-            throws BioStudiesClientException, IOException {
+    public Observable<String> getModifiedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session) {
         SubmFilterParams params = SubmFilterParams.fromMap(paramMap);
         Predicate<? super SubmissionListItem> predicate = params.asPredicate();
 
@@ -251,11 +381,11 @@ public class SubmissionService {
                     }
                 })
                 .flatMap(jsonNode -> {
-                        List<JsonNode> list = new ArrayList<>();
-                        if (jsonNode.isArray()) {
-                            jsonNode.iterator().forEachRemaining(list::add);
-                        }
-                        return Observable.from(list);
+                    List<JsonNode> list = new ArrayList<>();
+                    if (jsonNode.isArray()) {
+                        jsonNode.iterator().forEachRemaining(list::add);
+                    }
+                    return Observable.from(list);
                 })
                 .map(jsonNode -> {
                     try {
@@ -284,7 +414,7 @@ public class SubmissionService {
     }
 */
 
-    public Observable<String> getProjectsRx(UserSession session) throws BioStudiesClientException, IOException {
+    public Observable<String> getProjectsRx(UserSession session) {
         return bsclient.getProjectsRx(session.id());
     }
 
