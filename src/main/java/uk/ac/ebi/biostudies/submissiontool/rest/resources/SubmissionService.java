@@ -278,8 +278,14 @@ public class SubmissionService {
                 });
     }
 
+/*
     public String getProjects(UserSession session) throws BioStudiesClientException, IOException {
         return bsclient.getProjects(session.id());
+    }
+*/
+
+    public Observable<String> getProjectsRx(UserSession session) throws BioStudiesClientException, IOException {
+        return bsclient.getProjectsRx(session.id());
     }
 
     public String getFilesDir(String path, int depth, boolean showArchive, UserSession session) throws BioStudiesClientException, IOException {

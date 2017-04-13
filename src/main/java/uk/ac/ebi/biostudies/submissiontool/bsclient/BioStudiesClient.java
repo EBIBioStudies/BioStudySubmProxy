@@ -39,11 +39,7 @@ public interface BioStudiesClient extends Closeable {
 
     String getSubmissions(String sessid, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
 
-    Observable<String> getSubmissionsRx(String sessid, int offset, int limit, Map<String, String> paramMap);
-
     String getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
-
-    Observable<String> getModifiedSubmissionsRx(String sessid);
 
     String getProjects(String sessid) throws BioStudiesClientException, IOException;
 
@@ -64,4 +60,10 @@ public interface BioStudiesClient extends Closeable {
     String resendActivationLink(String obj) throws BioStudiesClientException, IOException;
 
     String activate(String key) throws BioStudiesClientException, IOException;
+
+    Observable<String> getSubmissionsRx(String sessid, int offset, int limit, Map<String, String> paramMap);
+
+    Observable<String> getModifiedSubmissionsRx(String sessid);
+
+    Observable<String> getProjectsRx(String sessid);
 }

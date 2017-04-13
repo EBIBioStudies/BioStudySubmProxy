@@ -223,6 +223,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> getProjectsRx(String sessionId) {
+        logger.debug("getProjects(sessionId={})", sessionId);
+        return getRx(targets.getProjectsReq(sessionId));
+    }
+
+    @Override
     public String deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
         return get(targets.deleteSubmissionReq(sessionId, acc));
@@ -394,7 +400,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
         if (statusCode == 200) {
             return body;
         }
-        
+
         throw new BioStudiesRxClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
     }
 }

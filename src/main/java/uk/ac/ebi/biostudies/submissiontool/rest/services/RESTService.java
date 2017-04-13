@@ -63,14 +63,14 @@ public class RESTService {
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
     public void getSubmissions(@QueryParam("offset") int offset,
-                                 @QueryParam("limit") int limit,
-                                 @QueryParam("submitted") boolean submitted,
-                                 @QueryParam("accNo") String accNoFilter,
-                                 @QueryParam("rTimeFrom") Long rTimeFromFilter,
-                                 @QueryParam("rTimeTo") Long rTimeToFilter,
-                                 @QueryParam("keywords") String titleFilter,
-                                 @Context UserSession session,
-                                 @Suspended final AsyncResponse async)
+                               @QueryParam("limit") int limit,
+                               @QueryParam("submitted") boolean submitted,
+                               @QueryParam("accNo") String accNoFilter,
+                               @QueryParam("rTimeFrom") Long rTimeFromFilter,
+                               @QueryParam("rTimeTo") Long rTimeToFilter,
+                               @QueryParam("keywords") String titleFilter,
+                               @Context UserSession session,
+                               @Suspended final AsyncResponse async)
             throws BioStudiesClientException, IOException {
 
         Map<String, String> params = new HashMap<>();
@@ -91,16 +91,17 @@ public class RESTService {
         (submitted ?
                 service.getSubmittedSubmissionsRx(offset, limit, params, session) :
                 service.getModifiedSubmissionsRx(offset, limit, params, session))
-        .subscribe(async::resume, async::resume);
+                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @GET
     @Path("/projects")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getProjects(@Context UserSession session)
+    public void getProjects(@Context UserSession session, @Suspended final AsyncResponse async)
             throws BioStudiesClientException, IOException {
-        return service.getProjects(session);
+        service.getProjectsRx(session)
+                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -177,7 +178,7 @@ public class RESTService {
     @Path("/auth/activation/check/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String activate( @PathParam("key") String key) throws BioStudiesClientException, IOException {
+    public String activate(@PathParam("key") String key) throws BioStudiesClientException, IOException {
         logger.debug("activate(key={})", key);
         return service.activate(key);
     }
