@@ -140,11 +140,17 @@ public class SubmissionService {
         logger.debug("submitSubmission(session={}, obj={})", session, subm);
         ModifiedSubmission modified = ModifiedSubmission.parse(subm);
         return submitRx(modified.isNew(), modified.getData(), session)
-                .map(resp -> {
-                    JsonNode resultNode = objectMapper().readTree(resp);
-                    String status = resultNode.get("status").asText();
-                    if (status.equals("OK")) {
-                        deleteSubmission(modified.getAccno(), session);
+                .flatMap(resp -> {
+                    try {
+                        JsonNode resultNode = objectMapper().readTree(resp);
+                        String status = resultNode.get("status").asText();
+                        if (status.equals("OK")) {
+                            return deleteModifiedRx(modified.getAccno(), session)
+                                    .map(delResp -> resp);
+                        }
+                        return Observable.just(resp);
+                    } catch (IOException e) {
+                        return Observable.error(e);
                     }
                 });
     }
