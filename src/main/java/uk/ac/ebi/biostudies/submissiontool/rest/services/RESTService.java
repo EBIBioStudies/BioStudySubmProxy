@@ -116,13 +116,16 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions/{id}")
+    @Path("/submissions/{acc}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void saveSubmission(@Context UserSession session,
-                               String str) throws IOException, BioStudiesClientException {
+                               @PathParam("acc") String acc,
+                               String str,
+                               @Suspended AsyncResponse async) {
         logger.debug("saveSubmission(session={}, str={})", session, str);
-        service.saveSubmission(str, session);
+        service.saveSubmissionRx(str, acc, session)
+                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -130,10 +133,12 @@ public class RESTService {
     @Path("/submissions")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String createSubmission(@Context UserSession session, String str)
-            throws IOException, BioStudiesClientException {
+    public void createSubmission(@Context UserSession session,
+                                 String str,
+                                 @Suspended AsyncResponse async) throws IOException {
         logger.debug("createSubmission(session={}, str={})", session, str);
-        return service.createSubmission(str, session).json().toString();
+        service.createSubmissionRx(str, session)
+                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -164,7 +169,7 @@ public class RESTService {
         service.submitPlainRx(create != null && create, subm, session)
                 .subscribe(async::resume, async::resume);
     }
-    
+
     @RolesAllowed("AUTHENTICATED")
     @GET
     @Path("/projects")
@@ -292,8 +297,11 @@ public class RESTService {
     @GET
     @Path("/pubMedSearch/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String pubMedSearch(@Context UserSession session, @PathParam("id") String id) {
+    public void pubMedSearch(@Context UserSession session,
+                             @PathParam("id") String id,
+                             @Suspended AsyncResponse async) {
         logger.debug("pubMedSearch(session={}, ID={})", session, id);
-        return service.pubMedSearch(id);
+        service.pubMedSearchRx(id)
+                .subscribe(async::resume, async::resume);
     }
 }

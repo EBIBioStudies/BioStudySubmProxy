@@ -16,39 +16,67 @@
 
 package uk.ac.ebi.biostudies.submissiontool.europepmc;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import org.glassfish.jersey.client.rx.rxjava.RxObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
 
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 
 public class EuropePmcClient {
 
     private static final Logger logger = LoggerFactory.getLogger(EuropePmcClient.class);
 
-    public String pubMedSearch(String id) throws IOException {
-        HttpUriRequest req = RequestBuilder.get().setUri("http://www.ebi.ac.uk/europepmc/webservices/rest/search")
-                .addParameter("query", "ext_id:" + id)
-                .addParameter("format", "json")
-                .build();
+    private final Client rsClient;
 
-        CloseableHttpClient client = HttpClients.createDefault();
-        try (CloseableHttpResponse response = client.execute(req)) {
-            String body = EntityUtils.toString(response.getEntity(), "UTF-8");
-            int statusCode = response.getStatusLine().getStatusCode();
-            if (statusCode == 200) {
-                return body;
-            }
+    public EuropePmcClient() {
+        this.rsClient = ClientBuilder.newClient();
+    }
 
-            logger.error("EuropePMC request(" + req.getURI() + ") failed with status: " + statusCode);
-            throw new IOException("EropwPMC request failed with status: " + statusCode);
+    public String pubMedSearch(String id) throws EuropePMCClientException, IOException {
+        Invocation.Builder builder = createTarget(id).request(MediaType.APPLICATION_JSON_TYPE);
+        Response resp = null;
+        try {
+            resp = builder.get();
+            return readResponse(resp);
+        } catch (ProcessingException e) {
+            throw new IOException(e);
+        } finally {
+            if (resp != null)
+                resp.close();
         }
+    }
+
+    public Observable<String> pubMedSearchRx(String id) {
+        return RxObservable.from(createTarget(id))
+                .request()
+                .rx()
+                .get()
+                .map(EuropePmcClient::readResponse);
+    }
+
+    private WebTarget createTarget(String id) {
+        return rsClient.target("http://www.ebi.ac.uk/europepmc/webservices/rest/search")
+                .queryParam("query", "ext_id:" + id)
+                .queryParam("format", "json");
 
     }
 
+    private static String readResponse(Response resp) {
+        int statusCode = resp.getStatus();
+        String body = resp.readEntity(String.class);
+        if (statusCode == 200) {
+            return body;
+        }
+
+        logger.error("EuropePMC failed with status: " + statusCode);
+        throw new EuropePMCClientException("EropwPMC request failed with status: " + statusCode);
+    }
 }

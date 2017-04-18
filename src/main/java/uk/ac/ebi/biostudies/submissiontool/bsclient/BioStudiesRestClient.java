@@ -31,7 +31,6 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
-import java.util.Queue;
 
 /**
  * @author Olga Melnichuk
@@ -344,6 +343,14 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> saveModifiedSubmissionRx(String obj, String acc, String sessionId) {
+        logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
+        return postFormRx(
+                targets.saveModifiedSubmissionReq(sessionId),
+                targets.saveModifiedSubmissionForm(acc, obj));
+    }
+
+    @Override
     public String deleteModifiedSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         return postJSON(targets.deleteModifiedSubmissionReq(sessionId, acc), null);
@@ -404,6 +411,10 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     private static Observable<String> postJSONRx(WebTarget target, String data) {
         return postRx(target, Entity.json(data));
+    }
+
+    private static Observable<String> postFormRx(WebTarget target, Form data) {
+        return postRx(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
     }
 
     private static Observable<String> postRx(WebTarget target, Entity entity) {

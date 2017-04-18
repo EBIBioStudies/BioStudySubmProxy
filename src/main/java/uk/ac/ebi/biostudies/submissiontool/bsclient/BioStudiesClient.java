@@ -73,6 +73,8 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> deleteModifiedSubmissionRx(String acc, String sessid);
 
+    Observable<String> saveModifiedSubmissionRx(String modified, String accno, String sessid);
+
     Observable<String> getProjectsRx(String sessid);
 
     Observable<String> submitNewRx(String sbm, String sessid);

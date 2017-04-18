@@ -107,13 +107,26 @@ public class SubmissionService {
     }
 */
 
-    public ModifiedSubmission createSubmission(String subm, UserSession session) throws IOException, BioStudiesClientException {
+   /* public ModifiedSubmission createSubmission(String subm, UserSession session) throws IOException, BioStudiesClientException {
         logger.debug("createSubmission(session={})", session);
         ModifiedSubmission modified = ModifiedSubmission.wrap(subm);
         saveSubmission(modified, session);
         return modified;
+    }*/
+
+    public Observable<String> createSubmissionRx(String subm, UserSession session) throws IOException {
+        logger.debug("createSubmission(session={})", session);
+        ModifiedSubmission modified = ModifiedSubmission.wrap(subm);
+        String submStr = modified.update().json().toString();
+        return saveSubmissionRx(submStr, modified.getAccno(), session)
+                .map(resp -> submStr);
     }
 
+    public Observable<String> saveSubmissionRx(String subm, String accno, UserSession session) {
+        return bsclient.saveModifiedSubmissionRx(subm, accno, session.id());
+    }
+
+/*
     public void saveSubmission(String subm, UserSession session) throws IOException, BioStudiesClientException {
         this.saveSubmission(ModifiedSubmission.parse(subm), session);
     }
@@ -122,6 +135,7 @@ public class SubmissionService {
         logger.debug("saveSubmission(session={}, obj={})", session, subm);
         bsclient.saveModifiedSubmission(subm.update().json().toString(), subm.getAccno(), session.id());
     }
+*/
 
    /* public String editSubmission(String accno, UserSession session)
             throws BioStudiesClientException, IOException {
@@ -491,6 +505,7 @@ public class SubmissionService {
         logger.debug("activate(key={})", key);
         return bsclient.activate(key);
     }
+/*
 
     public String pubMedSearch(String id) {
         logger.debug("pubMedSearch(ID={})", id);
@@ -518,5 +533,37 @@ public class SubmissionService {
             result.set("data", JsonNodeFactory.instance.objectNode());
         }
         return result.toString();
+    }
+*/
+
+
+    public Observable<String> pubMedSearchRx(String id) {
+        logger.debug("pubMedSearch(ID={})", id);
+        return europePmc
+                .pubMedSearchRx(id)
+                .map(resp -> {
+                    ObjectNode result = JsonNodeFactory.instance.objectNode();
+                    try {
+                        JsonNode respNode = objectMapper().readTree(resp);
+                        int hitCount = respNode.path("hitCount").asInt();
+                        ObjectNode data = JsonNodeFactory.instance.objectNode();
+
+                        if (hitCount >= 1) {
+                            final JsonNode publ = respNode.path("resultList").path("result").get(0);
+                            europePmcAttributes.forEach((key, value) -> {
+                                if (publ.has(key)) {
+                                    data.put(value, publ.get(key).asText(""));
+                                }
+                            });
+                        }
+                        result.put("status", "OK");
+                        result.set("data", data);
+                    } catch (IOException e) {
+                        logger.warn("EuropePMC call for ID={} failed: {}", id, e);
+                        result.put("status", "FAIL");
+                        result.set("data", JsonNodeFactory.instance.objectNode());
+                    }
+                    return result.toString();
+                });
     }
 }
