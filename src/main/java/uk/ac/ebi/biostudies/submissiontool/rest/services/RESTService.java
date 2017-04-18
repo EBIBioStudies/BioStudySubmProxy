@@ -263,10 +263,12 @@ public class RESTService {
     @Path("/auth/activation/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String resendActivationLink(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
+    public void resendActivationLink(EmailPathCaptchaParams par,
+                                     @Suspended AsyncResponse async) throws IOException {
         logger.debug("resendActivationLink(str={})", par);
         try {
-            return service.resendActivationLink(par.withPath(getApplUrl(par.getPath())));
+            service.resendActivationLinkRx(par.withPath(getApplUrl(par.getPath())))
+                    .subscribe(async::resume, async::resume);
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
@@ -276,9 +278,11 @@ public class RESTService {
     @Path("/auth/activation/check/{key}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String activate(@PathParam("key") String key) throws BioStudiesClientException, IOException {
+    public void activate(@PathParam("key") String key,
+                         @Suspended AsyncResponse async) {
         logger.debug("activate(key={})", key);
-        return service.activate(key);
+        service.activateRx(key)
+                .subscribe(async::resume, async::resume);
     }
 
     private String getApplUrl(String path) throws URISyntaxException {

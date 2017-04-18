@@ -537,18 +537,33 @@ public class SubmissionService {
         return bsclient.passwordResetRx(json.toString());
     }
 
-    public String resendActivationLink(EmailPathCaptchaParams params) throws IOException, BioStudiesClientException {
+   /* public String resendActivationLink(EmailPathCaptchaParams params) throws IOException, BioStudiesClientException {
         logger.debug("resendActivationLink(params={})", params);
         ObjectNode json = JsonNodeFactory.instance.objectNode();
         json.put("email", params.getEmail());
         json.put("recaptcha2-response", params.getCaptcha());
         json.put("activationURL", params.getPath());
         return bsclient.resendActivationLink(json.toString());
+    }*/
+
+    public Observable<String> resendActivationLinkRx(EmailPathCaptchaParams params) {
+        logger.debug("resendActivationLink(params={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("email", params.getEmail());
+        json.put("recaptcha2-response", params.getCaptcha());
+        json.put("activationURL", params.getPath());
+        return bsclient.resendActivationLinkRx(json.toString());
     }
 
-    public String activate(String key) throws IOException, BioStudiesClientException {
+  /*  public String activate(String key) throws IOException, BioStudiesClientException {
         logger.debug("activate(key={})", key);
         return bsclient.activate(key);
+    }*/
+
+
+    public Observable<String> activateRx(String key) {
+        logger.debug("activate(key={})", key);
+        return bsclient.activateRx(key);
     }
 /*
 

@@ -334,9 +334,21 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> resendActivationLinkRx(String obj) {
+        logger.debug("resendActivationLink(obj={})", obj);
+        return postJSONRx(targets.resendActivationLinkReq(), obj);
+    }
+
+    @Override
     public String activate(String key) throws BioStudiesClientException, IOException {
         logger.debug("resendActivationLink(obj={})", key);
         return postJSON(targets.activationReq(key), "{}");
+    }
+
+    @Override
+    public Observable<String> activateRx(String key) {
+        logger.debug("resendActivationLink(obj={})", key);
+        return postJSONRx(targets.activationReq(key), "{}");
     }
 
     public String signIn(String username, String password) throws BioStudiesClientException, IOException {

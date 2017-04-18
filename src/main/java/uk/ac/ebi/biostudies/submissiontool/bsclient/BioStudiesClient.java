@@ -91,4 +91,8 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> passwordResetRx(String obj);
 
+    Observable<String> resendActivationLinkRx(String obj);
+
+    Observable<String> activateRx(String key);
+
 }
