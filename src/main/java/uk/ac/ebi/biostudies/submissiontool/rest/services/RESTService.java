@@ -222,10 +222,12 @@ public class RESTService {
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String signup(SignUpParams par) throws BioStudiesClientException, IOException {
+    public void signup(SignUpParams par,
+                       @Suspended AsyncResponse async) throws IOException {
         logger.debug("signup(form={})", par);
         try {
-            return service.signUp(par.withPath(getApplUrl(par.getPath())));
+            service.signUpRx(par.withPath(getApplUrl(par.getPath())))
+                    .subscribe(async::resume, async::resume);
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
@@ -235,10 +237,12 @@ public class RESTService {
     @Path("/auth/password/reset_request")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String passwordResetRequest(EmailPathCaptchaParams par) throws BioStudiesClientException, IOException {
+    public void passwordResetRequest(EmailPathCaptchaParams par,
+                                     @Suspended AsyncResponse async) throws IOException {
         logger.debug("passwordResetRequest(str={})", par);
         try {
-            return service.passwordResetRequest(par.withPath(getApplUrl(par.getPath())));
+            service.passwordResetRequestRx(par.withPath(getApplUrl(par.getPath())))
+                    .subscribe(async::resume, async::resume);
         } catch (URISyntaxException e) {
             throw new IOException("Bad url syntax");
         }
@@ -248,9 +252,11 @@ public class RESTService {
     @Path("/auth/password/reset")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public String passwordReset(KeyPasswordCaptchaParams par) throws BioStudiesClientException, IOException {
+    public void passwordReset(KeyPasswordCaptchaParams par,
+                              @Suspended AsyncResponse async) {
         logger.debug("passwordReset(str={})", par);
-        return service.passwordReset(par);
+        service.passwordResetRx(par)
+                .subscribe(async::resume, async::resume);
     }
 
     @POST

@@ -472,7 +472,7 @@ public class SubmissionService {
         return bsclient.signIn(obj);
     }
 
-    public String signUp(SignUpParams params) throws BioStudiesClientException, IOException {
+   /* public String signUp(SignUpParams params) throws BioStudiesClientException, IOException {
         logger.debug("signUp(obj={})", params);
         ObjectNode json = JsonNodeFactory.instance.objectNode();
         json.put("username", params.getUsername());
@@ -484,9 +484,23 @@ public class SubmissionService {
         aux.add("orcid:" + (params.hasOrcid() ? params.getOrcid() : ""));
         json.set("aux", aux);
         return bsclient.signUp(json.toString());
+    }*/
+
+    public Observable<String> signUpRx(SignUpParams params) {
+        logger.debug("signUp(obj={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("username", params.getUsername());
+        json.put("password", params.getPassword());
+        json.put("email", params.getEmail());
+        json.put("recaptcha2-response", params.getCaptcha());
+        json.put("activationURL", params.getPath());
+        ArrayNode aux = JsonNodeFactory.instance.arrayNode();
+        aux.add("orcid:" + (params.hasOrcid() ? params.getOrcid() : ""));
+        json.set("aux", aux);
+        return bsclient.signUpRx(json.toString());
     }
 
-    public String passwordResetRequest(EmailPathCaptchaParams params) throws BioStudiesClientException, IOException {
+    /*public String passwordResetRequest(EmailPathCaptchaParams params) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(obj={})", params);
         ObjectNode json = JsonNodeFactory.instance.objectNode();
         json.put("email", params.getEmail());
@@ -494,14 +508,33 @@ public class SubmissionService {
         json.put("resetURL", params.getPath());
         return bsclient.passwordResetRequest(json.toString());
     }
+*/
+    public Observable<String> passwordResetRequestRx(EmailPathCaptchaParams params) {
+        logger.debug("passwordResetRequest(obj={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("email", params.getEmail());
+        json.put("recaptcha2-response", params.getCaptcha());
+        json.put("resetURL", params.getPath());
+        return bsclient.passwordResetRequestRx(json.toString());
+    }
 
-    public String passwordReset(KeyPasswordCaptchaParams params) throws IOException, BioStudiesClientException {
+  /*  public String passwordReset(KeyPasswordCaptchaParams params) throws IOException, BioStudiesClientException {
         logger.debug("passwordReset(obj={})", params);
         ObjectNode json = JsonNodeFactory.instance.objectNode();
         json.put("key", params.getKey());
         json.put("password", params.getPassword());
         json.put("recaptcha2-response", params.getCaptcha());
         return bsclient.passwordReset(json.toString());
+    }*/
+
+
+    public Observable<String> passwordResetRx(KeyPasswordCaptchaParams params) {
+        logger.debug("passwordReset(obj={})", params);
+        ObjectNode json = JsonNodeFactory.instance.objectNode();
+        json.put("key", params.getKey());
+        json.put("password", params.getPassword());
+        json.put("recaptcha2-response", params.getCaptcha());
+        return bsclient.passwordResetRx(json.toString());
     }
 
     public String resendActivationLink(EmailPathCaptchaParams params) throws IOException, BioStudiesClientException {

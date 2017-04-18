@@ -298,15 +298,33 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> signUpRx(String obj) {
+        logger.debug("signUp(obj={})", obj);
+        return postJSONRx(targets.signUpReq(), obj);
+    }
+
+    @Override
     public String passwordResetRequest(String obj) throws BioStudiesClientException, IOException {
         logger.debug("passwordResetRequest(obj={})", obj);
         return postJSON(targets.passwordResetReqReq(), obj);
     }
 
     @Override
+    public Observable<String> passwordResetRequestRx(String obj) {
+        logger.debug("passwordResetRequest(obj={})", obj);
+        return postJSONRx(targets.passwordResetReqReq(), obj);
+    }
+
+    @Override
     public String passwordReset(String obj) throws BioStudiesClientException, IOException {
         logger.debug("passwordReset(obj={})", obj);
         return postJSON(targets.passwordResetReq(), obj);
+    }
+
+    @Override
+    public Observable<String> passwordResetRx(String obj) {
+        logger.debug("passwordReset(obj={})", obj);
+        return postJSONRx(targets.passwordResetReq(), obj);
     }
 
     @Override
