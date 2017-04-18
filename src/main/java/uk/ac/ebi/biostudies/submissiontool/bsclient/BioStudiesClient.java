@@ -80,4 +80,8 @@ public interface BioStudiesClient extends Closeable {
     Observable<String> submitNewRx(String sbm, String sessid);
 
     Observable<String> submitUpdatedRx(String sbm, String sessid);
+
+    Observable<String> getFilesDirRx(String path, int depth, boolean showArchive, String sessid);
+
+    Observable<String> deleteFileRx(String file, String sessid);
 }

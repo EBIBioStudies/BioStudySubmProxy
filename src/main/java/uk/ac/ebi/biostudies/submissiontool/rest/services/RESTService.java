@@ -185,23 +185,37 @@ public class RESTService {
     @GET
     @Path("/files")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getFileDir(@QueryParam("path") String path,
-                             @QueryParam("depth") int depth,
-                             @QueryParam("showArchive") boolean showArchive,
-                             @Context UserSession session) throws BioStudiesClientException, IOException {
+    public void getFiles(@QueryParam("path") String path,
+                         @QueryParam("depth") int depth,
+                         @QueryParam("showArchive") boolean showArchive,
+                         @Context UserSession session,
+                         @Suspended AsyncResponse async) {
         logger.debug("getFileDir(session={}, path={}, depth={}, showArchive={})", session, path, depth, showArchive);
-        return service.getFilesDir(path, depth, showArchive, session);
+        service.getFilesRx(path, depth, showArchive, session)
+                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @DELETE
     @Path("/files")
     @Produces(MediaType.APPLICATION_JSON)
-    public String deleteFile(@Context UserSession session,
-                             @QueryParam("path") String path)
-            throws BioStudiesClientException, IOException {
+    public void deleteFile(@Context UserSession session,
+                           @QueryParam("path") String path,
+                           @Suspended AsyncResponse async) {
         logger.debug("deleteFile(session={}, path={})", session, path);
-        return service.deleteFile(path, session);
+        service.deleteFileRx(path, session)
+                .subscribe(async::resume, async::resume);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @POST
+    @Path("/auth/signout")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String signout(@Context UserSession session) throws BioStudiesClientException, IOException {
+        logger.info("signout(session={})", session);
+        String resp = service.signOut(session);
+        request.getSession(false).invalidate();
+        return resp;
     }
 
     @POST
@@ -282,16 +296,6 @@ public class RESTService {
         return uriBuilder.build();
     }
 
-    @RolesAllowed("AUTHENTICATED")
-    @POST
-    @Path("/auth/signout")
-    @Produces(MediaType.APPLICATION_JSON)
-    public String signout(@Context UserSession session) throws BioStudiesClientException, IOException {
-        logger.info("signout(session={})", session);
-        String resp = service.signOut(session);
-        request.getSession(false).invalidate();
-        return resp;
-    }
 
     @RolesAllowed("AUTHENTICATED")
     @GET

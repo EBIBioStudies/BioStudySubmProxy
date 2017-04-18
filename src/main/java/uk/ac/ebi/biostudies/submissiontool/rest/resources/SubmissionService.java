@@ -26,7 +26,7 @@ import rx.Observable;
 import rx.exceptions.Exceptions;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePmcClient;
+import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePMCClient;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.ModifiedSubmission;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.PageTabUtils;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.SubmissionListItem;
@@ -47,7 +47,7 @@ public class SubmissionService {
     private static final Logger logger = LoggerFactory.getLogger(SubmissionService.class);
 
     private final BioStudiesClient bsclient;
-    private final EuropePmcClient europePmc;
+    private final EuropePMCClient europePmc;
 
     private static final Map<String, String> europePmcAttributes = new HashMap<String, String>() {
         {
@@ -63,7 +63,7 @@ public class SubmissionService {
 
     public SubmissionService(BioStudiesClient bsclient) {
         this.bsclient = bsclient;
-        this.europePmc = new EuropePmcClient();
+        this.europePmc = new EuropePMCClient();
     }
 
     public Observable<String> getSubmissionRx(String accno, boolean origin, UserSession session) {
@@ -438,16 +438,28 @@ public class SubmissionService {
         return bsclient.getProjectsRx(session.id());
     }
 
-    public String getFilesDir(String path, int depth, boolean showArchive, UserSession session) throws BioStudiesClientException, IOException {
+    public Observable<String> getFilesRx(String path, int depth, boolean showArchive, UserSession session) {
         logger.debug("getFilesDir(session={}, path={}, depth={}, showArchive={})", session, path, depth, showArchive);
-        return bsclient.getFilesDir(path, depth, showArchive, session.id());
+        return bsclient.getFilesDirRx(path, depth, showArchive, session.id());
     }
 
+   /* public String getFilesDir(String path, int depth, boolean showArchive, UserSession session) throws BioStudiesClientException, IOException {
+        logger.debug("getFilesDir(session={}, path={}, depth={}, showArchive={})", session, path, depth, showArchive);
+        return bsclient.getFilesDir(path, depth, showArchive, session.id());
+    }*/
+
+    public Observable<String> deleteFileRx(String path, UserSession session) {
+        logger.debug("deleteFile(session={}, path={})", session, path);
+        return bsclient.deleteFileRx(path, session.id());
+    }
+
+/*
     public String deleteFile(String path, UserSession session)
             throws BioStudiesClientException, IOException {
         logger.debug("deleteFile(session={}, path={})", session, path);
         return bsclient.deleteFile(path, session.id());
     }
+*/
 
     public String signOut(UserSession session) throws BioStudiesClientException, IOException {
         logger.debug("signOut(session={})", session);

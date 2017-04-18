@@ -267,9 +267,22 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> getFilesDirRx(String path, int depth, boolean showArchive, String sessionId) {
+        logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
+        return getRx(targets.getFilesDirReq(path, depth, showArchive, sessionId));
+    }
+
+    @Override
     public String deleteFile(String file, String sessionId) throws BioStudiesClientException, IOException {
         logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
         return get(targets.deleteFileReq(sessionId, file));
+    }
+
+    @Override
+    public Observable<String> deleteFileRx(String file, String sessionId) {
+        logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
+        // WTF: why it is GET?
+        return getRx(targets.deleteFileReq(sessionId, file));
     }
 
     @Override
