@@ -109,19 +109,10 @@ public class SubmissionService {
         logger.debug("submitSubmission(session={}, obj={})", session, subm);
         ModifiedSubmission modified = ModifiedSubmission.parse(subm);
         return submitRx(modified.isNew(), modified.getData(), session)
-                .flatMap(resp -> {
-                    try {
-                        JsonNode resultNode = objectMapper().readTree(resp);
-                        String status = resultNode.get("status").asText();
-                        if (status.equals("OK")) {
-                            return deleteModifiedRx(modified.getAccno(), session)
-                                    .map(delResp -> resp);
-                        }
-                        return Observable.just(resp);
-                    } catch (IOException e) {
-                        return Observable.error(e);
-                    }
-                });
+                .flatMap(resp ->
+                        deleteModifiedRx(modified.getAccno(), session)
+                                .map(delResp -> resp)
+                );
     }
 
     public Observable<String> submitPlainRx(boolean create, String subm, UserSession session) throws IOException {
@@ -214,7 +205,6 @@ public class SubmissionService {
 
     public Observable<String> getSubmittedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session) {
         return bsclient.getSubmissionsRx(session.id(), offset, limit, paramMap);
-        // todo check status property ?
     }
 
     public Observable<String> getModifiedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session) {
@@ -271,7 +261,7 @@ public class SubmissionService {
         return bsclient.deleteFileRx(path, session.id());
     }
 
-    public Observable<String> signOutRx(UserSession session)  {
+    public Observable<String> signOutRx(UserSession session) {
         logger.debug("signOut(session={})", session);
         ObjectNode obj = JsonNodeFactory.instance.objectNode();
         obj.put("sessid", session.id());
@@ -329,7 +319,6 @@ public class SubmissionService {
         return europePmc
                 .pubMedSearchRx(id)
                 .map(resp -> {
-                    ObjectNode result = JsonNodeFactory.instance.objectNode();
                     try {
                         JsonNode respNode = objectMapper().readTree(resp);
                         int hitCount = respNode.path("hitCount").asInt();
@@ -343,14 +332,10 @@ public class SubmissionService {
                                 }
                             });
                         }
-                        result.put("status", "OK");
-                        result.set("data", data);
+                        return data.toString();
                     } catch (IOException e) {
-                        logger.warn("EuropePMC call for ID={} failed: {}", id, e);
-                        result.put("status", "FAIL");
-                        result.set("data", JsonNodeFactory.instance.objectNode());
+                        throw Exceptions.propagate(e);
                     }
-                    return result.toString();
                 });
     }
 }

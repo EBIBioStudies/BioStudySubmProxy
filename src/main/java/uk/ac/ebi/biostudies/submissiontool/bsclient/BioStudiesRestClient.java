@@ -16,12 +16,17 @@
 
 package uk.ac.ebi.biostudies.submissiontool.bsclient;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.MappingJsonFactory;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.glassfish.jersey.client.rx.rxjava.RxObservable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.exceptions.Exceptions;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.*;
@@ -471,7 +476,14 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 .request()
                 .rx()
                 .post(entity)
-                .map(BioStudiesRestClient::readResponse);
+                .map(resp -> {
+                            try {
+                                return readResponse(resp);
+                            } catch (IOException e) {
+                                throw Exceptions.propagate(e);
+                            }
+                        }
+                );
     }
 
     private static Observable<String> getRx(WebTarget target) {
@@ -479,10 +491,17 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 .request()
                 .rx()
                 .get()
-                .map(BioStudiesRestClient::readResponse);
+                .map(resp -> {
+                            try {
+                                return readResponse(resp);
+                            } catch (IOException e) {
+                                throw Exceptions.propagate(e);
+                            }
+                        }
+                );
     }
 
-    private static String readResponse(Response resp) {
+    private static String readResponse(Response resp) throws IOException {
         int statusCode = resp.getStatus();
 
         String body = resp.readEntity(String.class);
@@ -492,10 +511,29 @@ public class BioStudiesRestClient implements BioStudiesClient {
             logger.warn("Server responded with NULL content-type: " + resp.getLocation());
         }
 
-        if (statusCode == 200) {
-            return body;
+        if (statusCode != 200) {
+            throw new BioStudiesRxClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
         }
 
-        throw new BioStudiesRxClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+        if (!getStatus(body).equalsIgnoreCase("ok")) {
+            throw new BioStudiesRxClientException(422, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+        }
+        return body;
+    }
+
+    private static String getStatus(String body) throws IOException {
+        JsonFactory f = new MappingJsonFactory();
+        JsonParser jp = f.createParser(body);
+
+        while (jp.nextToken() != JsonToken.END_OBJECT) {
+            String fieldName = jp.getCurrentName();
+            if (fieldName.equalsIgnoreCase("status")) {
+                jp.nextToken();
+                String value = jp.getText();
+                return value == null ? "" : value.toLowerCase();
+            }
+        }
+        // no field status
+        return "ok";
     }
 }
