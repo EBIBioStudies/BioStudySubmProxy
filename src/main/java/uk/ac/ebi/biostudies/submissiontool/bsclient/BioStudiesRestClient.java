@@ -473,7 +473,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     private static Observable<String> postRx(WebTarget target, Entity entity) {
         return RxObservable.from(target)
-                .request()
+                .request(MediaType.APPLICATION_JSON_TYPE)
                 .rx()
                 .post(entity)
                 .map(resp -> {
@@ -488,7 +488,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     private static Observable<String> getRx(WebTarget target) {
         return RxObservable.from(target)
-                .request()
+                .request(MediaType.APPLICATION_JSON_TYPE)
                 .rx()
                 .get()
                 .map(resp -> {
@@ -523,17 +523,21 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     private static String getStatus(String body) throws IOException {
         JsonFactory f = new MappingJsonFactory();
-        JsonParser jp = f.createParser(body);
-
-        while (jp.nextToken() != JsonToken.END_OBJECT) {
-            String fieldName = jp.getCurrentName();
-            if (fieldName.equalsIgnoreCase("status")) {
-                jp.nextToken();
-                String value = jp.getText();
-                return value == null ? "" : value.toLowerCase();
+        try (JsonParser jp = f.createParser(body)) {
+            while (hasNextJsonToken(jp.nextToken())) {
+                String fieldName = jp.getCurrentName();
+                if (fieldName != null && fieldName.equalsIgnoreCase("status")) {
+                    jp.nextToken();
+                    String value = jp.getText();
+                    return value == null ? "" : value.toLowerCase();
+                }
             }
+            // no field status
+            return "ok";
         }
-        // no field status
-        return "ok";
+    }
+
+    private static boolean hasNextJsonToken(JsonToken token) {
+        return token != null && token != JsonToken.END_OBJECT;
     }
 }
