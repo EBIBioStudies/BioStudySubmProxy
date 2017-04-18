@@ -30,13 +30,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 
-public class EuropePmcClient {
+public class EuropePMCClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(EuropePmcClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(EuropePMCClient.class);
 
     private final Client rsClient;
 
-    public EuropePmcClient() {
+    public EuropePMCClient() {
         this.rsClient = ClientBuilder.newClient();
     }
 
@@ -59,7 +59,7 @@ public class EuropePmcClient {
                 .request()
                 .rx()
                 .get()
-                .map(EuropePmcClient::readResponse);
+                .map(EuropePMCClient::readResponse);
     }
 
     private WebTarget createTarget(String id) {
