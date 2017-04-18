@@ -95,4 +95,6 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> activateRx(String key);
 
+    Observable<String> signOutRx(String obj, String sessid);
+
 }

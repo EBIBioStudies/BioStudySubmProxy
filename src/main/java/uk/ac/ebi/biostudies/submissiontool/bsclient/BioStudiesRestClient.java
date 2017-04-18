@@ -292,6 +292,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> signOutRx(String obj, String sessionId) {
+        logger.debug("signOut(sessionId={})", sessionId);
+        return postJSONRx(targets.signOutReq(sessionId), obj);
+    }
+
+    @Override
     public String signUp(String obj) throws BioStudiesClientException, IOException {
         logger.debug("signUp(obj={})", obj);
         return postJSON(targets.signUpReq(), obj);

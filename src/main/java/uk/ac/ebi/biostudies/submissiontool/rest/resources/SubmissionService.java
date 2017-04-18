@@ -239,7 +239,7 @@ public class SubmissionService {
         return bsclient.submitNew(submissions.toString(), session.id());
     }*/
 
-    private String submitExisted(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
+   /* private String submitExisted(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
         ArrayNode array = JsonNodeFactory.instance.arrayNode();
         array.add(subm);
 
@@ -247,7 +247,7 @@ public class SubmissionService {
         submissions.set("submissions", array);
         return bsclient.submitUpdated(submissions.toString(), session.id());
     }
-
+*/
     /*private String accnoTemplate(JsonNode subm, UserSession session) throws IOException, BioStudiesClientException {
         final String defaultTmpl = "!{S-BSST}";
 
@@ -461,15 +461,18 @@ public class SubmissionService {
     }
 */
 
-    public String signOut(UserSession session) throws BioStudiesClientException, IOException {
+   /* public String signOut(UserSession session) throws BioStudiesClientException, IOException {
         logger.debug("signOut(session={})", session);
         ObjectNode obj = JsonNodeFactory.instance.objectNode();
         obj.put("sessid", session.id());
         return bsclient.signOut(obj.toString(), session.id());
-    }
+    }*/
 
-    public String signIn(String obj) throws BioStudiesClientException, IOException {
-        return bsclient.signIn(obj);
+    public Observable<String> signOutRx(UserSession session)  {
+        logger.debug("signOut(session={})", session);
+        ObjectNode obj = JsonNodeFactory.instance.objectNode();
+        obj.put("sessid", session.id());
+        return bsclient.signOutRx(obj.toString(), session.id());
     }
 
    /* public String signUp(SignUpParams params) throws BioStudiesClientException, IOException {

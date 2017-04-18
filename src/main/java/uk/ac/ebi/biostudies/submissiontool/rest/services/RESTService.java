@@ -211,11 +211,15 @@ public class RESTService {
     @POST
     @Path("/auth/signout")
     @Produces(MediaType.APPLICATION_JSON)
-    public String signout(@Context UserSession session) throws BioStudiesClientException, IOException {
+    public void signout(@Context UserSession session,
+                        @Suspended AsyncResponse async) {
         logger.info("signout(session={})", session);
-        String resp = service.signOut(session);
-        request.getSession(false).invalidate();
-        return resp;
+        service.signOutRx(session)
+                .map(resp -> {
+                    request.getSession(false).invalidate();
+                    return resp;
+                })
+                .subscribe(async::resume, async::resume);
     }
 
     @POST
