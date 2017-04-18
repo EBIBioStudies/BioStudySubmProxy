@@ -65,25 +65,14 @@ public class SubmissionService {
         this.europePmc = new EuropePMCClient();
     }
 
-    public Observable<String> getSubmissionRx(String accno, boolean origin, UserSession session) {
-        logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno, origin);
-        if (!origin) {
-            return getModifiedRx(accno, session)
-                    .flatMap(resp -> resp.isEmpty() ? getWrappedOriginalRx(accno, session) : Observable.just(resp));
-        }
-        return getWrappedOriginalRx(accno, session);
+    public Observable<String> getSubmissionRx(String accno, UserSession session) {
+        logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno);
+        return getSubmFromTmpStoreRx(accno, session)
+                .flatMap(resp -> resp.isEmpty() ? getSubmissionFromOriginRx(accno, session) : Observable.just(resp));
     }
 
-    private Observable<String> getModifiedRx(String accno, UserSession session) {
-        return bsclient.getModifiedSubmissionRx(accno, session.id());
-    }
-
-    private Observable<String> getOriginalRx(String accno, UserSession session) {
-        return bsclient.getSubmissionRx(accno, session.id());
-    }
-
-    private Observable<String> getWrappedOriginalRx(String accno, UserSession session) {
-        return getOriginalRx(accno, session)
+    public Observable<String> getSubmissionFromOriginRx(String accno, UserSession session) {
+        return getSubmFromOriginStoreRx(accno, session)
                 .map(resp -> {
                     try {
                         return ModifiedSubmission.wrap(resp).json().toString();
@@ -91,6 +80,14 @@ public class SubmissionService {
                         throw Exceptions.propagate(e);
                     }
                 });
+    }
+
+    private Observable<String> getSubmFromTmpStoreRx(String accno, UserSession session) {
+        return bsclient.getModifiedSubmissionRx(accno, session.id());
+    }
+
+    private Observable<String> getSubmFromOriginStoreRx(String accno, UserSession session) {
+        return bsclient.getSubmissionRx(accno, session.id());
     }
 
     public Observable<String> createSubmissionRx(String subm, UserSession session) throws IOException {
@@ -101,7 +98,13 @@ public class SubmissionService {
                 .map(resp -> submStr);
     }
 
-    public Observable<String> saveSubmissionRx(String subm, String accno, UserSession session) {
+    public Observable<String> saveSubmissionRx(String subm, UserSession session) throws IOException {
+        ModifiedSubmission modified = ModifiedSubmission.parse(subm);
+        String submStr = modified.update().json().toString();
+        return saveSubmissionRx(submStr, modified.getAccno(), session);
+    }
+
+    private Observable<String> saveSubmissionRx(String subm, String accno, UserSession session) {
         return bsclient.saveModifiedSubmissionRx(subm, accno, session.id());
     }
 
@@ -166,7 +169,7 @@ public class SubmissionService {
     }
 
     private Observable<String> projectAccnoTemplateRx(String accno, UserSession session) {
-        return getOriginalRx(accno, session)
+        return getSubmFromOriginStoreRx(accno, session)
                 .map(resp -> {
                     try {
                         return PageTabUtils.accnoTemplateAttr(objectMapper().readTree(resp));
@@ -178,7 +181,7 @@ public class SubmissionService {
 
     public Observable<Boolean> deleteSubmissionRx(String accno, UserSession session) {
         logger.debug("deleteSubmission(session={}, acc={})", session, accno);
-        return getModifiedRx(accno, session)
+        return getSubmFromTmpStoreRx(accno, session)
                 .flatMap(resp -> resp.isEmpty() ?
                         deleteOriginalRx(accno, session) : deleteModifiedRx(accno, session)
                 );

@@ -95,10 +95,21 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public void getSubmission(@Context UserSession session,
                               @PathParam("accno") String accno,
-                              @QueryParam("origin") boolean origin,
                               @Suspended AsyncResponse async) {
-        logger.debug("getSubmission(session={}, acc={}, origin={})", session, accno, origin);
-        service.getSubmissionRx(accno, origin, session)
+        logger.debug("getSubmission(session={}, acc={})", session, accno);
+        service.getSubmissionRx(accno, session)
+                .subscribe(async::resume, async::resume);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @GET
+    @Path("/submissions/origin/{accno}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public void getSubmissionFromOrigin(@Context UserSession session,
+                                    @PathParam("accno") String accno,
+                                    @Suspended AsyncResponse async) {
+        logger.debug("getSubmission(session={}, acc={})", session, accno);
+        service.getSubmissionFromOriginRx(accno, session)
                 .subscribe(async::resume, async::resume);
     }
 
@@ -116,21 +127,20 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions/{accno}")
+    @Path("/submissions/tmp/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void saveSubmission(@Context UserSession session,
-                               @PathParam("accno") String accno,
                                String str,
-                               @Suspended AsyncResponse async) {
+                               @Suspended AsyncResponse async) throws IOException {
         logger.debug("saveSubmission(session={}, str={})", session, str);
-        service.saveSubmissionRx(str, accno, session)
+        service.saveSubmissionRx(str, session)
                 .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions")
+    @Path("/submissions/tmp/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void createSubmission(@Context UserSession session,
@@ -143,14 +153,12 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions/ready/{accno}")
+    @Path("/submissions/tmp/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void submitSubmission(@Context UserSession session,
-                                 @PathParam("accno") String accno,
                                  String str,
-                                 @Suspended AsyncResponse async)
-            throws BioStudiesClientException, IOException {
+                                 @Suspended AsyncResponse async) throws IOException {
         logger.debug("submitSubmission(session={}, str={})", session, str);
         service.submitModifiedRx(str, session)
                 .subscribe(async::resume, async::resume);
@@ -158,7 +166,7 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions/ready")
+    @Path("/submissions/origin/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void directSubmit(@Context UserSession session,
