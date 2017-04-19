@@ -122,6 +122,7 @@ public class RESTService {
                                  @Suspended AsyncResponse async) {
         logger.debug("deleteSubmission(session={}, acc={})", session, accno);
         service.deleteSubmissionRx(accno, session)
+                .map(resp -> "{}")
                 .subscribe(async::resume, async::resume);
     }
 
