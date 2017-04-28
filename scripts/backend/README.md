@@ -15,7 +15,7 @@ These scripts build and deploy [BioStudies DB Backend](https://github.com/EBIBio
 ## Creating a VM ##
 
 `./Vagrantfile` contains all VM specific settings (static IP, private network, memory size etc.). Feel free to 
-customize it for your own purposes.
+customize it if needed.
 
 Next command creates a VM and does initial provisioning (by installing python libs and creating 'ansible' user) 
 
