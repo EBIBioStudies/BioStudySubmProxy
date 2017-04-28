@@ -1,0 +1,18 @@
+---
+- set_fact:
+    commons_home: "{{home_dir}}/commons"
+
+- name: clean commons folder
+  file: path="{{commons_home}}" state=absent
+
+- name: git checkout commons
+  git:
+    repo: "{{commons_repo}}"
+    dest: "{{commons_home}}"
+    version: "{{commons_branch}}"
+    accept_hostkey: yes
+
+- name: build and install commons
+  shell: mvn clean package install
+  args:
+    chdir: "{{commons_home}}"

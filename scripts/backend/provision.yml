@@ -1,0 +1,55 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  pre_tasks:
+    - name: install python for Ansible
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      register: output
+      changed_when: output.stdout != ""
+
+  tasks:
+    - name: run apt-get update
+      apt:
+        update_cache: yes
+
+    - set_fact:
+        key_dir: "/vagrant_data"
+        key_name: "id_rsa_ansible"
+
+    - name: create sudoers file backup
+      command: cp -f /etc/sudoers /etc/sudoers.bak
+
+    - name: create admins group
+      group: name=admin system=yes state=present
+
+    - name: make sure admin group can sudo
+      lineinfile: 
+        dest: /etc/sudoers 
+        state: present 
+        regexp: "^%admin ALL.?.?ALL.? NOPASSWD.? ALL" 
+        line: "%admin ALL=(ALL) NOPASSWD: ALL"
+
+    - name: make sure ssh-agent works via sudo
+      lineinfile: 
+        dest: /etc/sudoers 
+        state: present 
+        regexp: "^Defaults env_keep\\+\\=SSH_AUTH_SOCK" 
+        line: "Defaults env_keep+=SSH_AUTH_SOCK"
+
+    - name: create user ansible
+      user: name=ansible comment="Ansible User" group=admin home=/home/ansible shell=/bin/bash state=present
+
+    - name: check if key-pair exists 
+      stat: path={{key_dir}}/{{key_name}}
+      register: key_pair
+
+    - debug: var=key_pair.stat.exists
+
+    - name: generate SSH keys
+      command: ssh-keygen -t rsa  -f {{key_dir}}/{{key_name}} -P ""
+      when: not key_pair.stat.exists
+
+    - name: add authorized key
+      authorized_key: 
+        user: ansible 
+        key: "{{ lookup('file', '{{playbook_dir}}/data/{{key_name}}.pub') }}"

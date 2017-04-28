@@ -1,0 +1,22 @@
+---
+- name: create ant dest folder
+  shell: mkdir -p "{{ant_dest}}"
+
+- name: untar ant archive
+  unarchive:
+    src: "{{ant_targz}}"
+    dest: "{{ant_dest}}"
+    remote_src: yes
+
+- name: add ant bin to the PATH
+  lineinfile:
+    dest=/etc/environment
+    state=present
+    backrefs=yes
+    regexp='PATH=(["]*)((?!.*?{{ant_bin}}).*?)(["]*)$'
+    line="PATH=\1\2:{{ant_bin}}\3"
+
+- name: get the library dependencies of most of the Ant tasks that require them
+  shell: "{{ant_bin}}/ant -f fetch.xml -Ddest=system"
+  args:
+    chdir: "{{ant_home}}"

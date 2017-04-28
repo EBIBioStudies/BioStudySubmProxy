@@ -1,0 +1,15 @@
+---
+- include: install_java.yml
+  tags: java
+
+- include: install_maven.yml
+  tags: maven
+
+- include: install_ant.yml
+  tags: ant
+
+- include: install_mysql.yml
+  tags: mysql
+
+- include: install_tomcat.yml
+  tags: tomcat

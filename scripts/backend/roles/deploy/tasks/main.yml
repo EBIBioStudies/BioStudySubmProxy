@@ -1,0 +1,68 @@
+---
+- set_fact:
+    backend_app_base: "/biostudies"
+
+- name: find war name
+  shell: ls {{backend_dist}} | grep war | head -1
+  register: war_name_out
+
+- set_fact:
+    war_name: "{{war_name_out.stdout}}"
+
+- debug: var=war_name
+
+- assert: { that: "war_name != ''" }
+
+- name: create biostudies base dir
+  file: path="{{backend_app_base}}" state=directory owner="{{tomcat_user}}" group="{{tomcat_user_group}}"
+  become: yes
+
+- name: copy biostudies properties 
+  template: src="config.properties" dest="{{backend_app_base}}" owner="{{tomcat_user}}" group="{{tomcat_user_group}}"
+  become: yes
+
+- name: create mail-templates dir
+  file: path="{{backend_app_base}}/mail-templates" state=directory owner="{{tomcat_user}}" group="{{tomcat_user_group}}"
+  become: yes
+
+- name: copy mail-templates
+  copy: src="mail-templates/{{item}}" dest="{{backend_app_base}}/mail-templates" owner="{{tomcat_user}}" group="{{tomcat_user_group}}"
+  with_items:
+    - "activationMail.txt"
+    - "activationMail.html"
+    - "passResetMail.txt"
+    - "passResetMail.html"
+    - "subscriptionMail.txt"
+    - "subscriptionMail.html"
+    - "textSubscriptionMail.txt"
+    - "textSubscriptionMail.html"
+  become: yes
+
+- name: stop tomcat
+  shell: stop tomcat
+  become: yes
+  ignore_errors: yes
+
+- name: remove old war directory
+  shell: rm -rf "{{tomcat_home}}/webapps/biostudy-*"
+  become: yes
+
+- name: remove old war 
+  shell: rm -rf "{{tomcat_home}}/deploy/biostudy-*"
+  become: yes
+
+- name: copy war file to the tomcat's deploy dir
+  shell: cp "{{backend_dist}}/{{war_name}}" "{{tomcat_home}}/deploy"
+  become: yes
+
+- name: copy war file to the tomcat's deploy dir
+  file: path="{{tomcat_home}}/deploy/{{war_name}}" owner="{{tomcat_user}}" group="{{tomcat_user_group}}"
+  become: yes
+
+- name: copy context file
+  template: src=biostd-loc.xml dest="{{tomcat_home}}/conf/Catalina/localhost" group="{{tomcat_user_group}}"
+  become: yes
+
+- name: start tomcat
+  shell: start tomcat
+  become: yes

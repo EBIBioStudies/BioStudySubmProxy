@@ -1,0 +1,39 @@
+---
+- name: upgrade all packages
+  apt: update_cache=yes
+
+- name: set MySQL root password before installing
+  debconf: 
+    name: "mysql-server" 
+    question: "mysql-server/root_password" 
+    value: "{{mysql_root_password | quote}}"
+    vtype: "password"
+
+- name: confirm MySQL root password before installing
+  debconf: 
+    name: "mysql-server" 
+    question: "mysql-server/root_password_again" 
+    value: "{{mysql_root_password | quote}}" 
+    vtype: "password"
+
+- name: install required packages
+  apt: pkg={{item}} state=latest
+  with_items: 
+  - mysql-server
+  - python-mysqldb
+
+- name: create MySQL db
+  mysql_db:
+    name: "{{mysql_db}}"
+    state: present
+    login_user: "root"
+    login_password: "{{mysql_root_password}}"
+
+- name: create MySQL user
+  mysql_user:
+    name: "{{mysql_user}}"
+    password: "{{mysql_password}}"
+    priv: "{{mysql_db}}.*:ALL,GRANT"
+    state: present
+    login_user: "root"
+    login_password: "{{mysql_root_password}}"

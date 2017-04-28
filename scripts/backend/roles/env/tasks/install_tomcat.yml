@@ -1,0 +1,59 @@
+---
+- name: create tomact group
+  group: 
+    name: "{{tomcat_user_group}}"
+    state: present
+
+- name: create tomcat user
+  user: 
+    name: "{{tomcat_user}}"
+    group: "{{tomcat_user_group}}" 
+    home: "{{tomcat_home}}"
+    shell: "/bin/false"
+    state: present
+    comment: "Tomcat user" 
+
+- name: create tomcat dest folder
+  shell: mkdir -p "{{tomcat_dest}}"
+
+- name: untar tomcat archive
+  unarchive:
+    src: "{{tomcat_targz}}"
+    dest: "{{tomcat_dest}}"
+    remote_src: yes
+
+- name: copy MySQL driver to the CATLINA_HOME/lib
+  copy: src="{{playbook_dir}}/libs/{{mysql_driver.jar}}" dest="{{tomcat_home}}/lib"
+  tags: mysql_driver
+
+- name: change permissions for tomcat_home
+  shell: "{{item}}"
+  args:
+    chdir: "{{tomcat_home}}"
+  with_items:
+  - "chgrp -R {{tomcat_user_group}} conf"
+  - "chgrp -R {{tomcat_user_group}} bin"
+  - "chgrp -R {{tomcat_user_group}} lib"
+  - "chmod g+rwx conf"
+  - "chmod g+r conf/*"
+  - "chown -R {{tomcat_user}} work/ temp/ logs/ webapps/"
+  tags: mysql_driver
+
+- name: create deploy directory
+  file: path="{{tomcat_home}}/deploy" state=directory owner="{{tomcat_user}}" group="{{tomcat_user_group}}"
+
+- name: grep java_home
+  shell: update-alternatives --query java | grep 'Value' | grep -o '/.*/jre'
+  register: java_home_out
+
+- set_fact:
+    java_home: "{{java_home_out.stdout}}"
+
+- name: copy tomcat.config
+  template: src=tomcat.conf dest=/etc/init/tomcat.conf
+
+- name: reload upstart configuration
+  shell: initctl reload-configuration
+
+- name: start tomcat
+  shell: initctl start tomcat

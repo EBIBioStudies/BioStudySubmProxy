@@ -1,0 +1,18 @@
+---
+- set_fact:
+    core_model_home: "{{home_dir}}/core-model"
+
+- name: clean core-model folder
+  file: path="{{core_model_home}}" state=absent
+
+- name: git checkout core-model
+  git:
+    repo: "{{core_model_repo}}"
+    dest: "{{core_model_home}}"
+    version: "{{core_model_branch}}"
+    accept_hostkey: yes
+
+- name: build and install core-model
+  shell: mvn clean package install
+  args:
+    chdir: "{{core_model_home}}"

@@ -59,7 +59,7 @@ local.properties
 # Code Recommenders
 .recommenders/.
 
-build/
+./build/
 
 # Ignore Gradle GUI config
 gradle-app.setting
@@ -73,3 +73,7 @@ gradle-app.setting
 *.iml
 
 gradle.properties
+
+scripts/**/.vagrant/
+
+.reply

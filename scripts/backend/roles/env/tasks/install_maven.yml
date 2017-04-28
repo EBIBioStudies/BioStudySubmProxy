@@ -1,0 +1,20 @@
+---
+- name: create maven dest folder
+  shell: mkdir -p "{{maven_dest}}"
+  become: yes
+
+- name: untar maven archive
+  unarchive:
+    src: "{{maven_targz}}"
+    dest: "{{maven_dest}}"
+    remote_src: yes
+  become: yes
+
+- name: add maven bin to the PATH
+  lineinfile:
+    dest=/etc/environment
+    state=present
+    backrefs=yes
+    regexp='PATH=(["]*)((?!.*?{{maven_bin}}).*?)(["]*)$'
+    line="PATH=\1\2:{{maven_bin}}\3"
+  become: yes 
