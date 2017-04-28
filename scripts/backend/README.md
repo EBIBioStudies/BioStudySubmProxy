@@ -1,6 +1,6 @@
 # Setting up a VM with BioStudies DB Backend application #
 
-Here are the scripts which install a VM with [BioStudies DB Backend](https://github.com/EBIBioStudies/BackendWebApp) 
+These scripts install a VM with [BioStudies DB Backend](https://github.com/EBIBioStudies/BackendWebApp) 
 
 ## Prerequisites ##
 * VirtualBox (>= v5.1.18)
