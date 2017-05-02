@@ -22,9 +22,7 @@ processResources {
     filter ReplaceTokens, tokens: [
             "BS_SERVER_URL": bsBackendUrl,
             "LOGS_DIR": logsDir,
-            "LOG_LEVEL": logLevel,
-            "OFFLINE_MODE": offlineMode,
-            "OFFLINE_USER_DIR": offlineUserDir
+            "LOG_LEVEL": logLevel
     ]
 }
 

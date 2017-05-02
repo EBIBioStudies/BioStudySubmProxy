@@ -33,6 +33,7 @@ import java.io.*;
 import java.util.List;
 
 /**
+ * A file upload service (just for test)
  * @author Olga Melnichuk
  */
 @Path("/fileUpload")
@@ -60,11 +61,12 @@ public class RESTUploadService {
     }
 
     private boolean isOfflineModeOn() {
-        return AppContext.getConfig(this.context).isOfflineModeOn();
+        return false;
     }
 
     private java.nio.file.Path getUserDir(String relPath) {
-        return AppContext.getConfig(this.context).getUserDir().resolve(relPath.replaceAll("^/", ""));
+        //todo
+        return null;
     }
 
     // save uploaded file to new location
