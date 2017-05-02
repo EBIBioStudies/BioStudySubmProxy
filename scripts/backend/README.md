@@ -4,6 +4,10 @@ These scripts build and deploy [BioStudies DB Backend](https://github.com/EBIBio
 
 ## Prerequisites ##
 * VirtualBox (>= v5.1.18)
+  * vagrant-vbguest plugin is required
+````sh  
+$ vagrant plugin install vagrant-vbguest
+````  
 * Vagrant (>= v1.9.1)
 * Ansible (>= v2.2.1.0)
 
