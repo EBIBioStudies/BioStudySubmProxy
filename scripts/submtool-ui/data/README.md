@@ -1,0 +1,1 @@
+This directory contains shared data between host and VM machine.

@@ -1,0 +1,36 @@
+---
+- name: include additional variables
+  include_vars: ../../vars.yml
+
+- name: stop tomcat (1)
+  command: stop tomcat
+  become: true
+  register: result
+
+- include: install_tomcat.yml
+  become: true
+  when: result|failed
+
+- name: stop tomcat (2)
+  command: stop tomcat
+  become: true
+  when: result|failed
+
+- name: delete war file
+  file: path={{tomcat_home}}/webapps/proxy.war state=absent
+
+- name: delete war dir
+  file: path={{tomcat_home}}/webapps/proxy state=absent
+
+- name: copy new war file
+  copy:
+    src: "{{git_dest['proxy']}}/build/libs/proxy.war"
+    dest: "{{tomcat_home}}/webapps/proxy.war"
+    owner: "{{tomcat_user}}"
+    group: "{{tomcat_user_group}}"
+    remote_src: true
+  become: yes
+
+- name: start tomcat
+  command: start tomcat
+  become: true

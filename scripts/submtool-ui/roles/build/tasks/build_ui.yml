@@ -1,0 +1,32 @@
+---
+- name: get nodejs source installation script
+  shell: curl -sL https://deb.nodesource.com/setup_6.x -o ~/nodesource_setup.sh
+  become: yes
+
+- name: run nodejs source installation script
+  shell: bash ~/nodesource_setup.sh
+  become: yes
+
+- name: install nodejs
+  apt: name={{item}} state=present
+  with_items:
+  - nodejs
+  become: yes
+
+- set_fact:
+    ui_dest: "{{git_dest['ui']}}"
+
+- name: create ui config
+  template:
+    src: "config.json.j2"
+    dest: "{{ui_dest}}/config.json"
+
+- name: build ui
+  shell: "{{item}}"
+  args:
+    chdir: "{{ui_dest}}"
+  with_items:
+  - "npm install"
+  - "{{ui_dest}}/node_modules/.bin/gulp config"
+  - "{{ui_dest}}/node_modules/.bin/ng build --prod"
+  - "{{ui_dest}}/node_modules/.bin/gulp zip"
