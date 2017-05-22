@@ -1,0 +1,18 @@
+---
+- set_fact:
+    readers_home: "{{home_dir}}/spreadsheet-readers"
+
+- name: clean spreadsheet-readers folder
+  file: path="{{readers_home}}" state=absent
+
+- name: git checkout spreadsheet-readers
+  git:
+    repo: "{{readers_repo}}"
+    dest: "{{readers_home}}"
+    version: "{{readers_branch}}"
+    accept_hostkey: yes
+
+- name: build and install spreadsheet-readers
+  shell: mvn clean package install
+  args:
+    chdir: "{{readers_home}}"

@@ -6,13 +6,13 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.bmuschko:gradle-tomcat-plugin:2.2.4'
+        classpath 'org.akhikhl.gretty:gretty:+'
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'war'
-apply plugin: 'com.bmuschko.tomcat'
+apply plugin: 'org.akhikhl.gretty'
 
 repositories {
     mavenCentral()
@@ -22,9 +22,7 @@ processResources {
     filter ReplaceTokens, tokens: [
             "BS_SERVER_URL": bsBackendUrl,
             "LOGS_DIR": logsDir,
-            "LOG_LEVEL": logLevel,
-            "OFFLINE_MODE": offlineMode,
-            "OFFLINE_USER_DIR": offlineUserDir
+            "LOG_LEVEL": logLevel
     ]
 }
 
@@ -34,15 +32,14 @@ processTestResources {
     ]
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
 dependencies {
     compile group: 'org.apache.httpcomponents', version: '4.5.2', name: 'httpmime'
     compile group: 'org.apache.httpcomponents', version: '4.5.2', name: 'httpclient'
     compile group: 'commons-fileupload', version: '1.3.1', name: 'commons-fileupload'
     compile group: 'javax.ws.rs', version: '2.0.1', name: 'javax.ws.rs-api'
     compile group: 'org.glassfish.jersey.containers', version: '2.23.2', name: 'jersey-container-servlet'
+    compile group: 'org.glassfish.jersey.media', version: '2.23.2', name: 'jersey-media-json-jackson'
+
     compile group: 'org.glassfish.jersey.core', version: '2.23.2', name: 'jersey-client'
     compile group: 'org.glassfish.jersey.connectors', version: '2.23.2', name: 'jersey-apache-connector'
     compile group: 'io.reactivex', name: 'rxjava', version: '1.1.10'
@@ -52,23 +49,19 @@ dependencies {
     }
     compile group: 'org.glassfish.jersey.media', name: 'jersey-media-multipart', version: '2.23.2'
 
+    compile group: 'com.fasterxml.jackson.core', version: '2.8.6', name: 'jackson-databind'
+    compile group: 'com.fasterxml.jackson.core', version: '2.8.6', name: 'jackson-annotations'
+    compile group: 'com.fasterxml.jackson.core', version: '2.8.6', name: 'jackson-core'
+
     compile group: 'ch.qos.logback', version: '1.1.7', name: 'logback-classic'
     compile group: 'ch.qos.logback', version: '1.1.7', name: 'logback-core'
     compile group: 'org.slf4j', version: '1.7.21', name: 'slf4j-api'
     compile group: 'org.slf4j', version: '1.7.21', name: 'jul-to-slf4j'
 
-    compile group: 'org.json', version: '20140107', name: 'json'
-    compile group: 'org.mapdb', version: '2.0-beta13', name: 'mapdb'
-
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.mockito', name: 'mockito-all', version: '2.0.2-beta'
 
     providedCompile "javax.servlet:javax.servlet-api:3.0.1"
-
-    def tomcatVersion = '7.0.59'
-    tomcat "org.apache.tomcat.embed:tomcat-embed-core:${tomcatVersion}",
-            "org.apache.tomcat.embed:tomcat-embed-logging-juli:${tomcatVersion}",
-            "org.apache.tomcat.embed:tomcat-embed-jasper:${tomcatVersion}"
 }
 
 test {
@@ -83,13 +76,14 @@ war {
     from 'src/main/webapp/'
 }
 
-tomcat {
-    httpPort = 9180
-    //httpsPort = 9181
-    //enableSSL = true
+gretty {
+    servletContainer = 'tomcat7'
+    httpPort = 10280
+    httpsPort = 10281
+    httpsEnabled = true
     contextPath = 'proxy'
+    jvmArgs = ['-Duk.ac.ebi.biostudy.submission.HTTPS_FILTER_DISABLED=true']
 }
-
 
 defaultTasks 'clean', 'build'
 

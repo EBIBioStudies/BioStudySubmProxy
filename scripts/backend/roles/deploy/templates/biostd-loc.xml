@@ -1,0 +1,8 @@
+<Context docBase="${catalina.base}/deploy/{{war_name}}">
+
+<Parameter name='resetConfig' value='true'/>
+<Parameter name='disableOnlineConfig' value='true'/>
+
+<Parameter name='biostd.baseDir' value='{{backend_app_base}}'/>
+
+</Context>

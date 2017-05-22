@@ -1,0 +1,48 @@
+---
+commons_repo: "https://github.com/mikegostev/Commons.git"
+commons_branch: "master"
+
+readers_repo: "https://github.com/EBIBioStudies/SpreadsheetReaders.git"
+readers_branch: "master"
+
+core_model_repo: "https://github.com/EBIBioStudies/CoreModel.git"
+core_model_branch: "master"
+
+backend_repo: "https://github.com/EBIBioStudies/BackendWebApp.git"
+backend_branch: "master"
+
+maven_targz: "http://mirrors.ukfast.co.uk/sites/ftp.apache.org/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz"
+maven_dest: "/opt"
+maven_bin: "/opt/apache-maven-3.5.0/bin"
+
+ant_targz: "http://apache.mirror.anlx.net//ant/binaries/apache-ant-1.10.1-bin.tar.gz"
+ant_dest: "/opt"
+ant_bin: "/opt/apache-ant-1.10.1/bin"
+ant_home: "/opt/apache-ant-1.10.1"
+
+mysql_root_password: "password"
+mysql_user: "biostd"
+mysql_password: "biostd"
+mysql_db: "biostd_db"
+
+tomcat_targz: "http://www.mirrorservice.org/sites/ftp.apache.org/tomcat/tomcat-8/v8.5.14/bin/apache-tomcat-8.5.14.tar.gz"
+tomcat_dest: "/opt"
+tomcat_home: "/opt/apache-tomcat-8.5.14"
+tomcat_user: "tomcat"
+tomcat_user_group: "tomcat"
+tomcat_password: "tomcat"
+
+smartgwt:
+  jar: "smartgwt.jar"
+  groupId: "com.isomorphic.smartgwt.lgpl"
+  artifactId: "smartgwt-lgpl"
+  version: "5.0-p20170421"
+
+gwt_uploader:
+  jar: "org.moxieapps.gwt.uploader-1.1.0.jar"
+  groupId: "org.moxieapps.gwt"
+  artifactId: "org.moxieapps.gwt.uploader"
+  version: "1.1.0"
+
+mysql_driver:
+  jar: "mysql-connector-java-5.1.42-bin.jar"

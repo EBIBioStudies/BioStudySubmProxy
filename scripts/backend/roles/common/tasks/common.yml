@@ -1,0 +1,18 @@
+---
+- name: include additional variables
+  include_vars: ../../vars.yml
+
+- name: convert tilda path
+  shell: echo ~
+  register: home_dir_echo
+
+- set_fact:
+    home_dir: "{{home_dir_echo.stdout}}"
+
+- debug: var=home_dir
+
+- set_fact:
+    backend_home: "{{home_dir}}/backend"
+
+- set_fact:
+    backend_dist: "{{backend_home}}/dist"

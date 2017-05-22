@@ -19,7 +19,7 @@
         <async-supported>true</async-supported>
         <init-param>
             <param-name>javax.ws.rs.Application</param-name>
-            <param-value>uk.ac.ebi.biostudy.submission.rest.RESTApp</param-value>
+            <param-value>uk.ac.ebi.biostudies.submissiontool.rest.RESTApp</param-value>
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>

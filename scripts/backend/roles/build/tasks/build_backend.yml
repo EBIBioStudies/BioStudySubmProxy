@@ -1,0 +1,65 @@
+---
+- set_fact:
+    gwt_zip: "https://goo.gl/QWOlx0"
+    gwt_dest: "{{home_dir}}/gwt"
+    maven_tasks_lib: "http://central.maven.org/maven2/org/apache/maven/maven-ant-tasks/2.1.3/maven-ant-tasks-2.1.3.jar"
+    lib_dir: "{{home_dir}}/lib"
+
+- name: clean backend folder
+  file: path="{{backend_home}}" state=absent
+
+- name: git checkout backend
+  git:
+    repo: "{{backend_repo}}"
+    dest: "{{backend_home}}"
+    version: "{{backend_branch}}"
+    accept_hostkey: yes
+
+- name: create GWT destination dir
+  file: path="{{gwt_dest}}" state=directory
+
+- name: download GWT SDK
+  unarchive:
+    src: "{{gwt_zip}}"
+    dest: "{{gwt_dest}}"
+    remote_src: yes
+
+- name: create lib dir
+  file: path="{{lib_dir}}" state=directory
+
+- name: replace smartgwt version
+  replace:
+    dest: "{{backend_home}}/pom.xml"
+    regexp: '5\.0\-p20150515'
+    replace: '{{smartgwt.version}}'
+    backup: yes
+
+- name: download maven-ant tasks library
+  get_url:
+    url: "{{maven_tasks_lib}}"
+    dest: "{{lib_dir}}"
+
+- set_fact:
+    libs:
+    - "{{smartgwt}}"
+    - "{{gwt_uploader}}"
+
+# - {file: "{{smartgwt.jar}}", groupId: "{{smartgwt.groupId}}", artifactId: "{{smartgwt.artifactId}}", version: "{{smartgwt.version}}"}
+# - {file: "{{gwt_uploader.jar}}", groupId: "{{gwt_uploader.groupId}}", artifactId: "{{gwt_uploader.artifactId}}", version: "{{gwt_uploader.version}}"}
+
+- debug: var=libs
+
+- name: upload 3d party libraries
+  copy: src="{{playbook_dir}}/libs/{{item.jar}}" dest="{{lib_dir}}"
+  with_items: "{{libs}}"
+
+- name: install 3d party libraries
+  shell: mvn install:install-file -Dfile={{item.jar}} -DgroupId={{item.groupId}} -DartifactId={{item.artifactId}} -Dversion={{item.version}} -Dpackaging=jar
+  with_items: "{{libs}}"
+  args:
+    chdir: "{{lib_dir}}"
+
+- name: build backend
+  shell: ant -Dgwt.home={{gwt_dest}}/gwt-2.8.0 build -lib {{lib_dir}}/maven-ant-tasks-2.1.3.jar
+  args:
+    chdir: "{{backend_home}}"
