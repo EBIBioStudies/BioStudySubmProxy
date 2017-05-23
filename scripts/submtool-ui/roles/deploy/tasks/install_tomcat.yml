@@ -22,6 +22,15 @@
     dest: "{{tomcat_dest}}"
     remote_src: yes
 
+- name: remove ssl keystore
+  file: path={{tomcat_home}}/conf/localhost-rsa.jks state=absent
+
+- name: create ssl keystore
+  command: keytool -genkey -noprompt -keyalg RSA -alias tomcat -dname "CN=localhost, OU=ID, O=EBI, L=Hinxton, S=Cambridge, C=UK" -validity 360 -keysize 2048 -keystore {{tomcat_home}}/conf/localhost-rsa.jks -storepass changeit -keypass changeit
+
+- name: copy server.xml config
+  template: src=server.xml dest={{tomcat_home}}/conf
+
 - name: change permissions for tomcat_home
   shell: "{{item}}"
   args:
@@ -33,7 +42,6 @@
   - "chmod g+rwx conf"
   - "chmod g+r conf/*"
   - "chown -R {{tomcat_user}} work/ temp/ logs/ webapps/"
-  tags: mysql_driver
 
 - name: grep java_home
   shell: update-alternatives --query java | grep 'Value' | grep -o '/.*/jre'

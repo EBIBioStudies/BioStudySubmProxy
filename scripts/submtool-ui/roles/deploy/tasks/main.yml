@@ -2,10 +2,20 @@
 - name: include additional variables
   include_vars: ../../vars.yml
 
+- name: convert tilda path
+  shell: echo {{git_dest['proxy']}}
+  register: proxy_dir_echo
+
+- set_fact:
+    proxy_dir: "{{proxy_dir_echo.stdout}}"
+
+- debug: var=home_dir
+
 - name: stop tomcat (1)
   command: stop tomcat
   become: true
   register: result
+  ignore_errors: yes
 
 - include: install_tomcat.yml
   become: true
@@ -24,7 +34,7 @@
 
 - name: copy new war file
   copy:
-    src: "{{git_dest['proxy']}}/build/libs/proxy.war"
+    src: "{{proxy_dir}}/build/libs/proxy.war"
     dest: "{{tomcat_home}}/webapps/proxy.war"
     owner: "{{tomcat_user}}"
     group: "{{tomcat_user_group}}"
