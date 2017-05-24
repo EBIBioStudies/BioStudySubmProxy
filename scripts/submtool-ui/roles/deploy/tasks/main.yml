@@ -14,17 +14,16 @@
 - name: stop tomcat (1)
   command: stop tomcat
   become: true
-  register: result
   ignore_errors: yes
 
 - include: install_tomcat.yml
   become: true
-  when: result|failed
+  when: install_tomcat_on
 
 - name: stop tomcat (2)
   command: stop tomcat
   become: true
-  when: result|failed
+  when: install_tomcat_on
 
 - name: delete war file
   file: path={{tomcat_home}}/webapps/proxy.war state=absent

@@ -4,7 +4,7 @@ git_repo:
   ui: "https://github.com/EBIBioStudies/BioStudyUISub.git"
 
 git_branch:
-  proxy: "master"
+  proxy: "submtool_ui_vm"
   ui: "master"
 
 git_dest:
@@ -18,7 +18,7 @@ proxy_config:
 
 ui_config:
   proxy_base: "/proxy"
-  context: "/"
+  context: "/proxy"
   debug: "true"
 
 tomcat_targz: "http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.14/bin/apache-tomcat-8.5.14.tar.gz"
@@ -28,4 +28,7 @@ tomcat_user: "tomcat"
 tomcat_user_group: "tomcat"
 tomcat_password: "tomcat"
 
-
+checkout_on: true
+build_on: true
+deploy_on: true
+install_tomcat_on: true

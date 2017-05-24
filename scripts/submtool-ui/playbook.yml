@@ -3,8 +3,9 @@
   pre_tasks:
     - name: ssh-add the private key locally
       local_action: command ssh-add "{{playbook_dir}}/data/id_rsa_ansible"
-
+  vars_files:
+    - "roles/vars.yml"
   roles:
-  #- {role: checkout}
-  #- {role: build}
-  - {role: deploy}
+  - {role: checkout, when: checkout_on}
+  - {role: build, when: build_on}
+  - {role: deploy, when: deploy_on}
