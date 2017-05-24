@@ -25,7 +25,7 @@ mysql_user: "biostd"
 mysql_password: "biostd"
 mysql_db: "biostd_db"
 
-tomcat_targz: "http://www.mirrorservice.org/sites/ftp.apache.org/tomcat/tomcat-8/v8.5.14/bin/apache-tomcat-8.5.14.tar.gz"
+tomcat_targz: "http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.14/bin/apache-tomcat-8.5.14.tar.gz"
 tomcat_dest: "/opt"
 tomcat_home: "/opt/apache-tomcat-8.5.14"
 tomcat_user: "tomcat"

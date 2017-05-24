@@ -59,9 +59,7 @@ public class HttpsFilter implements Filter {
             return;
         }
 
-        String xfp = httpRequest.getHeader("X-Forwarded-Proto");
-        if ("https".equals(xfp)) {
-            httpResponse.setHeader("Strict-Transport-Security", "max-age=60");
+        if (httpRequest.isSecure()) {
             chain.doFilter(request, response);
         } else {
             String url = getUrl(httpRequest);
