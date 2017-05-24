@@ -21,7 +21,7 @@ If you want to use backend service directly from the host machine use 192.168.33
 
 
 ## Checkout/Build/Deploy ##
-The following command will do everything: checkout, build and deploy 
+The following command does all: checkout, build and deploy 
 ```
 $ ansible-playbook -i hosts playbook.yml 
 ```
