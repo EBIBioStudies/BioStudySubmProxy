@@ -25,24 +25,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-import static java.lang.Boolean.parseBoolean;
-
 @WebFilter(value = "/*", asyncSupported = true)
 public class HttpsFilter implements Filter {
-
-    private static final String FILTER_DISABLED = "uk.ac.ebi.biostudy.submission.HTTPS_FILTER_DISABLED";
-
-    private static final Logger logger = LoggerFactory.getLogger(HttpsFilter.class);
-
-    private boolean enabled = true;
+ private static final Logger logger = LoggerFactory.getLogger(HttpsFilter.class);
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        String disabled = System.getProperty(FILTER_DISABLED);
-        if (disabled != null) {
-            logger.info(FILTER_DISABLED + ": " + disabled);
-            enabled = !parseBoolean(disabled);
-        }
     }
 
     @Override
@@ -54,14 +42,8 @@ public class HttpsFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        if (!enabled) {
-            chain.doFilter(request, response);
-            return;
-        }
-
         String xfp = httpRequest.getHeader("X-Forwarded-Proto");
-        if ("https".equals(xfp)) {
-            httpResponse.setHeader("Strict-Transport-Security", "max-age=60");
+        if (httpRequest.isSecure() || "https".equals(xfp)) {
             chain.doFilter(request, response);
         } else {
             String url = getUrl(httpRequest);

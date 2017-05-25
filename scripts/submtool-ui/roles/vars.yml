@@ -1,0 +1,34 @@
+---
+git_repo:
+  proxy: "https://github.com/EBIBioStudies/BioStudySubmProxy.git"
+  ui: "https://github.com/EBIBioStudies/BioStudyUISub.git"
+
+git_branch:
+  proxy: "master"
+  ui: "master"
+
+git_dest:
+  proxy: "~/biostudies/proxy"
+  ui: "~/biostudies/ui"
+
+proxy_config:
+  backend: "http://192.168.33.15:8080/biostd-loc"
+  logs_dir: "${catalina.base}/logs"
+  logs_level: "DEBUG"
+
+ui_config:
+  proxy_base: "/proxy"
+  context: "/proxy"
+  debug: "true"
+
+tomcat_targz: "http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.14/bin/apache-tomcat-8.5.14.tar.gz"
+tomcat_dest: "/opt"
+tomcat_home: "/opt/apache-tomcat-8.5.14"
+tomcat_user: "tomcat"
+tomcat_user_group: "tomcat"
+tomcat_password: "tomcat"
+
+checkout_on: true
+build_on: true
+deploy_on: true
+install_tomcat_on: true

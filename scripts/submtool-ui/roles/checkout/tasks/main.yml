@@ -1,0 +1,32 @@
+---
+- name: include additional variables
+  include_vars: ../../vars.yml
+
+- name: install and configure the necessary dependencies
+  apt: name={{item}} state=present
+  with_items:
+  - git
+  - curl
+  become: yes
+
+- name: delete destination dir
+  file: path={{git_dest[item]}} state=absent
+  with_items:
+  - "proxy"
+  - "ui"
+
+- name: mkdir destination dir
+  file: path={{git_dest[item]}} state=directory
+  with_items:
+  - "proxy"
+  - "ui"
+
+- name: git checkout projects
+  git:
+    repo: "{{git_repo[item]}}"
+    dest: "{{git_dest[item]}}"
+    version: "{{git_branch[item]}}"
+    accept_hostkey: yes
+  with_items:
+  - "proxy"
+  - "ui"

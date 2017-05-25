@@ -1,0 +1,31 @@
+---
+- name: add jdk8 repository
+  apt_repository:
+    repo: 'ppa:webupd8team/java'
+    state: present
+  become: yes
+
+- name: run apt-get update
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: accepting oracle license
+  shell: echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" | debconf-set-selections
+  become: yes
+
+- name: install oracle jdk8
+  apt: name={{item}} state=present
+  with_items:
+  - oracle-java8-installer
+  become: yes
+
+- name: create gradle.properties
+  template:
+    src: "config.properties.j2"
+    dest: "{{git_dest['proxy']}}/gradle.properties"
+
+- name: build proxy
+  shell: ./gradlew clean build war -x test
+  args:
+    chdir: "{{git_dest['proxy']}}"

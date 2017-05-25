@@ -1,0 +1,45 @@
+---
+- name: include additional variables
+  include_vars: ../../vars.yml
+
+- name: convert tilda path
+  shell: echo {{git_dest['proxy']}}
+  register: proxy_dir_echo
+
+- set_fact:
+    proxy_dir: "{{proxy_dir_echo.stdout}}"
+
+- debug: var=home_dir
+
+- name: stop tomcat (1)
+  command: stop tomcat
+  become: true
+  ignore_errors: yes
+
+- include: install_tomcat.yml
+  become: true
+  when: install_tomcat_on
+
+- name: stop tomcat (2)
+  command: stop tomcat
+  become: true
+  when: install_tomcat_on
+
+- name: delete war file
+  file: path={{tomcat_home}}/webapps/proxy.war state=absent
+
+- name: delete war dir
+  file: path={{tomcat_home}}/webapps/proxy state=absent
+
+- name: copy new war file
+  copy:
+    src: "{{proxy_dir}}/build/libs/proxy.war"
+    dest: "{{tomcat_home}}/webapps/proxy.war"
+    owner: "{{tomcat_user}}"
+    group: "{{tomcat_user_group}}"
+    remote_src: true
+  become: yes
+
+- name: start tomcat
+  command: start tomcat
+  become: true

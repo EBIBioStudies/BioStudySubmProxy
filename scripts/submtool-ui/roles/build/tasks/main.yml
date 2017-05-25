@@ -1,0 +1,15 @@
+---
+- name: include additional variables
+  include_vars: ../../vars.yml
+  tags:
+  - ui
+  - proxy
+
+- include: build_ui.yml
+  tags: ui
+
+- include: copy_ui.yml
+  tags: proxy
+
+- include: build_proxy.yml
+  tags: proxy

@@ -1,0 +1,9 @@
+---
+- set_fact:
+    webapp_dest: "{{git_dest['proxy']}}/WebContent"
+
+- name: create WebContent directory if needed
+  file: path="{{webapp_dest}}" state=directory
+
+- name: copy ui app to proxy/WebContent
+  shell: cp -R {{git_dest['ui']}}/.build/*  {{webapp_dest}}
