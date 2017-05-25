@@ -59,7 +59,8 @@ public class HttpsFilter implements Filter {
             return;
         }
 
-        if (httpRequest.isSecure()) {
+        String xfp = httpRequest.getHeader("X-Forwarded-Proto");
+        if (httpRequest.isSecure() || "https".equals(xfp)) {
             chain.doFilter(request, response);
         } else {
             String url = getUrl(httpRequest);
