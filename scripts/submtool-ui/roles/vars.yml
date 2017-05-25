@@ -4,7 +4,7 @@ git_repo:
   ui: "https://github.com/EBIBioStudies/BioStudyUISub.git"
 
 git_branch:
-  proxy: "submtool_ui_vm"
+  proxy: "master"
   ui: "master"
 
 git_dest:
