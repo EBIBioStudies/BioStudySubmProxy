@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
+import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
@@ -58,6 +59,7 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getSubmissions(@QueryParam("offset") int offset,
                                @QueryParam("limit") int limit,
                                @QueryParam("submitted") boolean submitted,
