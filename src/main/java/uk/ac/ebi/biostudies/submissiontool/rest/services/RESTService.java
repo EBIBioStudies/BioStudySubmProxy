@@ -95,6 +95,7 @@ public class RESTService {
     @GET
     @Path("/submissions/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getSubmission(@Context UserSession session,
                               @PathParam("accno") String accno,
                               @Suspended AsyncResponse async) {
@@ -107,6 +108,7 @@ public class RESTService {
     @GET
     @Path("/submissions/origin/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getSubmissionFromOrigin(@Context UserSession session,
                                     @PathParam("accno") String accno,
                                     @Suspended AsyncResponse async) {
@@ -186,6 +188,7 @@ public class RESTService {
     @GET
     @Path("/projects")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getProjects(@Context UserSession session,
                             @Suspended AsyncResponse async) {
         logger.debug("getProjects(session={})", session);
@@ -197,6 +200,7 @@ public class RESTService {
     @GET
     @Path("/files")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getFiles(@QueryParam("path") String path,
                          @QueryParam("depth") int depth,
                          @QueryParam("showArchive") boolean showArchive,
