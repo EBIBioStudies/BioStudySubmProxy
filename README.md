@@ -2,7 +2,7 @@
 A Tomcat-based proxy server for the [BioStudies Submission Tool](https://github.com/EBIBioStudies/BioStudyUISub) that normalises the differences between the server and browser side:
 
 * Makes the separation between temporary and full submissions at the API level transparent to the Submission Tool.
-* Converts between REST and non-REST requests to ameliorate the impedance imposed by the BioStudies custom API.
+* Converts between REST and non-REST requests when exchanging data with the custom API for BioStudies.
 
 # Getting the proxy up and running locally
 Please note that the IDE assumed throughout this document is IntelliJ IDEA v2017. Other IDEs or versions might require slightly different configuration steps.
@@ -43,7 +43,7 @@ Decompress the Tomcat installation files, ideally somewhere under your home dire
 
 On the IDE, add a run configuration for a new non-EE, local Tomcat server. Normally you have to specify the home directory for the server as part of the configuration.
 
-A gradle task should also be added. This entails the selection of a gradle project (the present one) and, probably, its associated .WAR file (select the exploded version if available).
+A gradle deployment task should also be added to the run configuration. This entails the selection of a gradle artifact for the project's .WAR file (select the exploded version if available). On ItelliJ Idea, this is done under the "Deployment section". The application's context should be set to "/proxy".
 
 ### 5.Add an HTTPS port
 By default, the Submission Tool app will use HTTPS in every transaction with the proxy. This requires [generating a new certificate keystore](https://tomcat.apache.org/tomcat-8.0-doc/ssl-howto.html#Prepare_the_Certificate_Keystore), which will be password-protected and saved locally. The keystore should then be declared within a new connector entry in Tomcat's `server.xml` file, located typically under the project's [`/scripts/submtool-ui/roles/deploy/templates/server.xml`](https://github.com/EBIBioStudies/BioStudySubmProxy/blob/master/scripts/submtool-ui/roles/deploy/templates/server.xml):
@@ -57,4 +57,4 @@ By default, the Submission Tool app will use HTTPS in every transaction with the
 The newly created run configuration for Tomcat should reflect the port being used by the Submission Tool app, typically 10281.
 
 ### 6.Run the proxy server
-Now a local instance of the proxy server can be run using the run configuration for Tomcat. Should errors be listed in Tomcat's logs, check if they are warnings. If so, the proxy will probably be able to run regardless of them.
+Now a local instance of the proxy server can be run using the run configuration for Tomcat created above. Should errors be listed in Tomcat's logs, check if they are warnings. If so, the proxy will probably be able to run regardless of them.
