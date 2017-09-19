@@ -36,7 +36,7 @@ In recent versions of the JDK for Mac, an error may crop up during the build pro
 
 This is [totally benign](http://bugs.java.com/bugdatabase/view_bug.do?bug_id=8022291) and should not affect the running of the project.
 
-Once the build finished, a .WAR file should have been generated inside the project's `/build/libs` folder.
+Once the build is finished, a .WAR file should have been generated inside the project's `/build/libs` folder.
 
 ### 4.Set up Tomcat
 Decompress the Tomcat installation files, ideally somewhere under your home directory to avoid further complications with system privileges. Especially on Mac.
