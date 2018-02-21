@@ -70,7 +70,7 @@ test {
 }
 
 war {
-    filter(ReplaceTokens, tokens: ["BS_SERVER_URL": bsBackendUrl])
+    filter(ReplaceTokens, tokens: ["BS_SERVER_URL": bsBackendUrl, "HTTPS_FILTER_DISABLED": httpsFilterDisabled])
     webAppDirName = 'WebContent'
     baseName = 'proxy'
     version = ''
