@@ -22,7 +22,8 @@ processResources {
     filter ReplaceTokens, tokens: [
             "BS_SERVER_URL": bsBackendUrl,
             "LOGS_DIR": logsDir,
-            "LOG_LEVEL": logLevel
+            "LOG_LEVEL": logLevel,
+            "HTTPS_FILTER_DISABLED": httpsFilterDisabled
     ]
 }
 
@@ -82,7 +83,6 @@ gretty {
     httpsPort = 10281
     httpsEnabled = true
     contextPath = 'proxy'
-    jvmArgs = ['-Duk.ac.ebi.biostudy.submission.HTTPS_FILTER_DISABLED=true']
 }
 
 defaultTasks 'clean', 'build'

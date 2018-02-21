@@ -4,8 +4,8 @@ git_repo:
   ui: "https://github.com/EBIBioStudies/BioStudyUISub.git"
 
 git_branch:
-  proxy: "master"
-  ui: "master"
+  proxy: "dev"
+  ui: "dev"
 
 git_dest:
   proxy: "~/biostudies/proxy"
