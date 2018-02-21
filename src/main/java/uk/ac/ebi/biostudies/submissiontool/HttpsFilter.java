@@ -49,6 +49,7 @@ public class HttpsFilter implements Filter {
 
         if (this.disabled) {
             chain.doFilter(request, response);
+            return;
         }
 
         String xfp = httpRequest.getHeader("X-Forwarded-Proto");
