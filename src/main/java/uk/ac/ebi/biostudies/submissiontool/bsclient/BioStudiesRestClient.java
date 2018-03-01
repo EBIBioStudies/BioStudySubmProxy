@@ -518,10 +518,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
         if (!getStatus(body).equalsIgnoreCase("ok")) {
             throw new BioStudiesRxClientException(422, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
         }
-
-        if (body.isEmpty()) {
-            body = "{}";
-        }
         return body;
     }
 
