@@ -104,7 +104,6 @@ public class SubmissionService {
         String submStr = modified.update().json().toString();
         return saveSubmissionRx(submStr, modified.getAccno(), session)
                 .flatMap(resp -> resp.isEmpty() ? Observable.just("{}") : Observable.just(resp));
-        ;
     }
 
     private Observable<String> saveSubmissionRx(String subm, String accno, UserSession session) {
