@@ -102,7 +102,9 @@ public class SubmissionService {
     public Observable<String> saveSubmissionRx(String subm, UserSession session) throws IOException {
         ModifiedSubmission modified = ModifiedSubmission.parse(subm);
         String submStr = modified.update().json().toString();
-        return saveSubmissionRx(submStr, modified.getAccno(), session);
+        return saveSubmissionRx(submStr, modified.getAccno(), session)
+                .flatMap(resp -> resp.isEmpty() ? Observable.just("{}") : Observable.just(resp));
+        ;
     }
 
     private Observable<String> saveSubmissionRx(String subm, String accno, UserSession session) {
