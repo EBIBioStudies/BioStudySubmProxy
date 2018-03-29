@@ -90,10 +90,7 @@ public class ModifiedSubmission {
     }
 
     public static ModifiedSubmission convert(JsonNode node) throws JsonProcessingException {
-        if (node.get("dataKey") == null) {
-            return objectMapper().treeToValue(node, ModifiedSubmission.class);
-        }
-        return objectMapper().treeToValue(node.get("data"), ModifiedSubmission.class);
+        return objectMapper().treeToValue(node, ModifiedSubmission.class);
     }
 
     public String getTitle() {
