@@ -399,13 +399,13 @@ public class BioStudiesRestClient implements BioStudiesClient {
     @Override
     public String deleteModifiedSubmission(String acc, String sessionId) throws  IOException {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).postJSON(targets.deleteModifiedSubmissionReq(acc), null);
+        return req(sessionId).postJSON(targets.deleteModifiedSubmissionReq(acc), "{}");
     }
 
     @Override
     public Observable<String> deleteModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).postJSONRx(targets.deleteModifiedSubmissionReq(acc), null);
+        return req(sessionId).postJSONRx(targets.deleteModifiedSubmissionReq(acc), "{}");
     }
 
     @Override
