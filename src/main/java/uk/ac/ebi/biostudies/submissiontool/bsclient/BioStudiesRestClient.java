@@ -399,12 +399,14 @@ public class BioStudiesRestClient implements BioStudiesClient {
     @Override
     public String deleteModifiedSubmission(String acc, String sessionId) throws  IOException {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
+        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
         return req(sessionId).postJSON(targets.deleteModifiedSubmissionReq(acc), "{}");
     }
 
     @Override
     public Observable<String> deleteModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
+        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
         return req(sessionId).postJSONRx(targets.deleteModifiedSubmissionReq(acc), "{}");
     }
 
