@@ -30,10 +30,7 @@ import rx.exceptions.Exceptions;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.*;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
@@ -443,6 +440,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
         private MultivaluedHashMap<String, Object> headers() {
             MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<>();
+            headers.put(HttpHeaders.ACCEPT, singletonList(MediaType.APPLICATION_JSON));
             Optional.ofNullable(sessionId).ifPresent(s -> headers.put(SESSION_TOKEN, singletonList(s)));
             return headers;
         }
@@ -457,7 +455,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
         private String post(WebTarget target, Entity entity) throws IOException {
             Invocation.Builder builder = target
-                    .request(MediaType.APPLICATION_JSON_TYPE)
+                    .request()
                     .headers(headers());
 
             Response resp = null;
@@ -473,7 +471,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
         private String get(WebTarget target) throws IOException {
             Invocation.Builder builder = target
-                    .request(MediaType.APPLICATION_JSON_TYPE)
+                    .request()
                     .headers(headers());
 
             Response resp = null;
@@ -498,7 +496,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
         private Observable<String> postRx(WebTarget target, Entity entity) {
             return RxObservable.from(target)
-                    .request(MediaType.APPLICATION_JSON_TYPE)
+                    .request()
                     .headers(headers())
                     .rx()
                     .post(entity)
@@ -514,7 +512,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
         private Observable<String> getRx(WebTarget target) {
             return RxObservable.from(target)
-                    .request(MediaType.APPLICATION_JSON_TYPE)
+                    .request()
                     .headers(headers())
                     .rx()
                     .get()
