@@ -20,6 +20,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.filter.SubmissionListFilterParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
@@ -38,8 +39,6 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @author Olga Melnichuk
@@ -60,34 +59,15 @@ public class RESTService {
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
-    public void getSubmissions(@QueryParam("offset") int offset,
-                               @QueryParam("limit") int limit,
-                               @QueryParam("submitted") boolean submitted,
-                               @QueryParam("accNo") String accnoFilter,
-                               @QueryParam("rTimeFrom") Long rTimeFromFilter,
-                               @QueryParam("rTimeTo") Long rTimeToFilter,
-                               @QueryParam("keywords") String titleFilter,
+    public void getSubmissions(@QueryParam("submitted") boolean submitted,
+                               @BeanParam SubmissionListFilterParams filterParams,
                                @Context UserSession session,
                                @Suspended AsyncResponse async) {
 
-        Map<String, String> params = new HashMap<>();
-        if (accnoFilter != null) {
-            params.put("accNo", accnoFilter);
-        }
-        if (rTimeFromFilter != null) {
-            params.put("rTimeFrom", rTimeFromFilter.toString());
-        }
-        if (rTimeToFilter != null) {
-            params.put("rTimeTo", rTimeToFilter.toString());
-        }
-        if (titleFilter != null) {
-            params.put("keywords", titleFilter);
-        }
-
-        logger.debug("getSubmissions(session={}, offset={}, limit={})", session, offset, limit);
+        logger.debug("getSubmissions(session={}, filterParams={})", session, filterParams);
         (submitted ?
-                service.getSubmittedSubmissionsRx(offset, limit, params, session) :
-                service.getModifiedSubmissionsRx(offset, limit, params, session))
+                service.getSubmittedSubmissionsRx(filterParams, session) :
+                service.getModifiedSubmissionsRx(filterParams, session))
                 .subscribe(async::resume, async::resume);
     }
 
@@ -110,8 +90,8 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
     public void getSubmissionFromOrigin(@Context UserSession session,
-                                    @PathParam("accno") String accno,
-                                    @Suspended AsyncResponse async) {
+                                        @PathParam("accno") String accno,
+                                        @Suspended AsyncResponse async) {
         logger.debug("getSubmission(session={}, acc={})", session, accno);
         service.getSubmissionFromOriginRx(accno, session)
                 .subscribe(async::resume, async::resume);

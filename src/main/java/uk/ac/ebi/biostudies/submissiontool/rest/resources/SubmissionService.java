@@ -26,14 +26,11 @@ import rx.Observable;
 import rx.exceptions.Exceptions;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePMCClient;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.ModifiedSubmission;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.PageTabUtils;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.SubmissionListItem;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.*;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.filter.SubmissionListFilterParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SubmFilterParams;
 
 import java.io.IOException;
 import java.util.*;
@@ -208,13 +205,12 @@ public class SubmissionService {
                 .map(resp -> true);
     }
 
-    public Observable<String> getSubmittedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session) {
-        return bsclient.getSubmissionsRx(session.id(), offset, limit, paramMap);
+    public Observable<String> getSubmittedSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
+        return bsclient.getSubmissionsRx(session.id(), filterParams.asMap());
     }
 
-    public Observable<String> getModifiedSubmissionsRx(int offset, int limit, Map<String, String> paramMap, UserSession session) {
-        SubmFilterParams params = SubmFilterParams.fromMap(paramMap);
-        Predicate<? super SubmissionListItem> predicate = params.asPredicate();
+    public Observable<String> getModifiedSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
+        Predicate<? super SubmissionListItem> predicate = filterParams.asPredicate();
 
         return bsclient.getModifiedSubmissionsRx(session.id())
                 .map((String resp) -> {
@@ -242,8 +238,8 @@ public class SubmissionService {
                 .filter(Objects::nonNull)
                 .sorted((item1, item2) -> SubmissionListItem.sortByMTime().compare(item1, item2))
                 .filter(predicate::test)
-                .skip(offset)
-                .limit(limit)
+                .skip(filterParams.getOffset())
+                .limit(filterParams.getLimit())
                 .toList()
                 .map((List<SubmissionListItem> items) -> {
                     ObjectNode obj = JsonNodeFactory.instance.objectNode();

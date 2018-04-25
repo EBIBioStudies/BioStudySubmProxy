@@ -18,6 +18,7 @@ package uk.ac.ebi.biostudies.submissiontool.rest.data.filter;
 
 import uk.ac.ebi.biostudies.submissiontool.rest.data.SubmissionListItem;
 
+import java.util.Arrays;
 import java.util.function.Predicate;
 
 /**
@@ -48,4 +49,8 @@ public enum SubmissionListFilters implements SubmissionListFilter {
             return TitleFilter.fromKeywords(value);
         }
     };
+
+    static boolean contains(String value) {
+        return Arrays.stream(SubmissionListFilters.values()).anyMatch((v) -> v.name().equals(value));
+    }
 }

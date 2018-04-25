@@ -73,10 +73,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return baseTarget.path("/submission/" + acc);
         }
 
-        WebTarget getSubmissionsReq(int offset, int limit, Map<String, String> moreParams) {
-            WebTarget t = baseTarget.path("/sbmlist")
-                    .queryParam("offset", offset)
-                    .queryParam("limit", limit);
+        WebTarget getSubmissionsReq(Map<String, String> moreParams) {
+            WebTarget t = baseTarget.path("/sbmlist");
             for (Map.Entry<String, String> entry : moreParams.entrySet()) {
                 t = t.queryParam(entry.getKey(), entry.getValue());
             }
@@ -218,14 +216,14 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String getSubmissions(String sessionId, int offset, int limit, Map<String, String> paramMap) throws  IOException {
+    public String getSubmissions(String sessionId, Map<String, String> paramMap) throws  IOException {
         logger.debug("getSubmissions(sessionId={})", sessionId);
-        return req(sessionId).get(targets.getSubmissionsReq(offset, limit, paramMap));
+        return req(sessionId).get(targets.getSubmissionsReq(paramMap));
     }
 
     @Override
-    public Observable<String> getSubmissionsRx(String sessionId, int offset, int limit, Map<String, String> paramMap) {
-        return req(sessionId).getRx(targets.getSubmissionsReq(offset, limit, paramMap));
+    public Observable<String> getSubmissionsRx(String sessionId, Map<String, String> paramMap) {
+        return req(sessionId).getRx(targets.getSubmissionsReq(paramMap));
     }
 
     @Override

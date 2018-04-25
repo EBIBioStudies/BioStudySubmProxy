@@ -37,7 +37,7 @@ public interface BioStudiesClient extends Closeable {
 
     String deleteSubmission(String acc, String sessid) throws BioStudiesClientException, IOException;
 
-    String getSubmissions(String sessid, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
+    String getSubmissions(String sessid, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
 
     String getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
 
@@ -61,7 +61,7 @@ public interface BioStudiesClient extends Closeable {
 
     String activate(String key) throws BioStudiesClientException, IOException;
 
-    Observable<String> getSubmissionsRx(String sessid, int offset, int limit, Map<String, String> paramMap);
+    Observable<String> getSubmissionsRx(String sessid, Map<String, String> paramMap);
 
     Observable<String> getSubmissionRx(String accno, String sessid);
 
