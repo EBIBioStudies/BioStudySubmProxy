@@ -179,34 +179,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String submitNew(String subm, String sessionId) throws  IOException {
-        logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
-        return req(sessionId).postJSON(targets.createSubmissionReq(), subm);
-    }
-
-    @Override
     public Observable<String> submitNewRx(String subm, String sessionId) {
         logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
         return req(sessionId).postJSONRx(targets.createSubmissionReq(), subm);
-    }
-
-
-    @Override
-    public String submitUpdated(String obj, String sessionId) throws  IOException {
-        logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
-        return req(sessionId).postJSON(targets.updateSubmissionReq(), obj);
     }
 
     @Override
     public Observable<String> submitUpdatedRx(String obj, String sessionId) {
         logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
         return req(sessionId).postJSONRx(targets.updateSubmissionReq(), obj);
-    }
-
-    @Override
-    public String getSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).get(targets.getSubmissionReq(acc));
     }
 
     @Override
@@ -227,22 +208,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String getProjects(String sessionId) throws  IOException {
-        logger.debug("getProjects(sessionId={})", sessionId);
-        return req(sessionId).get(targets.getProjectsReq());
-    }
-
-    @Override
     public Observable<String> getProjectsRx(String sessionId) {
         logger.debug("getProjects(sessionId={})", sessionId);
         return req(sessionId).getRx(targets.getProjectsReq());
-    }
-
-    @Override
-    public String deleteSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
-        // WTF: why it is GET?
-        return req(sessionId).get(targets.deleteSubmissionReq(acc));
     }
 
     @Override
@@ -253,21 +221,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String getFilesDir(String path, int depth, boolean showArchive, String sessionId) throws  IOException {
-        logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
-        return req(sessionId).get(targets.getFilesDirReq(path, depth, showArchive));
-    }
-
-    @Override
     public Observable<String> getFilesDirRx(String path, int depth, boolean showArchive, String sessionId) {
         logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
         return req(sessionId).getRx(targets.getFilesDirReq(path, depth, showArchive));
-    }
-
-    @Override
-    public String deleteFile(String file, String sessionId) throws  IOException {
-        logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
-        return req(sessionId).get(targets.deleteFileReq(file));
     }
 
     @Override
@@ -278,21 +234,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String signOut(String obj, String sessionId) throws  IOException {
-        logger.debug("signOut(sessionId={})", sessionId);
-        return req(sessionId).postJSON(targets.signOutReq(), obj);
-    }
-
-    @Override
     public Observable<String> signOutRx(String obj, String sessionId) {
         logger.debug("signOut(sessionId={})", sessionId);
         return req(sessionId).postJSONRx(targets.signOutReq(), obj);
-    }
-
-    @Override
-    public String signUp(String obj) throws  IOException {
-        logger.debug("signUp(obj={})", obj);
-        return req().postJSON(targets.signUpReq(), obj);
     }
 
     @Override
@@ -302,21 +246,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String passwordResetRequest(String obj) throws  IOException {
-        logger.debug("passwordResetRequest(obj={})", obj);
-        return req().postJSON(targets.passwordResetReqReq(), obj);
-    }
-
-    @Override
     public Observable<String> passwordResetRequestRx(String obj) {
         logger.debug("passwordResetRequest(obj={})", obj);
         return req().postJSONRx(targets.passwordResetReqReq(), obj);
-    }
-
-    @Override
-    public String passwordReset(String obj) throws  IOException {
-        logger.debug("passwordReset(obj={})", obj);
-        return req().postJSON(targets.passwordResetReq(), obj);
     }
 
     @Override
@@ -326,35 +258,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String resendActivationLink(String obj) throws  IOException {
-        logger.debug("resendActivationLink(obj={})", obj);
-        return req().postJSON(targets.resendActivationLinkReq(), obj);
-    }
-
-    @Override
     public Observable<String> resendActivationLinkRx(String obj) {
         logger.debug("resendActivationLink(obj={})", obj);
         return req().postJSONRx(targets.resendActivationLinkReq(), obj);
     }
 
     @Override
-    public String activate(String key) throws  IOException {
-        logger.debug("resendActivationLink(obj={})", key);
-        return req().postJSON(targets.activationReq(key), "{}");
-    }
-
-    @Override
     public Observable<String> activateRx(String key) {
         logger.debug("resendActivationLink(obj={})", key);
         return req().postJSONRx(targets.activationReq(key), "{}");
-    }
-
-    public String signIn(String username, String password) throws  IOException {
-        logger.debug("signIn(username={}, password=...)", username);
-        ObjectNode obj = JsonNodeFactory.instance.objectNode();
-        obj.put("login", username);
-        obj.put("password", password);
-        return signIn(obj.toString());
     }
 
     @Override
@@ -364,23 +276,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String getModifiedSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).get(targets.getModifiedSubmissionReq(acc));
-    }
-
-    @Override
     public Observable<String> getModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         return req(sessionId).getRx(targets.getModifiedSubmissionReq(acc));
-    }
-
-    @Override
-    public String saveModifiedSubmission(String obj, String acc, String sessionId) throws  IOException {
-        logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
-        return req(sessionId).postForm(
-                targets.saveModifiedSubmissionReq(),
-                targets.saveModifiedSubmissionForm(acc, obj));
     }
 
     @Override
@@ -392,23 +290,10 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String deleteModifiedSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
-        return req(sessionId).postJSON(targets.deleteModifiedSubmissionReq(acc), "{}");
-    }
-
-    @Override
     public Observable<String> deleteModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
         return req(sessionId).postJSONRx(targets.deleteModifiedSubmissionReq(acc), "{}");
-    }
-
-    @Override
-    public String getModifiedSubmissions(String sessionId) throws  IOException {
-        logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
-        return req(sessionId).get(targets.getModifiedSubmissionsReq());
     }
 
     @Override
@@ -445,10 +330,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
         private String postJSON(WebTarget target, String data) throws IOException {
             return post(target, Entity.json(data));
-        }
-
-        private String postForm(WebTarget target, Form data) throws IOException {
-            return post(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
         }
 
         private String post(WebTarget target, Entity entity) throws IOException {
