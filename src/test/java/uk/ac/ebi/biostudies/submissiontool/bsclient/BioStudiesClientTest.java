@@ -17,7 +17,7 @@
 package uk.ac.ebi.biostudies.submissiontool.bsclient;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Assert;
 import org.junit.Test;
 import uk.ac.ebi.biostudies.submissiontool.TestEnvironment;
 
@@ -26,7 +26,10 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.AbstractMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertNotNull;
 import static uk.ac.ebi.biostudies.submissiontool.rest.data.Json.objectMapper;
@@ -43,7 +46,7 @@ public class BioStudiesClientTest {
         }
 
         URI uri = getServerUrl();
-        if (! isReachable(uri.toURL())) {
+        if (!isReachable(uri.toURL())) {
             return;
         }
         BioStudiesClient bsclient = new BioStudiesRestClient(uri);
@@ -52,8 +55,14 @@ public class BioStudiesClientTest {
 
         JsonNode respNode = objectMapper().readTree(resp);
         String sessionId = respNode.get("sessid").asText();
-        String submissions = bsclient.getSubmissions(sessionId, 0, 10, new HashMap<>());
-        assertNotNull(submissions);
+
+        Map<String, String> params = Stream.of(
+                new AbstractMap.SimpleEntry<>("offset", "0"),
+                new AbstractMap.SimpleEntry<>("limit", "15")
+        ).collect(Collectors.toMap(AbstractMap.SimpleEntry::getKey, AbstractMap.SimpleEntry::getValue));
+
+        bsclient.getSubmissionsRx(sessionId, params)
+                .subscribe(Assert::assertNotNull);
     }
 
     private static URI getServerUrl() throws IOException {
