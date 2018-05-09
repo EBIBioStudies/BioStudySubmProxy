@@ -50,11 +50,11 @@ public class SubmissionListFilterParams {
     }
 
     public int getOffset() {
-        return Optional.of(offset).isPresent() ? this.offset : 0;
+        return offset == null ? 0 : this.offset;
     }
 
     public int getLimit() {
-        return Optional.of(limit).isPresent() ? this.limit : 50;
+        return limit == null ? 50 : this.limit;
     }
 
     public Predicate<? super SubmissionListItem> asPredicate() {
@@ -68,12 +68,12 @@ public class SubmissionListFilterParams {
 
     public Map<String, String> asMap() {
         Map<String, String> map = new HashMap<>();
-        Optional.of(offset).ifPresent(v -> map.put("offset", offset.toString()));
-        Optional.of(limit).ifPresent(v -> map.put("limit", limit.toString()));
-        Optional.of(accNo).ifPresent(v -> map.put("accNo", accNo));
-        Optional.of(rTimeFrom).ifPresent(v -> map.put("rTimeFrom", rTimeFrom.toString()));
-        Optional.of(rTimeTo).ifPresent(v -> map.put("rTimeTo", rTimeTo.toString()));
-        Optional.of(keywords).ifPresent(v -> map.put("keywords", keywords));
+        Optional.ofNullable(offset).ifPresent(v -> map.put("offset", offset.toString()));
+        Optional.ofNullable(limit).ifPresent(v -> map.put("limit", limit.toString()));
+        Optional.ofNullable(accNo).ifPresent(v -> map.put("accNo", accNo));
+        Optional.ofNullable(rTimeFrom).ifPresent(v -> map.put("rTimeFrom", rTimeFrom.toString()));
+        Optional.ofNullable(rTimeTo).ifPresent(v -> map.put("rTimeTo", rTimeTo.toString()));
+        Optional.ofNullable(keywords).ifPresent(v -> map.put("keywords", keywords));
         return map;
     }
 }
