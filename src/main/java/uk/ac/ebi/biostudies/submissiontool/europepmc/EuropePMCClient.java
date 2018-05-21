@@ -63,7 +63,7 @@ public class EuropePMCClient {
     }
 
     private WebTarget createTarget(String id) {
-        return rsClient.target("http://www.ebi.ac.uk/europepmc/webservices/rest/search")
+        return rsClient.target("https://www.ebi.ac.uk/europepmc/webservices/rest/search")
                 .queryParam("query", "ext_id:" + id)
                 .queryParam("format", "json");
 
