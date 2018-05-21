@@ -263,7 +263,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     @Override
     public Observable<String> activateRx(String key) {
-        logger.debug("resendActivationLink(obj={})", key);
+        logger.debug("activate(obj={})", key);
         return req().postJSONRx(targets.activationReq(key), "{}");
     }
 
