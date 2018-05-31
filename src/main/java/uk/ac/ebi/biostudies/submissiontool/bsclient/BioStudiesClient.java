@@ -24,8 +24,6 @@ import java.util.Map;
 
 public interface BioStudiesClient extends Closeable {
 
-    String getSubmissions(String sessid, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
-
     String signIn(String obj) throws BioStudiesClientException, IOException;
 
     Observable<String> getSubmissionsRx(String sessid, Map<String, String> paramMap);
@@ -63,5 +61,4 @@ public interface BioStudiesClient extends Closeable {
     Observable<String> activateRx(String key);
 
     Observable<String> signOutRx(String obj, String sessid);
-
 }
