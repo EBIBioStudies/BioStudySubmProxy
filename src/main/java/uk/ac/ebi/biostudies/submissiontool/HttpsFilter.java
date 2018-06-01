@@ -25,12 +25,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebFilter(value = "/*", asyncSupported = true)
+@WebFilter(value = "/*", filterName = "HttpsFilter", asyncSupported = true)
 public class HttpsFilter implements Filter {
- private static final Logger logger = LoggerFactory.getLogger(HttpsFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpsFilter.class);
+    private static final String THIS_FILTER_DISABLED = "HTTPS_FILTER_DISABLED";
+
+    private boolean disabled;
 
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
+        String v = filterConfig.getServletContext().getInitParameter(THIS_FILTER_DISABLED);
+        this.disabled = v != null && v.toLowerCase().equals("true");
     }
 
     @Override
@@ -41,6 +46,11 @@ public class HttpsFilter implements Filter {
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
+
+        if (this.disabled) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         String xfp = httpRequest.getHeader("X-Forwarded-Proto");
         if (httpRequest.isSecure() || "https".equals(xfp)) {

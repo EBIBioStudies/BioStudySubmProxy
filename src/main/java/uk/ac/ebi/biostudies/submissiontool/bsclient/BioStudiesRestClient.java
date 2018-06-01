@@ -30,20 +30,22 @@ import rx.exceptions.Exceptions;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.*;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
+import java.util.Optional;
+
+import static java.util.Collections.singletonList;
 
 /**
  * @author Olga Melnichuk
  */
 public class BioStudiesRestClient implements BioStudiesClient {
 
+    private static final String SESSION_TOKEN = "X-Session-Token";
+
     private static class APITargets {
-        private static final String SESSION_PARAM = "BIOSTDSESS";
 
         private static final String TMP_KEY_PARAM = "key";
 
@@ -59,24 +61,20 @@ public class BioStudiesRestClient implements BioStudiesClient {
             this.baseTarget = baseTarget;
         }
 
-        WebTarget createSubmissionReq(String sessionId) {
-            return baseTarget.path("/submit/create")
-                    .queryParam(SESSION_PARAM, sessionId);
+        WebTarget createSubmissionReq() {
+            return baseTarget.path("/submit/create");
         }
 
-        WebTarget updateSubmissionReq(String sessionId) {
-            return baseTarget.path("/submit/update")
-                    .queryParam(SESSION_PARAM, sessionId);
+        WebTarget updateSubmissionReq() {
+            return baseTarget.path("/submit/update");
         }
 
-        WebTarget getSubmissionReq(String sessionId, String acc) {
-            return baseTarget.path("/submission/" + acc)
-                    .queryParam(SESSION_PARAM, sessionId);
+        WebTarget getSubmissionReq(String acc) {
+            return baseTarget.path("/submission/" + acc);
         }
 
-        WebTarget getSubmissionsReq(String sessionId, int offset, int limit, Map<String, String> moreParams) {
+        WebTarget getSubmissionsReq(int offset, int limit, Map<String, String> moreParams) {
             WebTarget t = baseTarget.path("/sbmlist")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam("offset", offset)
                     .queryParam("limit", limit);
             for (Map.Entry<String, String> entry : moreParams.entrySet()) {
@@ -85,30 +83,26 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return t;
         }
 
-        WebTarget getProjectsReq(String sessionId) {
+        WebTarget getProjectsReq() {
             return baseTarget.path("/atthost")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam("type", "Project")
                     .queryParam("format", "json");
         }
 
-        WebTarget deleteSubmissionReq(String sessionId, String acc) {
+        WebTarget deleteSubmissionReq(String acc) {
             return baseTarget.path("/submit/delete")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam("id", acc);
         }
 
-        WebTarget getFilesDirReq(String path, int depth, boolean showArchive, String sessionId) {
+        WebTarget getFilesDirReq(String path, int depth, boolean showArchive) {
             return baseTarget.path("/dir")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam("path", path)
                     .queryParam("depth", depth)
                     .queryParam("showArchive", showArchive);
         }
 
-        WebTarget deleteFileReq(String sessionId, String file) {
+        WebTarget deleteFileReq(String file) {
             return baseTarget.path("/dir")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam("command", "rm")
                     .queryParam("path", file);
         }
@@ -121,9 +115,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return baseTarget.path("/auth/signup");
         }
 
-        WebTarget signOutReq(String sessionId) {
-            return baseTarget.path("/auth/signout")
-                    .queryParam(SESSION_PARAM, sessionId);
+        WebTarget signOutReq() {
+            return baseTarget.path("/auth/signout");
         }
 
         WebTarget passwordResetReqReq() {
@@ -138,16 +131,14 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return baseTarget.path("/auth/retryact");
         }
 
-        WebTarget deleteModifiedSubmissionReq(String sessionId, String acc) {
+        WebTarget deleteModifiedSubmissionReq(String acc) {
             return baseTarget.path("/userdata/del")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
                     .queryParam(TMP_KEY_PARAM, acc);
         }
 
-        WebTarget saveModifiedSubmissionReq(String sessionId) {
+        WebTarget saveModifiedSubmissionReq() {
             return baseTarget.path("/userdata/set")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION);
         }
 
@@ -157,17 +148,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .param(TMP_VALUE_PARAM, value);
         }
 
-        WebTarget getModifiedSubmissionReq(String sessionId, String acc) {
+        WebTarget getModifiedSubmissionReq(String acc) {
             return baseTarget.path("/userdata/get")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
                     .queryParam(TMP_KEY_PARAM, acc);
         }
 
-        WebTarget getModifiedSubmissionsReq(String sessionId) {
+        WebTarget getModifiedSubmissionsReq() {
             return baseTarget
                     .path("/userdata/listjson")
-                    .queryParam(SESSION_PARAM, sessionId)
                     .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION);
         }
 
@@ -192,177 +181,177 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String submitNew(String subm, String sessionId) throws BioStudiesClientException, IOException {
+    public String submitNew(String subm, String sessionId) throws  IOException {
         logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
-        return postJSON(targets.createSubmissionReq(sessionId), subm);
+        return req(sessionId).postJSON(targets.createSubmissionReq(), subm);
     }
 
     @Override
     public Observable<String> submitNewRx(String subm, String sessionId) {
         logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
-        return postJSONRx(targets.createSubmissionReq(sessionId), subm);
+        return req(sessionId).postJSONRx(targets.createSubmissionReq(), subm);
     }
 
 
     @Override
-    public String submitUpdated(String obj, String sessionId) throws BioStudiesClientException, IOException {
+    public String submitUpdated(String obj, String sessionId) throws  IOException {
         logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
-        return postJSON(targets.updateSubmissionReq(sessionId), obj);
+        return req(sessionId).postJSON(targets.updateSubmissionReq(), obj);
     }
 
     @Override
     public Observable<String> submitUpdatedRx(String obj, String sessionId) {
         logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
-        return postJSONRx(targets.updateSubmissionReq(sessionId), obj);
+        return req(sessionId).postJSONRx(targets.updateSubmissionReq(), obj);
     }
 
     @Override
-    public String getSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
+    public String getSubmission(String acc, String sessionId) throws  IOException {
         logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
-        return get(targets.getSubmissionReq(sessionId, acc));
+        return req(sessionId).get(targets.getSubmissionReq(acc));
     }
 
     @Override
     public Observable<String> getSubmissionRx(String acc, String sessionId) {
         logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
-        return getRx(targets.getSubmissionReq(sessionId, acc));
+        return req(sessionId).getRx(targets.getSubmissionReq(acc));
     }
 
     @Override
-    public String getSubmissions(String sessionId, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException {
+    public String getSubmissions(String sessionId, int offset, int limit, Map<String, String> paramMap) throws  IOException {
         logger.debug("getSubmissions(sessionId={})", sessionId);
-        return get(targets.getSubmissionsReq(sessionId, offset, limit, paramMap));
+        return req(sessionId).get(targets.getSubmissionsReq(offset, limit, paramMap));
     }
 
     @Override
     public Observable<String> getSubmissionsRx(String sessionId, int offset, int limit, Map<String, String> paramMap) {
-        return getRx(targets.getSubmissionsReq(sessionId, offset, limit, paramMap));
+        return req(sessionId).getRx(targets.getSubmissionsReq(offset, limit, paramMap));
     }
 
     @Override
-    public String getProjects(String sessionId) throws BioStudiesClientException, IOException {
+    public String getProjects(String sessionId) throws  IOException {
         logger.debug("getProjects(sessionId={})", sessionId);
-        return get(targets.getProjectsReq(sessionId));
+        return req(sessionId).get(targets.getProjectsReq());
     }
 
     @Override
     public Observable<String> getProjectsRx(String sessionId) {
         logger.debug("getProjects(sessionId={})", sessionId);
-        return getRx(targets.getProjectsReq(sessionId));
+        return req(sessionId).getRx(targets.getProjectsReq());
     }
 
     @Override
-    public String deleteSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
+    public String deleteSubmission(String acc, String sessionId) throws  IOException {
         logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
         // WTF: why it is GET?
-        return get(targets.deleteSubmissionReq(sessionId, acc));
+        return req(sessionId).get(targets.deleteSubmissionReq(acc));
     }
 
     @Override
     public Observable<String> deleteSubmissionRx(String acc, String sessionId) {
         logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
         // WTF: why it is GET?
-        return getRx(targets.deleteSubmissionReq(sessionId, acc));
+        return req(sessionId).getRx(targets.deleteSubmissionReq(acc));
     }
 
     @Override
-    public String getFilesDir(String path, int depth, boolean showArchive, String sessionId) throws BioStudiesClientException, IOException {
+    public String getFilesDir(String path, int depth, boolean showArchive, String sessionId) throws  IOException {
         logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
-        return get(targets.getFilesDirReq(path, depth, showArchive, sessionId));
+        return req(sessionId).get(targets.getFilesDirReq(path, depth, showArchive));
     }
 
     @Override
     public Observable<String> getFilesDirRx(String path, int depth, boolean showArchive, String sessionId) {
         logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
-        return getRx(targets.getFilesDirReq(path, depth, showArchive, sessionId));
+        return req(sessionId).getRx(targets.getFilesDirReq(path, depth, showArchive));
     }
 
     @Override
-    public String deleteFile(String file, String sessionId) throws BioStudiesClientException, IOException {
+    public String deleteFile(String file, String sessionId) throws  IOException {
         logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
-        return get(targets.deleteFileReq(sessionId, file));
+        return req(sessionId).get(targets.deleteFileReq(file));
     }
 
     @Override
     public Observable<String> deleteFileRx(String file, String sessionId) {
         logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
         // WTF: why it is GET?
-        return getRx(targets.deleteFileReq(sessionId, file));
+        return req(sessionId).getRx(targets.deleteFileReq(file));
     }
 
     @Override
-    public String signOut(String obj, String sessionId) throws BioStudiesClientException, IOException {
+    public String signOut(String obj, String sessionId) throws  IOException {
         logger.debug("signOut(sessionId={})", sessionId);
-        return postJSON(targets.signOutReq(sessionId), obj);
+        return req(sessionId).postJSON(targets.signOutReq(), obj);
     }
 
     @Override
     public Observable<String> signOutRx(String obj, String sessionId) {
         logger.debug("signOut(sessionId={})", sessionId);
-        return postJSONRx(targets.signOutReq(sessionId), obj);
+        return req(sessionId).postJSONRx(targets.signOutReq(), obj);
     }
 
     @Override
-    public String signUp(String obj) throws BioStudiesClientException, IOException {
+    public String signUp(String obj) throws  IOException {
         logger.debug("signUp(obj={})", obj);
-        return postJSON(targets.signUpReq(), obj);
+        return req().postJSON(targets.signUpReq(), obj);
     }
 
     @Override
     public Observable<String> signUpRx(String obj) {
         logger.debug("signUp(obj={})", obj);
-        return postJSONRx(targets.signUpReq(), obj);
+        return req().postJSONRx(targets.signUpReq(), obj);
     }
 
     @Override
-    public String passwordResetRequest(String obj) throws BioStudiesClientException, IOException {
+    public String passwordResetRequest(String obj) throws  IOException {
         logger.debug("passwordResetRequest(obj={})", obj);
-        return postJSON(targets.passwordResetReqReq(), obj);
+        return req().postJSON(targets.passwordResetReqReq(), obj);
     }
 
     @Override
     public Observable<String> passwordResetRequestRx(String obj) {
         logger.debug("passwordResetRequest(obj={})", obj);
-        return postJSONRx(targets.passwordResetReqReq(), obj);
+        return req().postJSONRx(targets.passwordResetReqReq(), obj);
     }
 
     @Override
-    public String passwordReset(String obj) throws BioStudiesClientException, IOException {
+    public String passwordReset(String obj) throws  IOException {
         logger.debug("passwordReset(obj={})", obj);
-        return postJSON(targets.passwordResetReq(), obj);
+        return req().postJSON(targets.passwordResetReq(), obj);
     }
 
     @Override
     public Observable<String> passwordResetRx(String obj) {
         logger.debug("passwordReset(obj={})", obj);
-        return postJSONRx(targets.passwordResetReq(), obj);
+        return req().postJSONRx(targets.passwordResetReq(), obj);
     }
 
     @Override
-    public String resendActivationLink(String obj) throws BioStudiesClientException, IOException {
+    public String resendActivationLink(String obj) throws  IOException {
         logger.debug("resendActivationLink(obj={})", obj);
-        return postJSON(targets.resendActivationLinkReq(), obj);
+        return req().postJSON(targets.resendActivationLinkReq(), obj);
     }
 
     @Override
     public Observable<String> resendActivationLinkRx(String obj) {
         logger.debug("resendActivationLink(obj={})", obj);
-        return postJSONRx(targets.resendActivationLinkReq(), obj);
+        return req().postJSONRx(targets.resendActivationLinkReq(), obj);
     }
 
     @Override
-    public String activate(String key) throws BioStudiesClientException, IOException {
+    public String activate(String key) throws  IOException {
         logger.debug("resendActivationLink(obj={})", key);
-        return postJSON(targets.activationReq(key), "{}");
+        return req().postJSON(targets.activationReq(key), "{}");
     }
 
     @Override
     public Observable<String> activateRx(String key) {
         logger.debug("resendActivationLink(obj={})", key);
-        return postJSONRx(targets.activationReq(key), "{}");
+        return req().postJSONRx(targets.activationReq(key), "{}");
     }
 
-    public String signIn(String username, String password) throws BioStudiesClientException, IOException {
+    public String signIn(String username, String password) throws  IOException {
         logger.debug("signIn(username={}, password=...)", username);
         ObjectNode obj = JsonNodeFactory.instance.objectNode();
         obj.put("login", username);
@@ -371,173 +360,211 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String signIn(String obj) throws BioStudiesClientException, IOException {
+    public String signIn(String obj) throws  IOException {
         logger.debug("signIn(obj={})", obj);
-        return postJSON(targets.signInReq(), obj);
+        return req().postJSON(targets.signInReq(), obj);
     }
 
     @Override
-    public String getModifiedSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
+    public String getModifiedSubmission(String acc, String sessionId) throws  IOException {
         logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return get(targets.getModifiedSubmissionReq(sessionId, acc));
+        return req(sessionId).get(targets.getModifiedSubmissionReq(acc));
     }
 
     @Override
     public Observable<String> getModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return getRx(targets.getModifiedSubmissionReq(sessionId, acc));
+        return req(sessionId).getRx(targets.getModifiedSubmissionReq(acc));
     }
 
     @Override
-    public String saveModifiedSubmission(String obj, String acc, String sessionId) throws BioStudiesClientException, IOException {
+    public String saveModifiedSubmission(String obj, String acc, String sessionId) throws  IOException {
         logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
-        return postForm(
-                targets.saveModifiedSubmissionReq(sessionId),
+        return req(sessionId).postForm(
+                targets.saveModifiedSubmissionReq(),
                 targets.saveModifiedSubmissionForm(acc, obj));
     }
 
     @Override
     public Observable<String> saveModifiedSubmissionRx(String obj, String acc, String sessionId) {
         logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
-        return postFormRx(
-                targets.saveModifiedSubmissionReq(sessionId),
+        return req(sessionId).postFormRx(
+                targets.saveModifiedSubmissionReq(),
                 targets.saveModifiedSubmissionForm(acc, obj));
     }
 
     @Override
-    public String deleteModifiedSubmission(String acc, String sessionId) throws BioStudiesClientException, IOException {
+    public String deleteModifiedSubmission(String acc, String sessionId) throws  IOException {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return postJSON(targets.deleteModifiedSubmissionReq(sessionId, acc), null);
+        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
+        return req(sessionId).postJSON(targets.deleteModifiedSubmissionReq(acc), "{}");
     }
 
     @Override
     public Observable<String> deleteModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return postJSONRx(targets.deleteModifiedSubmissionReq(sessionId, acc), null);
+        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
+        return req(sessionId).postJSONRx(targets.deleteModifiedSubmissionReq(acc), "{}");
     }
 
     @Override
-    public String getModifiedSubmissions(String sessionId) throws BioStudiesClientException, IOException {
+    public String getModifiedSubmissions(String sessionId) throws  IOException {
         logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
-        return get(targets.getModifiedSubmissionsReq(sessionId));
+        return req(sessionId).get(targets.getModifiedSubmissionsReq());
     }
 
     @Override
     public Observable<String> getModifiedSubmissionsRx(String sessionId) {
         logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
-        return getRx(targets.getModifiedSubmissionsReq(sessionId));
+        return req(sessionId).getRx(targets.getModifiedSubmissionsReq());
     }
 
-    private static String postJSON(WebTarget target, String data) throws BioStudiesClientException, IOException {
-        return post(target, Entity.json(data));
+    private static BioStudiesRequest req(String sessionId) {
+        return new BioStudiesRequest(sessionId);
     }
 
-    private static String postForm(WebTarget target, Form data) throws BioStudiesClientException, IOException {
-        return post(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+    private static BioStudiesRequest req() {
+        return new BioStudiesRequest();
     }
 
-    private static String post(WebTarget target, Entity entity) throws BioStudiesClientException, IOException {
-        Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-        Response resp = null;
-        try {
-            resp = builder.post(entity);
-            return readResponse(resp);
-        } catch (ProcessingException e) {
-            if (resp != null)
-                resp.close();
-            throw new IOException(e);
-        }
-    }
+    private static class BioStudiesRequest {
+        private final String sessionId;
 
-    private static String get(WebTarget target) throws BioStudiesClientException, IOException {
-        Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON_TYPE);
-        Response resp = null;
-        try {
-            resp = builder.get();
-            return readResponse(resp);
-        } catch (ProcessingException e) {
-            throw new IOException(e);
-        } finally {
-            if (resp != null)
-                resp.close();
-        }
-    }
-
-    private static Observable<String> postJSONRx(WebTarget target, String data) {
-        return postRx(target, Entity.json(data));
-    }
-
-    private static Observable<String> postFormRx(WebTarget target, Form data) {
-        return postRx(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-    }
-
-    private static Observable<String> postRx(WebTarget target, Entity entity) {
-        return RxObservable.from(target)
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                .rx()
-                .post(entity)
-                .map(resp -> {
-                            try {
-                                return readResponse(resp);
-                            } catch (IOException e) {
-                                throw Exceptions.propagate(e);
-                            }
-                        }
-                );
-    }
-
-    private static Observable<String> getRx(WebTarget target) {
-        return RxObservable.from(target)
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                .rx()
-                .get()
-                .map(resp -> {
-                            try {
-                                return readResponse(resp);
-                            } catch (IOException e) {
-                                throw Exceptions.propagate(e);
-                            }
-                        }
-                );
-    }
-
-    private static String readResponse(Response resp) throws IOException {
-        int statusCode = resp.getStatus();
-
-        String body = resp.readEntity(String.class);
-
-        MediaType mediaType = resp.getMediaType();
-        if (mediaType == null) {
-            logger.warn("Server responded with NULL content-type: " + resp.getLocation());
+        private BioStudiesRequest() {
+            this.sessionId = null;
         }
 
-        if (statusCode != 200) {
-            throw new BioStudiesRxClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+        private BioStudiesRequest(String sessionId) {
+            this.sessionId = sessionId;
         }
 
-        if (!getStatus(body).equalsIgnoreCase("ok")) {
-            throw new BioStudiesRxClientException(422, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+        private MultivaluedHashMap<String, Object> headers() {
+            MultivaluedHashMap<String, Object> headers = new MultivaluedHashMap<>();
+            headers.put(HttpHeaders.ACCEPT, singletonList(MediaType.APPLICATION_JSON));
+            Optional.ofNullable(sessionId).ifPresent(s -> headers.put(SESSION_TOKEN, singletonList(s)));
+            return headers;
         }
-        return body;
-    }
 
-    private static String getStatus(String body) throws IOException {
-        JsonFactory f = new MappingJsonFactory();
-        try (JsonParser jp = f.createParser(body)) {
-            while (hasNextJsonToken(jp.nextToken())) {
-                String fieldName = jp.getCurrentName();
-                if (fieldName != null && fieldName.equalsIgnoreCase("status")) {
-                    jp.nextToken();
-                    String value = jp.getText();
-                    return value == null ? "" : value.toLowerCase();
-                }
+        private String postJSON(WebTarget target, String data) throws IOException {
+            return post(target, Entity.json(data));
+        }
+
+        private String postForm(WebTarget target, Form data) throws IOException {
+            return post(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        }
+
+        private String post(WebTarget target, Entity entity) throws IOException {
+            Invocation.Builder builder = target
+                    .request()
+                    .headers(headers());
+
+            Response resp = null;
+            try {
+                resp = builder.post(entity);
+                return readResponse(resp);
+            } catch (ProcessingException e) {
+                if (resp != null)
+                    resp.close();
+                throw new IOException(e);
             }
-            // no field status
-            return "ok";
+        }
+
+        private String get(WebTarget target) throws IOException {
+            Invocation.Builder builder = target
+                    .request()
+                    .headers(headers());
+
+            Response resp = null;
+            try {
+                resp = builder.get();
+                return readResponse(resp);
+            } catch (ProcessingException e) {
+                throw new IOException(e);
+            } finally {
+                if (resp != null)
+                    resp.close();
+            }
+        }
+
+        private Observable<String> postJSONRx(WebTarget target, String data) {
+            return postRx(target, Entity.json(data));
+        }
+
+        private Observable<String> postFormRx(WebTarget target, Form data) {
+            return postRx(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        }
+
+        private Observable<String> postRx(WebTarget target, Entity entity) {
+            return RxObservable.from(target)
+                    .request()
+                    .headers(headers())
+                    .rx()
+                    .post(entity)
+                    .map(resp -> {
+                                try {
+                                    return readResponse(resp);
+                                } catch (IOException e) {
+                                    throw Exceptions.propagate(e);
+                                }
+                            }
+                    );
+        }
+
+        private Observable<String> getRx(WebTarget target) {
+            return RxObservable.from(target)
+                    .request()
+                    .headers(headers())
+                    .rx()
+                    .get()
+                    .map(resp -> {
+                                try {
+                                    return readResponse(resp);
+                                } catch (IOException e) {
+                                    throw Exceptions.propagate(e);
+                                }
+                            }
+                    );
+        }
+
+        private static String readResponse(Response resp) throws IOException {
+            int statusCode = resp.getStatus();
+
+            String body = resp.readEntity(String.class);
+
+            MediaType mediaType = resp.getMediaType();
+            if (mediaType == null) {
+                logger.warn("Server responded with NULL content-type: " + resp.getLocation());
+            }
+
+            if (statusCode != 200) {
+                throw new BioStudiesRxClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+            }
+
+            if (!getStatus(body).equalsIgnoreCase("ok")) {
+                throw new BioStudiesRxClientException(422, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+            }
+            return body;
+        }
+
+        private static String getStatus(String body) throws IOException {
+            JsonFactory f = new MappingJsonFactory();
+            try (JsonParser jp = f.createParser(body)) {
+                while (hasNextJsonToken(jp.nextToken())) {
+                    String fieldName = jp.getCurrentName();
+                    if (fieldName != null && fieldName.equalsIgnoreCase("status")) {
+                        jp.nextToken();
+                        String value = jp.getText();
+                        return value == null ? "" : value.toLowerCase();
+                    }
+                }
+                // no field status
+                return "ok";
+            }
+        }
+
+        private static boolean hasNextJsonToken(JsonToken token) {
+            return token != null && token != JsonToken.END_OBJECT;
         }
     }
 
-    private static boolean hasNextJsonToken(JsonToken token) {
-        return token != null && token != JsonToken.END_OBJECT;
-    }
 }

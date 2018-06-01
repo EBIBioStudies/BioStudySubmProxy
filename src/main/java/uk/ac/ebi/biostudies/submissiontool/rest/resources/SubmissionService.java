@@ -68,7 +68,8 @@ public class SubmissionService {
     public Observable<String> getSubmissionRx(String accno, UserSession session) {
         logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno);
         return getSubmFromTmpStoreRx(accno, session)
-                .flatMap(resp -> resp.isEmpty() ? getSubmissionFromOriginRx(accno, session) : Observable.just(resp));
+                .flatMap(resp -> resp.isEmpty() ? getSubmissionFromOriginRx(accno, session) : Observable.just(resp))
+                .flatMap(resp -> resp.isEmpty() ? Observable.just("{}") : Observable.just(resp));
     }
 
     public Observable<String> getSubmissionFromOriginRx(String accno, UserSession session) {
@@ -101,7 +102,8 @@ public class SubmissionService {
     public Observable<String> saveSubmissionRx(String subm, UserSession session) throws IOException {
         ModifiedSubmission modified = ModifiedSubmission.parse(subm);
         String submStr = modified.update().json().toString();
-        return saveSubmissionRx(submStr, modified.getAccno(), session);
+        return saveSubmissionRx(submStr, modified.getAccno(), session)
+                .flatMap(resp -> resp.isEmpty() ? Observable.just("{}") : Observable.just(resp));
     }
 
     private Observable<String> saveSubmissionRx(String subm, String accno, UserSession session) {

@@ -59,17 +59,19 @@ public class PageTabUtils {
     }
 
     private static List<JsonNode> attributes(JsonNode node) {
-        final String attributesName = "attributes";
-        if (!node.has(attributesName)) {
-            return Collections.emptyList();
-        }
-
-        JsonNode attributesNode = node.get(attributesName);
-        if (!attributesNode.isArray()) {
-            return Collections.emptyList();
-        }
         List<JsonNode> list = new ArrayList<>();
-        attributesNode.iterator().forEachRemaining(list::add);
+        final String attributesProp = "attributes";
+        if (node.has(attributesProp)) {
+            JsonNode attributesNode = node.get(attributesProp);
+            if (attributesNode.isArray()) {
+                attributesNode.iterator().forEachRemaining(list::add);
+            }
+        }
+        // NB: only submission node has 'section' property
+        final String sectionProp = "section";
+        if (node.has(sectionProp)) {
+            list.addAll(attributes(node.get(sectionProp)));
+        }
         return list;
     }
 

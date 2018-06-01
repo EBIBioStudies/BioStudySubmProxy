@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
+import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
@@ -58,6 +59,7 @@ public class RESTService {
     @GET
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getSubmissions(@QueryParam("offset") int offset,
                                @QueryParam("limit") int limit,
                                @QueryParam("submitted") boolean submitted,
@@ -93,6 +95,7 @@ public class RESTService {
     @GET
     @Path("/submissions/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getSubmission(@Context UserSession session,
                               @PathParam("accno") String accno,
                               @Suspended AsyncResponse async) {
@@ -105,6 +108,7 @@ public class RESTService {
     @GET
     @Path("/submissions/origin/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getSubmissionFromOrigin(@Context UserSession session,
                                     @PathParam("accno") String accno,
                                     @Suspended AsyncResponse async) {
@@ -184,6 +188,7 @@ public class RESTService {
     @GET
     @Path("/projects")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getProjects(@Context UserSession session,
                             @Suspended AsyncResponse async) {
         logger.debug("getProjects(session={})", session);
@@ -195,6 +200,7 @@ public class RESTService {
     @GET
     @Path("/files")
     @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
     public void getFiles(@QueryParam("path") String path,
                          @QueryParam("depth") int depth,
                          @QueryParam("showArchive") boolean showArchive,
