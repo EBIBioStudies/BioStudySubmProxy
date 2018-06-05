@@ -167,31 +167,31 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> createModifiedSubmissionRx(String pageTab, String sessionId) {
+    public Observable<String> createPendingSubmissionRx(String pageTab, String sessionId) {
         logger.debug("createModifiedSubmission(acc=..., sessionId={})", sessionId);
         return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending"), pageTab);
     }
 
     @Override
-    public Observable<String> getModifiedSubmissionRx(String acc, String sessionId) {
+    public Observable<String> getPendingSubmissionRx(String acc, String sessionId) {
         logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         return req(sessionId).getRx(baseTarget.path("/submissions/pending/" + acc));
     }
 
     @Override
-    public Observable<String> saveModifiedSubmissionRx(String obj, String acc, String sessionId) {
+    public Observable<String> savePendingSubmissionRx(String obj, String acc, String sessionId) {
         logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
         return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending/" + acc), obj);
     }
 
     @Override
-    public Observable<Void> deleteModifiedSubmissionRx(String acc, String sessionId) {
+    public Observable<Void> deletePendingSubmissionRx(String acc, String sessionId) {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
         return req(sessionId).deleteRx(baseTarget.path("/submissions/pending/" + acc));
     }
 
     @Override
-    public Observable<String> getModifiedSubmissionsRx(String sessionId, Map<String, String> params) {
+    public Observable<String> getPendingSubmissionsRx(String sessionId, Map<String, String> params) {
         logger.debug("getModifiedSubmissions(sessionId={}, params=...)", sessionId);
         WebTarget t = baseTarget.path("/submissions/pending");
         for (Map.Entry<String, String> entry : params.entrySet()) {

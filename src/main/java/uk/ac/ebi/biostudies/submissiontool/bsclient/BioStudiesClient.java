@@ -32,15 +32,15 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> deleteSubmissionRx(String acc, String sessid);
 
-    Observable<String> createModifiedSubmissionRx(String pageTab, String sessid);
+    Observable<String> createPendingSubmissionRx(String pageTab, String sessid);
 
-    Observable<String> getModifiedSubmissionsRx(String sessid, Map<String, String> paramMap);
+    Observable<String> getPendingSubmissionsRx(String sessid, Map<String, String> paramMap);
 
-    Observable<String> getModifiedSubmissionRx(String accno, String sessid);
+    Observable<String> getPendingSubmissionRx(String accno, String sessid);
 
-    Observable<Void> deleteModifiedSubmissionRx(String acc, String sessid);
+    Observable<Void> deletePendingSubmissionRx(String acc, String sessid);
 
-    Observable<String> saveModifiedSubmissionRx(String modified, String accno, String sessid);
+    Observable<String> savePendingSubmissionRx(String modified, String accno, String sessid);
 
     Observable<String> getProjectsRx(String sessid);
 

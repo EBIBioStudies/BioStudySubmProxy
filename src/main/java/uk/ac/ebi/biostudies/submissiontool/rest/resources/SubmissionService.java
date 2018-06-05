@@ -63,15 +63,15 @@ public class SubmissionService {
         this.europePmc = new EuropePMCClient();
     }
 
-    public Observable<String> getSubmissionRx(String accno, UserSession session) {
+    public Observable<String> findSubmissionRx(String accno, UserSession session) {
         logger.debug("getSubmission(session={}, accnoAttr={}, origin={})", session, accno);
-        return getSubmFromTmpStoreRx(accno, session)
-                .flatMap(resp -> resp.isEmpty() ? getSubmissionFromOriginRx(accno, session) : Observable.just(resp))
+        return getPendingSubmissionRx(accno, session)
+                .flatMap(resp -> resp.isEmpty() ? getOriginalSubmissionRx(accno, session) : Observable.just(resp))
                 .flatMap(resp -> resp.isEmpty() ? Observable.just("{}") : Observable.just(resp));
     }
 
-    public Observable<String> getSubmissionFromOriginRx(String accno, UserSession session) {
-        return getSubmFromOriginStoreRx(accno, session)
+    public Observable<String> getOriginalSubmissionRx(String accno, UserSession session) {
+        return getSubmissionRx(accno, session)
                 .map(resp -> {
                     try {
                         return ModifiedSubmission.wrap(resp).json().toString();
@@ -81,31 +81,24 @@ public class SubmissionService {
                 });
     }
 
-    private Observable<String> getSubmFromTmpStoreRx(String accno, UserSession session) {
-        return bsclient.getModifiedSubmissionRx(accno, session.id());
+    private Observable<String> getPendingSubmissionRx(String accno, UserSession session) {
+        return bsclient.getPendingSubmissionRx(accno, session.id());
     }
 
-    private Observable<String> getSubmFromOriginStoreRx(String accno, UserSession session) {
+    private Observable<String> getSubmissionRx(String accno, UserSession session) {
         return bsclient.getSubmissionRx(accno, session.id());
     }
 
-    public Observable<String> createSubmissionRx(String subm, UserSession session) {
+    public Observable<String> createPendingSubmissionRx(String subm, UserSession session) {
         logger.debug("createSubmission(session={})", session);
-        return bsclient.createModifiedSubmissionRx(subm, session.id());
+        return bsclient.createPendingSubmissionRx(subm, session.id());
     }
 
-    public Observable<String> saveSubmissionRx(String subm, UserSession session) throws IOException {
-        ModifiedSubmission modified = ModifiedSubmission.parse(subm);
-        String submStr = modified.update().json().toString();
-        return saveSubmissionRx(submStr, modified.getAccno(), session)
-                .flatMap(resp -> resp.isEmpty() ? Observable.just("{}") : Observable.just(resp));
+    public Observable<String> savePendingSubmissionRx(String subm, String accno, UserSession session) {
+        return bsclient.savePendingSubmissionRx(subm, accno, session.id());
     }
 
-    private Observable<String> saveSubmissionRx(String subm, String accno, UserSession session) {
-        return bsclient.saveModifiedSubmissionRx(subm, accno, session.id());
-    }
-
-    public Observable<String> submitModifiedRx(String subm, UserSession session) throws IOException {
+    public Observable<String> submitPendingSubmissionRx(String subm, UserSession session) throws IOException {
         logger.debug("submitSubmission(session={}, obj={})", session, subm);
         ModifiedSubmission modified = ModifiedSubmission.parse(subm);
         return submitRx(modified.isNew(), modified.getData(), session)
@@ -166,7 +159,7 @@ public class SubmissionService {
     }
 
     private Observable<String> projectAccnoTemplateRx(String accno, UserSession session) {
-        return getSubmFromOriginStoreRx(accno, session)
+        return getSubmissionRx(accno, session)
                 .map(resp -> {
                     try {
                         return PageTabUtils.accnoTemplateAttr(objectMapper().readTree(resp));
@@ -178,7 +171,7 @@ public class SubmissionService {
 
     public Observable<Boolean> deleteSubmissionRx(String accno, UserSession session) {
         logger.debug("deleteSubmission(session={}, acc={})", session, accno);
-        return getSubmFromTmpStoreRx(accno, session)
+        return getPendingSubmissionRx(accno, session)
                 .flatMap(resp -> resp.isEmpty() ?
                         deleteOriginalRx(accno, session) : deleteModifiedRx(accno, session)
                 );
@@ -199,15 +192,15 @@ public class SubmissionService {
     }
 
     private Observable<Boolean> deleteModifiedRx(String accno, UserSession session) {
-        return bsclient.deleteModifiedSubmissionRx(accno, session.id()).map(resp -> true);
+        return bsclient.deletePendingSubmissionRx(accno, session.id()).map(resp -> true);
     }
 
     public Observable<String> getSubmittedSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
         return bsclient.getSubmissionsRx(session.id(), filterParams.asMap());
     }
 
-    public Observable<String> getModifiedSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
-        return bsclient.getModifiedSubmissionsRx(session.id(), filterParams.asMap());
+    public Observable<String> getPendingSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
+        return bsclient.getPendingSubmissionsRx(session.id(), filterParams.asMap());
     }
 
     public Observable<String> getProjectsRx(UserSession session) {

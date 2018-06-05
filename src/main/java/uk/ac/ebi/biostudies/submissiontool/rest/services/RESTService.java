@@ -16,18 +16,9 @@
 
 package uk.ac.ebi.biostudies.submissiontool.rest.services;
 
-import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.filter.SubmissionListFilterParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
-import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
-
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -36,9 +27,17 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import org.apache.http.client.utils.URIBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.ModifiedSubmission;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.filter.SubmissionListFilterParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
 
 /**
  * @author Olga Melnichuk
@@ -67,7 +66,7 @@ public class RESTService {
         logger.debug("getSubmissions(session={}, filterParams={})", session, filterParams);
         (submitted ?
                 service.getSubmittedSubmissionsRx(filterParams, session) :
-                service.getModifiedSubmissionsRx(filterParams, session))
+                service.getPendingSubmissionsRx(filterParams, session))
                 .subscribe(async::resume, async::resume);
     }
 
@@ -80,7 +79,7 @@ public class RESTService {
                               @PathParam("accno") String accno,
                               @Suspended AsyncResponse async) {
         logger.debug("getSubmission(session={}, acc={})", session, accno);
-        service.getSubmissionRx(accno, session)
+        service.findSubmissionRx(accno, session)
                 .subscribe(async::resume, async::resume);
     }
 
@@ -89,11 +88,11 @@ public class RESTService {
     @Path("/submissions/origin/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
-    public void getSubmissionFromOrigin(@Context UserSession session,
+    public void getOriginalSubmission(@Context UserSession session,
                                         @PathParam("accno") String accno,
                                         @Suspended AsyncResponse async) {
-        logger.debug("getSubmission(session={}, acc={})", session, accno);
-        service.getSubmissionFromOriginRx(accno, session)
+        logger.debug("getOriginalSubmission(session={}, acc={})", session, accno);
+        service.getOriginalSubmissionRx(accno, session)
                 .subscribe(async::resume, async::resume);
     }
 
@@ -115,11 +114,27 @@ public class RESTService {
     @Path("/submissions/tmp/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void saveSubmission(@Context UserSession session,
+    @Deprecated
+    public void saveSubmissionOld(@Context UserSession session,
                                String str,
                                @Suspended AsyncResponse async) throws IOException {
         logger.debug("saveSubmission(session={}, str={})", session, str);
-        service.saveSubmissionRx(str, session)
+        ModifiedSubmission subm = ModifiedSubmission.parse(str);
+        service.savePendingSubmissionRx(str, subm.getAccno(), session)
+                .subscribe(async::resume, async::resume);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @POST
+    @Path("/submissions/pending/{accno}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void saveSubmission(@Context UserSession session,
+            @PathParam("accno") String accno,
+            String str,
+            @Suspended AsyncResponse async) {
+        logger.debug("saveSubmission(session={}, str={})", session, str);
+        service.savePendingSubmissionRx(str, accno, session)
                 .subscribe(async::resume, async::resume);
     }
 
@@ -132,7 +147,7 @@ public class RESTService {
                                  String str,
                                  @Suspended AsyncResponse async) throws IOException {
         logger.debug("createSubmission(session={}, str={})", session, str);
-        service.createSubmissionRx(str, session)
+        service.createPendingSubmissionRx(str, session)
                 .subscribe(async::resume, async::resume);
     }
 
@@ -145,7 +160,7 @@ public class RESTService {
                                  String str,
                                  @Suspended AsyncResponse async) throws IOException {
         logger.debug("submitSubmission(session={}, str={})", session, str);
-        service.submitModifiedRx(str, session)
+        service.submitPendingSubmissionRx(str, session)
                 .subscribe(async::resume, async::resume);
     }
 
@@ -157,8 +172,7 @@ public class RESTService {
     public void directSubmit(@Context UserSession session,
                              @QueryParam("create") Boolean create,
                              String subm,
-                             @Suspended AsyncResponse async)
-            throws BioStudiesClientException, IOException {
+                             @Suspended AsyncResponse async) throws IOException {
         logger.debug("directSubmit(session={}, create={}, subm={})", session, create, subm);
         service.submitPlainRx(create != null && create, subm, session)
                 .subscribe(async::resume, async::resume);
