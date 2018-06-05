@@ -84,12 +84,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
         return req(sessionId).getRx(baseTarget.path("/submission/" + acc));
     }
 
-    /* @Override
-     public String getSubmissions(String sessionId, Map<String, String> paramMap) throws  IOException {
-         logger.debug("getSubmissions(sessionId={})", sessionId);
-         return req(sessionId).get(targets.getSubmissionsReq(paramMap));
-     }
- */
     @Override
     public Observable<String> getSubmissionsRx(String sessionId, Map<String, String> params) {
         WebTarget t = baseTarget.path("/sbmlist");
