@@ -15,28 +15,29 @@
  */
 package uk.ac.ebi.biostudies.submissiontool.rest.resources;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import static uk.ac.ebi.biostudies.submissiontool.rest.data.Json.objectMapper;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.exceptions.Exceptions;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePMCClient;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.*;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.ModifiedSubmission;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.PageTabUtils;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.filter.SubmissionListFilterParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
-
-import java.io.IOException;
-import java.util.*;
-import java.util.function.Predicate;
-
-import static uk.ac.ebi.biostudies.submissiontool.rest.data.Json.objectMapper;
 
 public class SubmissionService {
 
@@ -88,12 +89,9 @@ public class SubmissionService {
         return bsclient.getSubmissionRx(accno, session.id());
     }
 
-    public Observable<String> createSubmissionRx(String subm, UserSession session) throws IOException {
+    public Observable<String> createSubmissionRx(String subm, UserSession session) {
         logger.debug("createSubmission(session={})", session);
-        ModifiedSubmission modified = ModifiedSubmission.wrap(subm);
-        String submStr = modified.update().json().toString();
-        return saveSubmissionRx(submStr, modified.getAccno(), session)
-                .map(resp -> submStr);
+        return bsclient.createModifiedSubmissionRx(subm, session.id());
     }
 
     public Observable<String> saveSubmissionRx(String subm, UserSession session) throws IOException {
@@ -201,8 +199,7 @@ public class SubmissionService {
     }
 
     private Observable<Boolean> deleteModifiedRx(String accno, UserSession session) {
-        return bsclient.deleteModifiedSubmissionRx(accno, session.id())
-                .map(resp -> true);
+        return bsclient.deleteModifiedSubmissionRx(accno, session.id()).map(resp -> true);
     }
 
     public Observable<String> getSubmittedSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
@@ -210,42 +207,7 @@ public class SubmissionService {
     }
 
     public Observable<String> getModifiedSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
-        Predicate<? super SubmissionListItem> predicate = filterParams.asPredicate();
-
-        return bsclient.getModifiedSubmissionsRx(session.id())
-                .map((String resp) -> {
-                    try {
-                        return objectMapper().readTree(resp);
-                    } catch (IOException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                })
-                .flatMap(jsonNode -> {
-                    List<JsonNode> list = new ArrayList<>();
-                    if (jsonNode.isArray()) {
-                        jsonNode.iterator().forEachRemaining(list::add);
-                    }
-                    return Observable.from(list);
-                })
-                .map(jsonNode -> {
-                    try {
-                        return SubmissionListItem.from(ModifiedSubmission.convert(jsonNode));
-                    } catch (JsonProcessingException e) {
-                        logger.error("Converting modified submissions error", e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .sorted((item1, item2) -> SubmissionListItem.sortByMTime().compare(item1, item2))
-                .filter(predicate::test)
-                .skip(filterParams.getOffset())
-                .limit(filterParams.getLimit())
-                .toList()
-                .map((List<SubmissionListItem> items) -> {
-                    ObjectNode obj = JsonNodeFactory.instance.objectNode();
-                    obj.set("submissions", objectMapper().valueToTree(items));
-                    return obj.toString();
-                });
+        return bsclient.getModifiedSubmissionsRx(session.id(), filterParams.asMap());
     }
 
     public Observable<String> getProjectsRx(UserSession session) {

@@ -43,14 +43,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     private static final String SESSION_TOKEN = "X-Session-Token";
 
-    private static final String TMP_KEY_PARAM = "key";
-
-    private static final String TMP_VALUE_PARAM = "value";
-
-    private static final String TMP_TOPIC_PARAM = "topic";
-
-    private static final String TMP_TOPIC_SUBMISSION = "submission";
-
     private static final Logger logger = LoggerFactory.getLogger(BioStudiesRestClient.class);
 
     private final Client rsClient;
@@ -175,42 +167,37 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
+    public Observable<String> createModifiedSubmissionRx(String pageTab, String sessionId) {
+        logger.debug("createModifiedSubmission(acc=..., sessionId={})", sessionId);
+        return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending"), pageTab);
+    }
+
+    @Override
     public Observable<String> getModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).getRx(
-                baseTarget.path("/userdata/get")
-                        .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
-                        .queryParam(TMP_KEY_PARAM, acc));
+        return req(sessionId).getRx(baseTarget.path("/submissions/pending/" + acc));
     }
 
     @Override
     public Observable<String> saveModifiedSubmissionRx(String obj, String acc, String sessionId) {
         logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
-        return req(sessionId).postFormRx(
-                baseTarget.path("/userdata/set").queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION),
-                new Form()
-                        .param(TMP_KEY_PARAM, acc)
-                        .param(TMP_VALUE_PARAM, obj));
+        return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending/" + acc), obj);
     }
 
     @Override
-    public Observable<String> deleteModifiedSubmissionRx(String acc, String sessionId) {
+    public Observable<Void> deleteModifiedSubmissionRx(String acc, String sessionId) {
         logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
-        return req(sessionId).postJSONRx(
-                baseTarget.path("/userdata/del")
-                        .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
-                        .queryParam(TMP_KEY_PARAM, acc),
-                "{}");
+        return req(sessionId).deleteRx(baseTarget.path("/submissions/pending/" + acc));
     }
 
     @Override
-    public Observable<String> getModifiedSubmissionsRx(String sessionId) {
-        logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
-        return req(sessionId).getRx(
-                baseTarget
-                        .path("/userdata/listjson")
-                        .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION));
+    public Observable<String> getModifiedSubmissionsRx(String sessionId, Map<String, String> params) {
+        logger.debug("getModifiedSubmissions(sessionId={}, params=...)", sessionId);
+        WebTarget t = baseTarget.path("/submissions/pending");
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            t = t.queryParam(entry.getKey(), entry.getValue());
+        }
+        return req(sessionId).getRx(t);
     }
 
     private static BioStudiesRequest req(String sessionId) {
@@ -259,29 +246,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
             }
         }
 
-        private String get(WebTarget target) throws IOException {
-            Invocation.Builder builder = target
-                    .request()
-                    .headers(headers());
-
-            Response resp = null;
-            try {
-                resp = builder.get();
-                return readResponse(resp);
-            } catch (ProcessingException e) {
-                throw new IOException(e);
-            } finally {
-                if (resp != null)
-                    resp.close();
-            }
-        }
-
         private Observable<String> postJSONRx(WebTarget target, String data) {
             return postRx(target, Entity.json(data));
-        }
-
-        private Observable<String> postFormRx(WebTarget target, Form data) {
-            return postRx(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
         }
 
         private Observable<String> postRx(WebTarget target, Entity entity) {
@@ -314,6 +280,22 @@ public class BioStudiesRestClient implements BioStudiesClient {
                                 }
                             }
                     );
+        }
+
+        private Observable<Void> deleteRx(WebTarget target) {
+            return RxObservable.from(target)
+                    .request()
+                    .headers(headers())
+                    .rx()
+                    .delete()
+                    .map((Response resp) -> {
+                        try {
+                            readResponse(resp);
+                            return null;
+                        } catch (IOException e) {
+                            throw Exceptions.propagate(e);
+                        }
+                    });
         }
 
         private static String readResponse(Response resp) throws IOException {
