@@ -16,15 +16,10 @@
 
 package uk.ac.ebi.biostudies.submissiontool.rest.data.filter;
 
-import uk.ac.ebi.biostudies.submissiontool.rest.data.SubmissionListItem;
-
-import javax.ws.rs.QueryParam;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import javax.ws.rs.QueryParam;
 
 public class SubmissionListFilterParams {
 
@@ -47,23 +42,6 @@ public class SubmissionListFilterParams {
         this.rTimeFrom = rTimeFrom;
         this.rTimeTo = rTimeTo;
         this.keywords = keywords;
-    }
-
-    public int getOffset() {
-        return offset == null ? 0 : this.offset;
-    }
-
-    public int getLimit() {
-        return limit == null ? 50 : this.limit;
-    }
-
-    public Predicate<? super SubmissionListItem> asPredicate() {
-        List<Predicate<SubmissionListItem>> predicates = asMap().entrySet().stream()
-                .filter(entry -> !entry.getValue().isEmpty())
-                .filter(entry -> SubmissionListFilters.contains(entry.getKey()))
-                .map(entry -> SubmissionListFilters.valueOf(entry.getKey()).create(entry.getValue()))
-                .collect(Collectors.toList());
-        return (Predicate<SubmissionListItem>) item -> predicates.stream().allMatch(p -> p.test(item));
     }
 
     public Map<String, String> asMap() {
