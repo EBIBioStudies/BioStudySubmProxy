@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.ac.ebi.biostudies.submissiontool.rest.data.filter;
+package uk.ac.ebi.biostudies.submissiontool.rest.resources.params;
 
 import java.util.HashMap;
 import java.util.Map;

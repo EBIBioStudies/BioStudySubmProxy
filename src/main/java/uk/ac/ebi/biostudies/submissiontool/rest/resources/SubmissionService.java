@@ -34,7 +34,7 @@ import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePMCClient;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.ModifiedSubmission;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.PageTabUtils;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.filter.SubmissionListFilterParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SubmissionListFilterParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
