@@ -38,17 +38,17 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> getPendingSubmissionRx(String accno, String sessid);
 
-    Observable<Void> deletePendingSubmissionRx(String acc, String sessid);
+    Observable<String> deletePendingSubmissionRx(String acc, String sessid);
 
-    Observable<String> savePendingSubmissionRx(String modified, String accno, String sessid);
+    Observable<String> savePendingSubmissionRx(String pending, String accno, String sessid);
+
+    Observable<String> submitPendingSubmissionRx(String pending, String accno, String sessid);
+
+    Observable<String> directSubmitRx(boolean create, String pageTab, String id);
 
     Observable<String> getProjectsRx(String sessid);
 
-    Observable<String> submitNewRx(String sbm, String sessid);
-
-    Observable<String> submitUpdatedRx(String sbm, String sessid);
-
-    Observable<String> getFilesDirRx(String path, int depth, boolean showArchive, String sessid);
+    Observable<String> getFileDirRx(String path, int depth, boolean showArchive, String sessid);
 
     Observable<String> deleteFileRx(String file, String sessid);
 
