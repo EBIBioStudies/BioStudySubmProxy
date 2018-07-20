@@ -283,6 +283,7 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 logger.warn("Server responded with NULL content-type: " + resp.getLocation());
             }
 
+            // should not be needed any more (but fix direct submit in UI first)
             if (statusCode == 200 && !getStatus(body).equalsIgnoreCase("ok")) {
                 statusCode = 422;
             }
