@@ -28,7 +28,6 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.http.client.utils.URIBuilder;
-import rx.Observable;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.PendingSubmission;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
