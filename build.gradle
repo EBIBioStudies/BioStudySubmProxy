@@ -20,9 +20,9 @@ repositories {
 
 processResources {
     filter ReplaceTokens, tokens: [
-            "BS_SERVER_URL": bsBackendUrl,
-            "LOGS_DIR": logsDir,
-            "LOG_LEVEL": logLevel,
+            "BS_SERVER_URL"        : bsBackendUrl,
+            "LOGS_DIR"             : logsDir,
+            "LOG_LEVEL"            : logLevel,
             "HTTPS_FILTER_DISABLED": httpsFilterDisabled
     ]
 }
@@ -45,7 +45,7 @@ dependencies {
     compile group: 'org.glassfish.jersey.connectors', version: '2.23.2', name: 'jersey-apache-connector'
     compile group: 'io.reactivex', name: 'rxjava', version: '1.1.10'
     compile group: 'org.glassfish.jersey.ext.rx', version: '2.23.2', name: 'jersey-rx-client'
-    compile (group: 'org.glassfish.jersey.ext.rx', version: '2.23.2', name: 'jersey-rx-client-rxjava') {
+    compile(group: 'org.glassfish.jersey.ext.rx', version: '2.23.2', name: 'jersey-rx-client-rxjava') {
         exclude group: 'io.reactivex', module: 'rxjava'
     }
     compile group: 'org.glassfish.jersey.media', name: 'jersey-media-multipart', version: '2.23.2'
@@ -70,7 +70,9 @@ test {
 }
 
 war {
-    filter(ReplaceTokens, tokens: ["BS_SERVER_URL": bsBackendUrl, "HTTPS_FILTER_DISABLED": httpsFilterDisabled])
+    filesMatching(['**/*.xml']) {
+        filter(ReplaceTokens, tokens: ["BS_SERVER_URL": bsBackendUrl, "HTTPS_FILTER_DISABLED": httpsFilterDisabled])
+    }
     webAppDirName = 'WebContent'
     baseName = 'proxy'
     version = ''
