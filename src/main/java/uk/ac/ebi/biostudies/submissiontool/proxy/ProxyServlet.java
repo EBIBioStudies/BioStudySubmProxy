@@ -16,16 +16,15 @@
 
 package uk.ac.ebi.biostudies.submissiontool.proxy;
 
-import uk.ac.ebi.biostudies.submissiontool.context.AppConfig;
+import static uk.ac.ebi.biostudies.submissiontool.context.AppContext.getConfig;
 
+import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-import static uk.ac.ebi.biostudies.submissiontool.context.AppContext.getConfig;
+import uk.ac.ebi.biostudies.submissiontool.context.AppConfig;
 
 @WebServlet("/raw/*")
 public class ProxyServlet extends HttpServlet {
@@ -35,7 +34,7 @@ public class ProxyServlet extends HttpServlet {
     private Proxy proxy;
 
     @Override
-    public void init() throws ServletException {
+    public void init() {
         AppConfig config = getConfig(getServletContext());
         proxy =/* config.isOfflineModeOn() ?
                 new ProxyStub() :*/
@@ -50,5 +49,15 @@ public class ProxyServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         proxy.proxyPost(req, resp);
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        proxy.proxyDelete(req, resp);
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        proxy.proxyPut(req, resp);
     }
 }
