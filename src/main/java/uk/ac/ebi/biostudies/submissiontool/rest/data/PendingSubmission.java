@@ -28,7 +28,7 @@ import static uk.ac.ebi.biostudies.submissiontool.rest.data.PageTabUtils.*;
 /**
  * @author olkin
  */
-public class ModifiedSubmission {
+public class PendingSubmission {
 
     private static final String ACCNO_PREFIX = "TMP_";
 
@@ -42,10 +42,10 @@ public class ModifiedSubmission {
     private JsonNode data;
 
     @SuppressWarnings("unused")
-    public ModifiedSubmission() {
+    public PendingSubmission() {
     }
 
-    public ModifiedSubmission(String accession, long changed, JsonNode data) {
+    public PendingSubmission(String accession, long changed, JsonNode data) {
         this.accession = accession;
         this.changed = changed;
         this.data = data;
@@ -59,9 +59,9 @@ public class ModifiedSubmission {
         return ACCNO_PREFIX + System.currentTimeMillis();
     }
 
-    public static ModifiedSubmission wrap(String json) throws IOException {
+    public static PendingSubmission wrap(String json) throws IOException {
         JsonNode subm = objectMapper().readTree(json);
-        return new ModifiedSubmission(accession(accnoField(subm)), System.currentTimeMillis(), subm);
+        return new PendingSubmission(accession(accnoField(subm)), System.currentTimeMillis(), subm);
     }
 
     public JsonNode json() {
@@ -72,13 +72,8 @@ public class ModifiedSubmission {
         return accession;
     }
 
-    public ModifiedSubmission update() {
-        this.changed = System.currentTimeMillis();
-        return this;
-    }
-
-    public static ModifiedSubmission parse(String resp) throws IOException {
-        return objectMapper().readValue(resp, ModifiedSubmission.class);
+    public static PendingSubmission parse(String resp) throws IOException {
+        return objectMapper().readValue(resp, PendingSubmission.class);
     }
 
     public JsonNode getData() {
@@ -87,21 +82,5 @@ public class ModifiedSubmission {
 
     public boolean isNew() {
         return accession.startsWith(ACCNO_PREFIX);
-    }
-
-    public static ModifiedSubmission convert(JsonNode node) throws JsonProcessingException {
-        return objectMapper().treeToValue(node, ModifiedSubmission.class);
-    }
-
-    public String getTitle() {
-        return titleAttr(this.data);
-    }
-
-    public Long getRTimeInSeconds() {
-        return rtimeInSecondsAttr(this.data);
-    }
-
-    public Long getMTimeInSeconds() {
-        return changed / 1000;
     }
 }

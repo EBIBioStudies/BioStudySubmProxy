@@ -23,65 +23,32 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface BioStudiesClient extends Closeable {
-    String getModifiedSubmission(String accno, String sessid) throws IOException, BioStudiesClientException;
-
-    String getSubmission(String accno, String sessid) throws BioStudiesClientException, IOException;
-
-    String saveModifiedSubmission(String modified, String accno, String sessid) throws IOException, BioStudiesClientException;
-
-    String submitNew(String sbm, String sessid) throws BioStudiesClientException, IOException;
-
-    String submitUpdated(String sbm, String sessid) throws BioStudiesClientException, IOException;
-
-    String deleteModifiedSubmission(String acc, String sessid) throws IOException, BioStudiesClientException;
-
-    String deleteSubmission(String acc, String sessid) throws BioStudiesClientException, IOException;
-
-    String getSubmissions(String sessid, int offset, int limit, Map<String, String> paramMap) throws BioStudiesClientException, IOException;
-
-    String getModifiedSubmissions(String sessid) throws IOException, BioStudiesClientException;
-
-    String getProjects(String sessid) throws BioStudiesClientException, IOException;
-
-    String getFilesDir(String path, int depth, boolean showArchive, String sessid) throws BioStudiesClientException, IOException;
-
-    String deleteFile(String file, String sessid) throws BioStudiesClientException, IOException;
-
-    String signOut(String obj, String sessid) throws BioStudiesClientException, IOException;
-
-    String signUp(String obj) throws BioStudiesClientException, IOException;
 
     String signIn(String obj) throws BioStudiesClientException, IOException;
 
-    String passwordResetRequest(String obj) throws BioStudiesClientException, IOException;
-
-    String passwordReset(String obj) throws BioStudiesClientException, IOException;
-
-    String resendActivationLink(String obj) throws BioStudiesClientException, IOException;
-
-    String activate(String key) throws BioStudiesClientException, IOException;
-
-    Observable<String> getSubmissionsRx(String sessid, int offset, int limit, Map<String, String> paramMap);
+    Observable<String> getSubmissionsRx(String sessid, Map<String, String> paramMap);
 
     Observable<String> getSubmissionRx(String accno, String sessid);
 
     Observable<String> deleteSubmissionRx(String acc, String sessid);
 
-    Observable<String> getModifiedSubmissionsRx(String sessid);
+    Observable<String> createPendingSubmissionRx(String pageTab, String sessid);
 
-    Observable<String> getModifiedSubmissionRx(String accno, String sessid);
+    Observable<String> getPendingSubmissionsRx(String sessid, Map<String, String> paramMap);
 
-    Observable<String> deleteModifiedSubmissionRx(String acc, String sessid);
+    Observable<String> getPendingSubmissionRx(String accno, String sessid);
 
-    Observable<String> saveModifiedSubmissionRx(String modified, String accno, String sessid);
+    Observable<String> deletePendingSubmissionRx(String acc, String sessid);
+
+    Observable<String> savePendingSubmissionRx(String pending, String accno, String sessid);
+
+    Observable<String> submitPendingSubmissionRx(String pending, String accno, String sessid);
+
+    Observable<String> directSubmitRx(boolean create, String pageTab, String id);
 
     Observable<String> getProjectsRx(String sessid);
 
-    Observable<String> submitNewRx(String sbm, String sessid);
-
-    Observable<String> submitUpdatedRx(String sbm, String sessid);
-
-    Observable<String> getFilesDirRx(String path, int depth, boolean showArchive, String sessid);
+    Observable<String> getFileDirRx(String path, int depth, boolean showArchive, String sessid);
 
     Observable<String> deleteFileRx(String file, String sessid);
 
@@ -96,5 +63,4 @@ public interface BioStudiesClient extends Closeable {
     Observable<String> activateRx(String key);
 
     Observable<String> signOutRx(String obj, String sessid);
-
 }

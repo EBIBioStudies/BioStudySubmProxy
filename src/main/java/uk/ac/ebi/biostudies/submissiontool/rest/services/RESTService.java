@@ -16,17 +16,9 @@
 
 package uk.ac.ebi.biostudies.submissiontool.rest.services;
 
-import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClientException;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
-import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
-
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -35,19 +27,21 @@ import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
+import org.apache.http.client.utils.URIBuilder;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.PendingSubmission;
+import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
+import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
+import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SubmissionListFilterParams;
 
 /**
  * @author Olga Melnichuk
  */
 @Path("/")
 public class RESTService {
-
-    private static final Logger logger = LoggerFactory.getLogger(RESTService.class);
 
     @Context
     private HttpServletRequest request;
@@ -60,34 +54,13 @@ public class RESTService {
     @Path("/submissions")
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
-    public void getSubmissions(@QueryParam("offset") int offset,
-                               @QueryParam("limit") int limit,
-                               @QueryParam("submitted") boolean submitted,
-                               @QueryParam("accNo") String accnoFilter,
-                               @QueryParam("rTimeFrom") Long rTimeFromFilter,
-                               @QueryParam("rTimeTo") Long rTimeToFilter,
-                               @QueryParam("keywords") String titleFilter,
-                               @Context UserSession session,
-                               @Suspended AsyncResponse async) {
-
-        Map<String, String> params = new HashMap<>();
-        if (accnoFilter != null) {
-            params.put("accNo", accnoFilter);
-        }
-        if (rTimeFromFilter != null) {
-            params.put("rTimeFrom", rTimeFromFilter.toString());
-        }
-        if (rTimeToFilter != null) {
-            params.put("rTimeTo", rTimeToFilter.toString());
-        }
-        if (titleFilter != null) {
-            params.put("keywords", titleFilter);
-        }
-
-        logger.debug("getSubmissions(session={}, offset={}, limit={})", session, offset, limit);
+    public void getSubmissions(@QueryParam("submitted") boolean submitted,
+            @BeanParam SubmissionListFilterParams filterParams,
+            @Context UserSession session,
+            @Suspended AsyncResponse async) {
         (submitted ?
-                service.getSubmittedSubmissionsRx(offset, limit, params, session) :
-                service.getModifiedSubmissionsRx(offset, limit, params, session))
+                service.getSubmittedSubmissionsRx(filterParams, session) :
+                service.getPendingSubmissionsRx(filterParams, session))
                 .subscribe(async::resume, async::resume);
     }
 
@@ -96,11 +69,10 @@ public class RESTService {
     @Path("/submissions/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
-    public void getSubmission(@Context UserSession session,
-                              @PathParam("accno") String accno,
-                              @Suspended AsyncResponse async) {
-        logger.debug("getSubmission(session={}, acc={})", session, accno);
-        service.getSubmissionRx(accno, session)
+    public void getSubmission(@Context UserSession session, @PathParam("accno") String accno,
+            @Suspended AsyncResponse async) {
+        service.getPendingSubmissionRx(accno, session)
+                .onErrorResumeNext(service.getOriginalSubmissionRx(accno, session))
                 .subscribe(async::resume, async::resume);
     }
 
@@ -109,12 +81,10 @@ public class RESTService {
     @Path("/submissions/origin/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
-    public void getSubmissionFromOrigin(@Context UserSession session,
-                                    @PathParam("accno") String accno,
-                                    @Suspended AsyncResponse async) {
-        logger.debug("getSubmission(session={}, acc={})", session, accno);
-        service.getSubmissionFromOriginRx(accno, session)
-                .subscribe(async::resume, async::resume);
+    public void getOriginalSubmission(@Context UserSession session,
+            @PathParam("accno") String accno,
+            @Suspended AsyncResponse async) {
+        service.getOriginalSubmissionRx(accno, session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -122,11 +92,9 @@ public class RESTService {
     @Path("/submissions/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteSubmission(@Context UserSession session,
-                                 @PathParam("accno") String accno,
-                                 @Suspended AsyncResponse async) {
-        logger.debug("deleteSubmission(session={}, acc={})", session, accno);
-        service.deleteSubmissionRx(accno, session)
-                .map(resp -> "{}")
+            @PathParam("accno") String accno,
+            @Suspended AsyncResponse async) {
+        service.deleteSubmissionRx(accno, session).map(resp -> "{}")
                 .subscribe(async::resume, async::resume);
     }
 
@@ -135,12 +103,22 @@ public class RESTService {
     @Path("/submissions/tmp/save")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void saveSubmission(@Context UserSession session,
-                               String str,
-                               @Suspended AsyncResponse async) throws IOException {
-        logger.debug("saveSubmission(session={}, str={})", session, str);
-        service.saveSubmissionRx(str, session)
+    @Deprecated
+    public void savePendingSubmissionOld(@Context UserSession session, String subm,
+            @Suspended AsyncResponse async) throws IOException {
+        PendingSubmission pending = PendingSubmission.parse(subm);
+        service.savePendingSubmissionRx(pending.getData().toString(), pending.getAccno(), session)
                 .subscribe(async::resume, async::resume);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @POST
+    @Path("/submissions/pending/{accno}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void savePendingSubmission(@Context UserSession session, @PathParam("accno") String accno,
+            String pageTab, @Suspended AsyncResponse async) {
+        service.savePendingSubmissionRx(pageTab, accno, session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -148,12 +126,8 @@ public class RESTService {
     @Path("/submissions/tmp/create")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void createSubmission(@Context UserSession session,
-                                 String str,
-                                 @Suspended AsyncResponse async) throws IOException {
-        logger.debug("createSubmission(session={}, str={})", session, str);
-        service.createSubmissionRx(str, session)
-                .subscribe(async::resume, async::resume);
+    public void createPendingSubmission(@Context UserSession session, String pageTab, @Suspended AsyncResponse async) {
+        service.createPendingSubmissionRx(pageTab, session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -161,12 +135,21 @@ public class RESTService {
     @Path("/submissions/tmp/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void submitSubmission(@Context UserSession session,
-                                 String str,
-                                 @Suspended AsyncResponse async) throws IOException {
-        logger.debug("submitSubmission(session={}, str={})", session, str);
-        service.submitModifiedRx(str, session)
+    public void submitPendingSubmissionOld(@Context UserSession session, String subm,
+            @Suspended AsyncResponse async) throws IOException {
+        PendingSubmission pending = PendingSubmission.parse(subm);
+        service.submitPendingSubmissionRx(pending.getData().toString(), pending.getAccno(), session)
                 .subscribe(async::resume, async::resume);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @POST
+    @Path("/submissions/pending/{accno}/submit")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public void submitPendingSubmission(@Context UserSession session, @PathParam("accno") String accno,
+            String pageTab, @Suspended AsyncResponse async) {
+        service.submitPendingSubmissionRx(pageTab, accno, session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -174,13 +157,11 @@ public class RESTService {
     @Path("/submissions/origin/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void directSubmit(@Context UserSession session,
-                             @QueryParam("create") Boolean create,
-                             String subm,
-                             @Suspended AsyncResponse async)
-            throws BioStudiesClientException, IOException {
-        logger.debug("directSubmit(session={}, create={}, subm={})", session, create, subm);
-        service.submitPlainRx(create != null && create, subm, session)
+    public void directSubmitOld(@Context UserSession session,
+            @QueryParam("create") Boolean create,
+            String pageTab,
+            @Suspended AsyncResponse async) {
+        service.directSubmitRx(create != null && create, pageTab, session)
                 .subscribe(async::resume, async::resume);
     }
 
@@ -190,10 +171,8 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
     public void getProjects(@Context UserSession session,
-                            @Suspended AsyncResponse async) {
-        logger.debug("getProjects(session={})", session);
-        service.getProjectsRx(session)
-                .subscribe(async::resume, async::resume);
+            @Suspended AsyncResponse async) {
+        service.getProjectsRx(session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -202,13 +181,11 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     @CacheControl("no-cache")
     public void getFiles(@QueryParam("path") String path,
-                         @QueryParam("depth") int depth,
-                         @QueryParam("showArchive") boolean showArchive,
-                         @Context UserSession session,
-                         @Suspended AsyncResponse async) {
-        logger.debug("getFileDir(session={}, path={}, depth={}, showArchive={})", session, path, depth, showArchive);
-        service.getFilesRx(path, depth, showArchive, session)
-                .subscribe(async::resume, async::resume);
+            @QueryParam("depth") int depth,
+            @QueryParam("showArchive") boolean showArchive,
+            @Context UserSession session,
+            @Suspended AsyncResponse async) {
+        service.getFileDirRx(path, depth, showArchive, session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -216,11 +193,9 @@ public class RESTService {
     @Path("/files")
     @Produces(MediaType.APPLICATION_JSON)
     public void deleteFile(@Context UserSession session,
-                           @QueryParam("path") String path,
-                           @Suspended AsyncResponse async) {
-        logger.debug("deleteFile(session={}, path={})", session, path);
-        service.deleteFileRx(path, session)
-                .subscribe(async::resume, async::resume);
+            @QueryParam("path") String path,
+            @Suspended AsyncResponse async) {
+        service.deleteFileRx(path, session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
@@ -228,8 +203,7 @@ public class RESTService {
     @Path("/auth/signout")
     @Produces(MediaType.APPLICATION_JSON)
     public void signout(@Context UserSession session,
-                        @Suspended AsyncResponse async) {
-        logger.info("signout(session={})", session);
+            @Suspended AsyncResponse async) {
         service.signOutRx(session)
                 .map(resp -> {
                     request.getSession(false).invalidate();
@@ -243,14 +217,8 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void signup(SignUpParams par,
-                       @Suspended AsyncResponse async) throws IOException {
-        logger.debug("signup(form={})", par);
-        try {
-            service.signUpRx(par.withPath(getApplUrl(par.getPath())))
-                    .subscribe(async::resume, async::resume);
-        } catch (URISyntaxException e) {
-            throw new IOException("Bad url syntax");
-        }
+            @Suspended AsyncResponse async) throws IOException {
+        service.signUpRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
     }
 
     @POST
@@ -258,14 +226,8 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void passwordResetRequest(EmailPathCaptchaParams par,
-                                     @Suspended AsyncResponse async) throws IOException {
-        logger.debug("passwordResetRequest(str={})", par);
-        try {
-            service.passwordResetRequestRx(par.withPath(getApplUrl(par.getPath())))
-                    .subscribe(async::resume, async::resume);
-        } catch (URISyntaxException e) {
-            throw new IOException("Bad url syntax");
-        }
+            @Suspended AsyncResponse async) throws IOException {
+        service.passwordResetRequestRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
     }
 
     @POST
@@ -273,10 +235,8 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void passwordReset(KeyPasswordCaptchaParams par,
-                              @Suspended AsyncResponse async) {
-        logger.debug("passwordReset(str={})", par);
-        service.passwordResetRx(par)
-                .subscribe(async::resume, async::resume);
+            @Suspended AsyncResponse async) {
+        service.passwordResetRx(par).subscribe(async::resume, async::resume);
     }
 
     @POST
@@ -284,14 +244,8 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void resendActivationLink(EmailPathCaptchaParams par,
-                                     @Suspended AsyncResponse async) throws IOException {
-        logger.debug("resendActivationLink(str={})", par);
-        try {
-            service.resendActivationLinkRx(par.withPath(getApplUrl(par.getPath())))
-                    .subscribe(async::resume, async::resume);
-        } catch (URISyntaxException e) {
-            throw new IOException("Bad url syntax");
-        }
+            @Suspended AsyncResponse async) throws IOException {
+        service.resendActivationLinkRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
     }
 
     @POST
@@ -299,31 +253,32 @@ public class RESTService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void activate(@PathParam("key") String key,
-                         @Suspended AsyncResponse async) {
-        logger.debug("activate(key={})", key);
-        service.activateRx(key)
-                .subscribe(async::resume, async::resume);
+            @Suspended AsyncResponse async) {
+        service.activateRx(key).subscribe(async::resume, async::resume);
     }
 
-    private String getApplUrl(String path) throws URISyntaxException {
-        URI actUrl = buildApplUrl(new URI(path));
-        return actUrl.toString() + "/{KEY}";
+    private String getApplUrl(String path) throws IOException {
+        return buildApplUrl(path) + "/{KEY}";
     }
 
-    private URI buildApplUrl(URI path) throws URISyntaxException {
-        logger.debug("buildAppUrl(path={})", path);
-        URI uri = new URI(request.getRequestURL().toString());
-        URIBuilder uriBuilder = new URIBuilder()
-                .setScheme(uri.getScheme())
-                .setHost(uri.getHost())
-                .setPath(path.getPath())
-                .setFragment(path.getFragment());
+    private String buildApplUrl(String stringPath) throws IOException {
+        try {
+            URI path = new URI(stringPath);
+            URI uri = new URI(request.getRequestURL().toString());
+            URIBuilder uriBuilder = new URIBuilder()
+                    .setScheme(uri.getScheme())
+                    .setHost(uri.getHost())
+                    .setPath(path.getPath())
+                    .setFragment(path.getFragment());
 
-        int port = uri.getPort();
-        if (port > 0 && port != 80 && port != 443) {
-            uriBuilder.setPort(port);
+            int port = uri.getPort();
+            if (port > 0 && port != 80 && port != 443) {
+                uriBuilder.setPort(port);
+            }
+            return uriBuilder.build().toString();
+        } catch (URISyntaxException e) {
+            throw new IOException("Bad url syntax");
         }
-        return uriBuilder.build();
     }
 
 
@@ -332,10 +287,8 @@ public class RESTService {
     @Path("/pubMedSearch/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     public void pubMedSearch(@Context UserSession session,
-                             @PathParam("id") String id,
-                             @Suspended AsyncResponse async) {
-        logger.debug("pubMedSearch(session={}, ID={})", session, id);
-        service.pubMedSearchRx(id)
-                .subscribe(async::resume, async::resume);
+            @PathParam("id") String id,
+            @Suspended AsyncResponse async) {
+        service.pubMedSearchRx(id).subscribe(async::resume, async::resume);
     }
 }

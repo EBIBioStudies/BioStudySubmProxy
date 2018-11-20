@@ -40,20 +40,6 @@ public class EuropePMCClient {
         this.rsClient = ClientBuilder.newClient();
     }
 
-    public String pubMedSearch(String id) throws EuropePMCClientException, IOException {
-        Invocation.Builder builder = createTarget(id).request(MediaType.APPLICATION_JSON_TYPE);
-        Response resp = null;
-        try {
-            resp = builder.get();
-            return readResponse(resp);
-        } catch (ProcessingException e) {
-            throw new IOException(e);
-        } finally {
-            if (resp != null)
-                resp.close();
-        }
-    }
-
     public Observable<String> pubMedSearchRx(String id) {
         return RxObservable.from(createTarget(id))
                 .request()

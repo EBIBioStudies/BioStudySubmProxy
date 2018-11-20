@@ -16,27 +16,26 @@
 
 package uk.ac.ebi.biostudies.submissiontool.bsclient;
 
+import static java.util.Collections.singletonList;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.glassfish.jersey.client.rx.rxjava.RxObservable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import rx.Observable;
-import rx.exceptions.Exceptions;
-
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.client.*;
-import javax.ws.rs.core.*;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
-
-import static java.util.Collections.singletonList;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.*;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.Response;
+import org.glassfish.jersey.client.rx.rxjava.RxObservable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import rx.Observable;
 
 /**
  * @author Olga Melnichuk
@@ -45,135 +44,15 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
     private static final String SESSION_TOKEN = "X-Session-Token";
 
-    private static class APITargets {
-
-        private static final String TMP_KEY_PARAM = "key";
-
-        private static final String TMP_VALUE_PARAM = "value";
-
-        private static final String TMP_TOPIC_PARAM = "topic";
-
-        private static final String TMP_TOPIC_SUBMISSION = "submission";
-
-        private final WebTarget baseTarget;
-
-        APITargets(WebTarget baseTarget) {
-            this.baseTarget = baseTarget;
-        }
-
-        WebTarget createSubmissionReq() {
-            return baseTarget.path("/submit/create");
-        }
-
-        WebTarget updateSubmissionReq() {
-            return baseTarget.path("/submit/update");
-        }
-
-        WebTarget getSubmissionReq(String acc) {
-            return baseTarget.path("/submission/" + acc);
-        }
-
-        WebTarget getSubmissionsReq(int offset, int limit, Map<String, String> moreParams) {
-            WebTarget t = baseTarget.path("/sbmlist")
-                    .queryParam("offset", offset)
-                    .queryParam("limit", limit);
-            for (Map.Entry<String, String> entry : moreParams.entrySet()) {
-                t = t.queryParam(entry.getKey(), entry.getValue());
-            }
-            return t;
-        }
-
-        WebTarget getProjectsReq() {
-            return baseTarget.path("/atthost")
-                    .queryParam("type", "Project")
-                    .queryParam("format", "json");
-        }
-
-        WebTarget deleteSubmissionReq(String acc) {
-            return baseTarget.path("/submit/delete")
-                    .queryParam("id", acc);
-        }
-
-        WebTarget getFilesDirReq(String path, int depth, boolean showArchive) {
-            return baseTarget.path("/dir")
-                    .queryParam("path", path)
-                    .queryParam("depth", depth)
-                    .queryParam("showArchive", showArchive);
-        }
-
-        WebTarget deleteFileReq(String file) {
-            return baseTarget.path("/dir")
-                    .queryParam("command", "rm")
-                    .queryParam("path", file);
-        }
-
-        WebTarget signInReq() {
-            return baseTarget.path("/auth/signin");
-        }
-
-        WebTarget signUpReq() {
-            return baseTarget.path("/auth/signup");
-        }
-
-        WebTarget signOutReq() {
-            return baseTarget.path("/auth/signout");
-        }
-
-        WebTarget passwordResetReqReq() {
-            return baseTarget.path("/auth/passrstreq");
-        }
-
-        WebTarget passwordResetReq() {
-            return baseTarget.path("/auth/passreset");
-        }
-
-        WebTarget resendActivationLinkReq() {
-            return baseTarget.path("/auth/retryact");
-        }
-
-        WebTarget deleteModifiedSubmissionReq(String acc) {
-            return baseTarget.path("/userdata/del")
-                    .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
-                    .queryParam(TMP_KEY_PARAM, acc);
-        }
-
-        WebTarget saveModifiedSubmissionReq() {
-            return baseTarget.path("/userdata/set")
-                    .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION);
-        }
-
-        Form saveModifiedSubmissionForm(String acc, String value) {
-            return new Form()
-                    .param(TMP_KEY_PARAM, acc)
-                    .param(TMP_VALUE_PARAM, value);
-        }
-
-        WebTarget getModifiedSubmissionReq(String acc) {
-            return baseTarget.path("/userdata/get")
-                    .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION)
-                    .queryParam(TMP_KEY_PARAM, acc);
-        }
-
-        WebTarget getModifiedSubmissionsReq() {
-            return baseTarget
-                    .path("/userdata/listjson")
-                    .queryParam(TMP_TOPIC_PARAM, TMP_TOPIC_SUBMISSION);
-        }
-
-        WebTarget activationReq(String key) {
-            return baseTarget.path("/auth/activate/" + key);
-        }
-    }
-
     private static final Logger logger = LoggerFactory.getLogger(BioStudiesRestClient.class);
-
-    private final APITargets targets;
 
     private final Client rsClient;
 
+    private final WebTarget baseTarget;
+
     public BioStudiesRestClient(URI baseUrl) {
         rsClient = ClientBuilder.newClient();
-        targets = new APITargets(rsClient.target(baseUrl));
+        baseTarget = rsClient.target(baseUrl);
     }
 
     public void close() {
@@ -181,242 +60,127 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public String submitNew(String subm, String sessionId) throws  IOException {
-        logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
-        return req(sessionId).postJSON(targets.createSubmissionReq(), subm);
-    }
-
-    @Override
-    public Observable<String> submitNewRx(String subm, String sessionId) {
-        logger.debug("submitNew(obj={}, sessionId={})", subm, sessionId);
-        return req(sessionId).postJSONRx(targets.createSubmissionReq(), subm);
-    }
-
-
-    @Override
-    public String submitUpdated(String obj, String sessionId) throws  IOException {
-        logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
-        return req(sessionId).postJSON(targets.updateSubmissionReq(), obj);
-    }
-
-    @Override
-    public Observable<String> submitUpdatedRx(String obj, String sessionId) {
-        logger.debug("submitUpdated(obj={}, sessionId={})", obj, sessionId);
-        return req(sessionId).postJSONRx(targets.updateSubmissionReq(), obj);
-    }
-
-    @Override
-    public String getSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).get(targets.getSubmissionReq(acc));
-    }
-
-    @Override
     public Observable<String> getSubmissionRx(String acc, String sessionId) {
-        logger.debug("getSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).getRx(targets.getSubmissionReq(acc));
+        return req(sessionId).getRx(baseTarget.path("/submission/" + acc));
     }
 
     @Override
-    public String getSubmissions(String sessionId, int offset, int limit, Map<String, String> paramMap) throws  IOException {
-        logger.debug("getSubmissions(sessionId={})", sessionId);
-        return req(sessionId).get(targets.getSubmissionsReq(offset, limit, paramMap));
-    }
-
-    @Override
-    public Observable<String> getSubmissionsRx(String sessionId, int offset, int limit, Map<String, String> paramMap) {
-        return req(sessionId).getRx(targets.getSubmissionsReq(offset, limit, paramMap));
-    }
-
-    @Override
-    public String getProjects(String sessionId) throws  IOException {
-        logger.debug("getProjects(sessionId={})", sessionId);
-        return req(sessionId).get(targets.getProjectsReq());
+    public Observable<String> getSubmissionsRx(String sessionId, Map<String, String> params) {
+        WebTarget t = baseTarget.path("/sbmlist");
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            t = t.queryParam(entry.getKey(), entry.getValue());
+        }
+        return req(sessionId).getRx(t);
     }
 
     @Override
     public Observable<String> getProjectsRx(String sessionId) {
-        logger.debug("getProjects(sessionId={})", sessionId);
-        return req(sessionId).getRx(targets.getProjectsReq());
-    }
-
-    @Override
-    public String deleteSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
-        // WTF: why it is GET?
-        return req(sessionId).get(targets.deleteSubmissionReq(acc));
+        return req(sessionId).getRx(
+                baseTarget.path("/atthost")
+                        .queryParam("type", "Project")
+                        .queryParam("format", "json"));
     }
 
     @Override
     public Observable<String> deleteSubmissionRx(String acc, String sessionId) {
-        logger.debug("deleteSubmission(acc={}, sessionId={})", acc, sessionId);
         // WTF: why it is GET?
-        return req(sessionId).getRx(targets.deleteSubmissionReq(acc));
+        return req(sessionId).getRx(
+                baseTarget.path("/submit/delete")
+                        .queryParam("id", acc));
     }
 
     @Override
-    public String getFilesDir(String path, int depth, boolean showArchive, String sessionId) throws  IOException {
-        logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
-        return req(sessionId).get(targets.getFilesDirReq(path, depth, showArchive));
-    }
-
-    @Override
-    public Observable<String> getFilesDirRx(String path, int depth, boolean showArchive, String sessionId) {
-        logger.debug("getFilesDir(sessionId={}, path={}, depth={}, showArchive={})", sessionId, path, depth, showArchive);
-        return req(sessionId).getRx(targets.getFilesDirReq(path, depth, showArchive));
-    }
-
-    @Override
-    public String deleteFile(String file, String sessionId) throws  IOException {
-        logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
-        return req(sessionId).get(targets.deleteFileReq(file));
+    public Observable<String> getFileDirRx(String path, int depth, boolean showArchive, String sessionId) {
+        return req(sessionId).getRx(
+                baseTarget.path("/dir")
+                        .queryParam("path", path)
+                        .queryParam("depth", depth)
+                        .queryParam("showArchive", showArchive));
     }
 
     @Override
     public Observable<String> deleteFileRx(String file, String sessionId) {
-        logger.debug("deleteFile(file={}, sessionId={})", file, sessionId);
         // WTF: why it is GET?
-        return req(sessionId).getRx(targets.deleteFileReq(file));
-    }
-
-    @Override
-    public String signOut(String obj, String sessionId) throws  IOException {
-        logger.debug("signOut(sessionId={})", sessionId);
-        return req(sessionId).postJSON(targets.signOutReq(), obj);
+        return req(sessionId).getRx(
+                baseTarget.path("/dir")
+                        .queryParam("command", "rm")
+                        .queryParam("path", file)
+        );
     }
 
     @Override
     public Observable<String> signOutRx(String obj, String sessionId) {
-        logger.debug("signOut(sessionId={})", sessionId);
-        return req(sessionId).postJSONRx(targets.signOutReq(), obj);
-    }
-
-    @Override
-    public String signUp(String obj) throws  IOException {
-        logger.debug("signUp(obj={})", obj);
-        return req().postJSON(targets.signUpReq(), obj);
+        return req(sessionId).postJSONRx(baseTarget.path("/auth/signout"), obj);
     }
 
     @Override
     public Observable<String> signUpRx(String obj) {
-        logger.debug("signUp(obj={})", obj);
-        return req().postJSONRx(targets.signUpReq(), obj);
-    }
-
-    @Override
-    public String passwordResetRequest(String obj) throws  IOException {
-        logger.debug("passwordResetRequest(obj={})", obj);
-        return req().postJSON(targets.passwordResetReqReq(), obj);
+        return req().postJSONRx(baseTarget.path("/auth/signup"), obj);
     }
 
     @Override
     public Observable<String> passwordResetRequestRx(String obj) {
-        logger.debug("passwordResetRequest(obj={})", obj);
-        return req().postJSONRx(targets.passwordResetReqReq(), obj);
-    }
-
-    @Override
-    public String passwordReset(String obj) throws  IOException {
-        logger.debug("passwordReset(obj={})", obj);
-        return req().postJSON(targets.passwordResetReq(), obj);
+        return req().postJSONRx(baseTarget.path("/auth/passrstreq"), obj);
     }
 
     @Override
     public Observable<String> passwordResetRx(String obj) {
-        logger.debug("passwordReset(obj={})", obj);
-        return req().postJSONRx(targets.passwordResetReq(), obj);
-    }
-
-    @Override
-    public String resendActivationLink(String obj) throws  IOException {
-        logger.debug("resendActivationLink(obj={})", obj);
-        return req().postJSON(targets.resendActivationLinkReq(), obj);
+        return req().postJSONRx(baseTarget.path("/auth/passreset"), obj);
     }
 
     @Override
     public Observable<String> resendActivationLinkRx(String obj) {
-        logger.debug("resendActivationLink(obj={})", obj);
-        return req().postJSONRx(targets.resendActivationLinkReq(), obj);
-    }
-
-    @Override
-    public String activate(String key) throws  IOException {
-        logger.debug("resendActivationLink(obj={})", key);
-        return req().postJSON(targets.activationReq(key), "{}");
+        return req().postJSONRx(baseTarget.path("/auth/retryact"), obj);
     }
 
     @Override
     public Observable<String> activateRx(String key) {
-        logger.debug("resendActivationLink(obj={})", key);
-        return req().postJSONRx(targets.activationReq(key), "{}");
-    }
-
-    public String signIn(String username, String password) throws  IOException {
-        logger.debug("signIn(username={}, password=...)", username);
-        ObjectNode obj = JsonNodeFactory.instance.objectNode();
-        obj.put("login", username);
-        obj.put("password", password);
-        return signIn(obj.toString());
+        return req().postJSONRx(baseTarget.path("/auth/activate/" + key), "{}");
     }
 
     @Override
-    public String signIn(String obj) throws  IOException {
-        logger.debug("signIn(obj={})", obj);
-        return req().postJSON(targets.signInReq(), obj);
+    public String signIn(String obj) throws IOException {
+        return req().postJSON(baseTarget.path("/auth/signin"), obj);
     }
 
     @Override
-    public String getModifiedSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).get(targets.getModifiedSubmissionReq(acc));
+    public Observable<String> createPendingSubmissionRx(String pageTab, String sessionId) {
+        return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending"), pageTab);
     }
 
     @Override
-    public Observable<String> getModifiedSubmissionRx(String acc, String sessionId) {
-        logger.debug("getModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        return req(sessionId).getRx(targets.getModifiedSubmissionReq(acc));
+    public Observable<String> getPendingSubmissionRx(String acc, String sessionId) {
+        return req(sessionId).getRx(baseTarget.path("/submissions/pending/" + acc));
     }
 
     @Override
-    public String saveModifiedSubmission(String obj, String acc, String sessionId) throws  IOException {
-        logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
-        return req(sessionId).postForm(
-                targets.saveModifiedSubmissionReq(),
-                targets.saveModifiedSubmissionForm(acc, obj));
+    public Observable<String> savePendingSubmissionRx(String obj, String acc, String sessionId) {
+        return req(sessionId).putJSONRx(baseTarget.path("/submissions/pending/" + acc), obj);
     }
 
     @Override
-    public Observable<String> saveModifiedSubmissionRx(String obj, String acc, String sessionId) {
-        logger.debug("saveModifiedSubmission(obj={}, acc={}, sessionId={})", obj, acc, sessionId);
-        return req(sessionId).postFormRx(
-                targets.saveModifiedSubmissionReq(),
-                targets.saveModifiedSubmissionForm(acc, obj));
+    public Observable<String> submitPendingSubmissionRx(String obj, String acc, String sessionId) {
+        return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending/" + acc + "/submit"), obj);
     }
 
     @Override
-    public String deleteModifiedSubmission(String acc, String sessionId) throws  IOException {
-        logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
-        return req(sessionId).postJSON(targets.deleteModifiedSubmissionReq(acc), "{}");
+    public Observable<String> directSubmitRx(boolean create, String obj, String sessionId) {
+        String operation = create ? "CREATE" : "CREATE_OR_UPDATE";
+        return req(sessionId).postJSONRx(baseTarget.path("/submissions/submit/" + operation), obj);
     }
 
     @Override
-    public Observable<String> deleteModifiedSubmissionRx(String acc, String sessionId) {
-        logger.debug("deleteModifiedSubmission(acc={}, sessionId={})", acc, sessionId);
-        // Note: adding empty object as data here to make POSt request body not empty, otherwise Content-Length: 0 header is required
-        return req(sessionId).postJSONRx(targets.deleteModifiedSubmissionReq(acc), "{}");
+    public Observable<String> deletePendingSubmissionRx(String acc, String sessionId) {
+        return req(sessionId).deleteRx(baseTarget.path("/submissions/pending/" + acc));
     }
 
     @Override
-    public String getModifiedSubmissions(String sessionId) throws  IOException {
-        logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
-        return req(sessionId).get(targets.getModifiedSubmissionsReq());
-    }
-
-    @Override
-    public Observable<String> getModifiedSubmissionsRx(String sessionId) {
-        logger.debug("getModifiedSubmissions(sessionId={})", sessionId);
-        return req(sessionId).getRx(targets.getModifiedSubmissionsReq());
+    public Observable<String> getPendingSubmissionsRx(String sessionId, Map<String, String> params) {
+        WebTarget t = baseTarget.path("/submissions/pending");
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            t = t.queryParam(entry.getKey(), entry.getValue());
+        }
+        return req(sessionId).getRx(t);
     }
 
     private static BioStudiesRequest req(String sessionId) {
@@ -449,10 +213,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return post(target, Entity.json(data));
         }
 
-        private String postForm(WebTarget target, Form data) throws IOException {
-            return post(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
-        }
-
         private String post(WebTarget target, Entity entity) throws IOException {
             Invocation.Builder builder = target
                     .request()
@@ -461,28 +221,11 @@ public class BioStudiesRestClient implements BioStudiesClient {
             Response resp = null;
             try {
                 resp = builder.post(entity);
-                return readResponse(resp);
+                return readResponsePlain(resp).getBody();
             } catch (ProcessingException e) {
                 if (resp != null)
                     resp.close();
                 throw new IOException(e);
-            }
-        }
-
-        private String get(WebTarget target) throws IOException {
-            Invocation.Builder builder = target
-                    .request()
-                    .headers(headers());
-
-            Response resp = null;
-            try {
-                resp = builder.get();
-                return readResponse(resp);
-            } catch (ProcessingException e) {
-                throw new IOException(e);
-            } finally {
-                if (resp != null)
-                    resp.close();
             }
         }
 
@@ -490,8 +233,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return postRx(target, Entity.json(data));
         }
 
-        private Observable<String> postFormRx(WebTarget target, Form data) {
-            return postRx(target, Entity.entity(data, MediaType.APPLICATION_FORM_URLENCODED_TYPE));
+        private Observable<String> putJSONRx(WebTarget target, String data) {
+            return putRx(target, Entity.json(data));
         }
 
         private Observable<String> postRx(WebTarget target, Entity entity) {
@@ -500,14 +243,16 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .headers(headers())
                     .rx()
                     .post(entity)
-                    .map(resp -> {
-                                try {
-                                    return readResponse(resp);
-                                } catch (IOException e) {
-                                    throw Exceptions.propagate(e);
-                                }
-                            }
-                    );
+                    .switchMap(BioStudiesRequest::readResponse);
+        }
+
+        private Observable<String> putRx(WebTarget target, Entity entity) {
+            return RxObservable.from(target)
+                    .request()
+                    .headers(headers())
+                    .rx()
+                    .put(entity)
+                    .switchMap(BioStudiesRequest::readResponse);
         }
 
         private Observable<String> getRx(WebTarget target) {
@@ -516,17 +261,19 @@ public class BioStudiesRestClient implements BioStudiesClient {
                     .headers(headers())
                     .rx()
                     .get()
-                    .map(resp -> {
-                                try {
-                                    return readResponse(resp);
-                                } catch (IOException e) {
-                                    throw Exceptions.propagate(e);
-                                }
-                            }
-                    );
+                    .switchMap(BioStudiesRequest::readResponse);
         }
 
-        private static String readResponse(Response resp) throws IOException {
+        private Observable<String> deleteRx(WebTarget target) {
+            return RxObservable.from(target)
+                    .request()
+                    .headers(headers())
+                    .rx()
+                    .delete()
+                    .switchMap(BioStudiesRequest::readResponse);
+        }
+
+        private static BioStudiesResponse readResponsePlain(Response resp) {
             int statusCode = resp.getStatus();
 
             String body = resp.readEntity(String.class);
@@ -536,17 +283,18 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 logger.warn("Server responded with NULL content-type: " + resp.getLocation());
             }
 
-            if (statusCode != 200) {
-                throw new BioStudiesRxClientException(statusCode, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
+            // should not be needed any more (but fix direct submit in UI first)
+            if (statusCode == 200 && !getStatus(body).equalsIgnoreCase("ok")) {
+                statusCode = 422;
             }
-
-            if (!getStatus(body).equalsIgnoreCase("ok")) {
-                throw new BioStudiesRxClientException(422, mediaType == null ? MediaType.TEXT_PLAIN : mediaType.getType(), body);
-            }
-            return body;
+            return new BioStudiesResponse(body, statusCode, mediaType);
         }
 
-        private static String getStatus(String body) throws IOException {
+        private static Observable<String> readResponse(Response resp) {
+            return readResponsePlain(resp).asObservable();
+        }
+
+        private static String getStatus(String body) {
             JsonFactory f = new MappingJsonFactory();
             try (JsonParser jp = f.createParser(body)) {
                 while (hasNextJsonToken(jp.nextToken())) {
@@ -559,6 +307,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 }
                 // no field status
                 return "ok";
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
             }
         }
 
