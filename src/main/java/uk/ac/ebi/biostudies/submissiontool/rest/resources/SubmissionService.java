@@ -98,6 +98,7 @@ public class SubmissionService {
 
     public Observable<Boolean> deleteSubmissionRx(String accno, UserSession session) {
         return getPendingSubmissionRx(accno, session)
+                .onErrorResumeNext(Observable.just(""))
                 .flatMap(resp -> resp.isEmpty() ?
                         deleteOriginalRx(accno, session) : deleteModifiedRx(accno, session)
                 );

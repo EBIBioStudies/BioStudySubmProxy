@@ -100,19 +100,6 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions/tmp/save")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    @Deprecated
-    public void savePendingSubmissionOld(@Context UserSession session, String subm,
-            @Suspended AsyncResponse async) throws IOException {
-        PendingSubmission pending = PendingSubmission.parse(subm);
-        service.savePendingSubmissionRx(pending.getData().toString(), pending.getAccno(), session)
-                .subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @POST
     @Path("/submissions/pending/{accno}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -128,18 +115,6 @@ public class RESTService {
     @Produces(MediaType.APPLICATION_JSON)
     public void createPendingSubmission(@Context UserSession session, String pageTab, @Suspended AsyncResponse async) {
         service.createPendingSubmissionRx(pageTab, session).subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @POST
-    @Path("/submissions/tmp/submit")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void submitPendingSubmissionOld(@Context UserSession session, String subm,
-            @Suspended AsyncResponse async) throws IOException {
-        PendingSubmission pending = PendingSubmission.parse(subm);
-        service.submitPendingSubmissionRx(pending.getData().toString(), pending.getAccno(), session)
-                .subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
