@@ -134,14 +134,6 @@ public class SubmissionService {
         return bsclient.getProjectsRx(session.id());
     }
 
-    public Observable<String> getFileDirRx(String path, int depth, boolean showArchive, UserSession session) {
-        return bsclient.getFileDirRx(path, depth, showArchive, session.id());
-    }
-
-    public Observable<String> deleteFileRx(String path, UserSession session) {
-        return bsclient.deleteFileRx(path, session.id());
-    }
-
     public Observable<String> signOutRx(UserSession session) {
         ObjectNode obj = JsonNodeFactory.instance.objectNode();
         obj.put("sessid", session.id());

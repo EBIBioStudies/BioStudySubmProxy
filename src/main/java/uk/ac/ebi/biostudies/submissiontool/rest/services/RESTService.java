@@ -151,29 +151,6 @@ public class RESTService {
     }
 
     @RolesAllowed("AUTHENTICATED")
-    @GET
-    @Path("/files")
-    @Produces(MediaType.APPLICATION_JSON)
-    @CacheControl("no-cache")
-    public void getFiles(@QueryParam("path") String path,
-            @QueryParam("depth") int depth,
-            @QueryParam("showArchive") boolean showArchive,
-            @Context UserSession session,
-            @Suspended AsyncResponse async) {
-        service.getFileDirRx(path, depth, showArchive, session).subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @DELETE
-    @Path("/files")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deleteFile(@Context UserSession session,
-            @QueryParam("path") String path,
-            @Suspended AsyncResponse async) {
-        service.deleteFileRx(path, session).subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
     @POST
     @Path("/auth/signout")
     @Produces(MediaType.APPLICATION_JSON)

@@ -90,25 +90,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> getFileDirRx(String path, int depth, boolean showArchive, String sessionId) {
-        return req(sessionId).getRx(
-                baseTarget.path("/dir")
-                        .queryParam("path", path)
-                        .queryParam("depth", depth)
-                        .queryParam("showArchive", showArchive));
-    }
-
-    @Override
-    public Observable<String> deleteFileRx(String file, String sessionId) {
-        // WTF: why it is GET?
-        return req(sessionId).getRx(
-                baseTarget.path("/dir")
-                        .queryParam("command", "rm")
-                        .queryParam("path", file)
-        );
-    }
-
-    @Override
     public Observable<String> signOutRx(String obj, String sessionId) {
         return req(sessionId).postJSONRx(baseTarget.path("/auth/signout"), obj);
     }
@@ -284,9 +265,9 @@ public class BioStudiesRestClient implements BioStudiesClient {
             }
 
             // should not be needed any more (but fix direct submit in UI first)
-            if (statusCode == 200 && !getStatus(body).equalsIgnoreCase("ok")) {
-                statusCode = 422;
-            }
+            //if (statusCode == 200 && !getStatus(body).equalsIgnoreCase("ok")) {
+            //    statusCode = 422;
+            //}
             return new BioStudiesResponse(body, statusCode, mediaType);
         }
 
