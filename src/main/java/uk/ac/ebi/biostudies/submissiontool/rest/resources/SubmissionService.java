@@ -85,7 +85,10 @@ public class SubmissionService {
     }
 
     public Observable<String> savePendingSubmissionRx(String pageTab, String accno, UserSession session) {
-        return bsclient.savePendingSubmissionRx(pageTab, accno, session.id());
+        return bsclient.getPendingSubmissionRx(accno, session.id())
+                .onErrorResumeNext(
+                        bsclient.createPendingSubmissionRx(pageTab, session.id())
+                ).switchMap(s -> bsclient.savePendingSubmissionRx(pageTab, accno, session.id()));
     }
 
     public Observable<String> submitPendingSubmissionRx(String pageTab, String accno, UserSession session) {

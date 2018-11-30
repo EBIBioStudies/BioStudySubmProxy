@@ -65,29 +65,6 @@ public class RESTService {
     }
 
     @RolesAllowed("AUTHENTICATED")
-    @GET
-    @Path("/submissions/{accno}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @CacheControl("no-cache")
-    public void getSubmission(@Context UserSession session, @PathParam("accno") String accno,
-            @Suspended AsyncResponse async) {
-        service.getPendingSubmissionRx(accno, session)
-                .onErrorResumeNext(service.getOriginalSubmissionRx(accno, session))
-                .subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @GET
-    @Path("/submissions/origin/{accno}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @CacheControl("no-cache")
-    public void getOriginalSubmission(@Context UserSession session,
-            @PathParam("accno") String accno,
-            @Suspended AsyncResponse async) {
-        service.getOriginalSubmissionRx(accno, session).subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
     @DELETE
     @Path("/submissions/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -95,6 +72,18 @@ public class RESTService {
             @PathParam("accno") String accno,
             @Suspended AsyncResponse async) {
         service.deleteSubmissionRx(accno, session).map(resp -> "{}")
+                .subscribe(async::resume, async::resume);
+    }
+
+    @RolesAllowed("AUTHENTICATED")
+    @GET
+    @Path("/submissions/pending/{accno}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @CacheControl("no-cache")
+    public void getSubmission(@Context UserSession session, @PathParam("accno") String accno,
+            @Suspended AsyncResponse async) {
+        service.getPendingSubmissionRx(accno, session)
+                .onErrorResumeNext(service.getOriginalSubmissionRx(accno, session))
                 .subscribe(async::resume, async::resume);
     }
 
@@ -110,7 +99,7 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions/tmp/create")
+    @Path("/submissions/pending")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void createPendingSubmission(@Context UserSession session, String pageTab, @Suspended AsyncResponse async) {
