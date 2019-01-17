@@ -145,32 +145,17 @@ public class SubmissionService {
     }
 
     public Observable<String> signUpRx(SignUpParams params) throws JsonProcessingException {
-        // json.put("activationURL", params.getPath());
         return bsclient.signUpRx(objectMapper().writerWithView(SignUpParams.class).writeValueAsString(params));
     }
 
-    public Observable<String> passwordResetRequestRx(EmailPathCaptchaParams params) {
-        ObjectNode json = JsonNodeFactory.instance.objectNode();
-        json.put("email", params.getEmail());
-        json.put("recaptcha2-response", params.getCaptcha());
-        json.put("resetURL", params.getPath());
-        return bsclient.passwordResetRequestRx(json.toString());
+    public Observable<String> passwordResetRequestRx(EmailPathCaptchaParams params) throws JsonProcessingException {
+        return bsclient.passwordResetRequestRx(objectMapper()
+                .writerWithView(EmailPathCaptchaParams.PasswordResetView.class).writeValueAsString(params));
     }
 
-    public Observable<String> passwordResetRx(KeyPasswordCaptchaParams params) {
-        ObjectNode json = JsonNodeFactory.instance.objectNode();
-        json.put("key", params.getKey());
-        json.put("password", params.getPassword());
-        json.put("recaptcha2-response", params.getCaptcha());
-        return bsclient.passwordResetRx(json.toString());
-    }
-
-    public Observable<String> resendActivationLinkRx(EmailPathCaptchaParams params) {
-        ObjectNode json = JsonNodeFactory.instance.objectNode();
-        json.put("email", params.getEmail());
-        json.put("recaptcha2-response", params.getCaptcha());
-        json.put("activationURL", params.getPath());
-        return bsclient.resendActivationLinkRx(json.toString());
+    public Observable<String> resendActivationLinkRx(EmailPathCaptchaParams params) throws JsonProcessingException {
+        return bsclient.resendActivationLinkRx(objectMapper()
+                .writerWithView(EmailPathCaptchaParams.ActivationLinkView.class).writeValueAsString(params));
     }
 
     public Observable<String> pubMedSearchRx(String id) {

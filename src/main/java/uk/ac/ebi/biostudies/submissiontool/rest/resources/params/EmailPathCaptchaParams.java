@@ -16,20 +16,34 @@
 
 package uk.ac.ebi.biostudies.submissiontool.rest.resources.params;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+
 /**
  * @author olkin
  */
 public class EmailPathCaptchaParams {
+
+    @JsonProperty()
     private String email;
+
+    @JsonProperty("recaptcha2-response")
     private String captcha;
+
+    @JsonProperty("path")
+    @JsonView(EmailPathCaptchaParams.HiddenView.class)
     private String path;
 
-    public String getEmail() {
-        return email;
+    @JsonProperty("resetURL")
+    @JsonView(PasswordResetView.class)
+    public String getResetUrl() {
+        return path;
     }
 
-    public String getCaptcha() {
-        return captcha;
+    @JsonProperty("activationURL")
+    @JsonView(ActivationLinkView.class)
+    public String getActivationUrl() {
+        return path;
     }
 
     public String getPath() {
@@ -51,5 +65,14 @@ public class EmailPathCaptchaParams {
                 ", captcha='" + captcha + '\'' +
                 ", path='" + path + '\'' +
                 '}';
+    }
+
+    public static class HiddenView {
+    }
+
+    public static class PasswordResetView {
+    }
+
+    public static class ActivationLinkView {
     }
 }
