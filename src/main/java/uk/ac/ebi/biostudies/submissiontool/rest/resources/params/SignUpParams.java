@@ -16,37 +16,37 @@
 
 package uk.ac.ebi.biostudies.submissiontool.rest.resources.params;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @author olkin
  */
 public class SignUpParams {
+
+    @JsonProperty()
     private String username;
+
+    @JsonProperty()
     private String password;
+
+    @JsonProperty()
     private String email;
-    private String orcid;
+
+    @JsonProperty()
+    private List<String> aux;
+
+    @JsonProperty("recaptcha2-response")
     private String captcha;
+
+    @JsonProperty("path")
+    @JsonView(SignUpParams.HiddenView.class)
     private String path;
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getOrcid() {
-        return orcid;
-    }
-
-    public String getCaptcha() {
-        return captcha;
-    }
-
+    @JsonProperty("activationURL")
+    @JsonView(SignUpParams.class)
     public String getPath() {
         return path;
     }
@@ -56,9 +56,9 @@ public class SignUpParams {
         p.username = username;
         p.password = password;
         p.email = email;
-        p.orcid = orcid;
         p.captcha = captcha;
         p.path = newPath;
+        p.aux = Collections.unmodifiableList(aux);
         return p;
     }
 
@@ -68,13 +68,11 @@ public class SignUpParams {
                 "username='" + username + '\'' +
                 ", password='---'\'" +
                 ", email='" + email + '\'' +
-                ", orcid='" + orcid + '\'' +
+                ", aux='" + aux + '\'' +
                 ", captcha='" + captcha + '\'' +
                 ", path='" + path + '\'' +
                 '}';
     }
 
-    public boolean hasOrcid() {
-        return orcid != null && !orcid.isEmpty();
-    }
+    public static class HiddenView{}
 }

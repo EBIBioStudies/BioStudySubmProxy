@@ -115,11 +115,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> activateRx(String key) {
-        return req().postJSONRx(baseTarget.path("/auth/activate/" + key), "{}");
-    }
-
-    @Override
     public String signIn(String obj) throws IOException {
         return req().postJSON(baseTarget.path("/auth/signin"), obj);
     }

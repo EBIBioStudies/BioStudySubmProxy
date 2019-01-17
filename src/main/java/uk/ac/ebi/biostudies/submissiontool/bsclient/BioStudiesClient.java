@@ -56,7 +56,5 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> resendActivationLinkRx(String obj);
 
-    Observable<String> activateRx(String key);
-
     Observable<String> signOutRx(String obj, String sessid);
 }

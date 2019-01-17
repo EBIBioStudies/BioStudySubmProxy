@@ -17,6 +17,7 @@ package uk.ac.ebi.biostudies.submissiontool.rest.resources;
 
 import static uk.ac.ebi.biostudies.submissiontool.rest.data.Json.objectMapper;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -143,17 +144,9 @@ public class SubmissionService {
         return bsclient.signOutRx(obj.toString(), session.id());
     }
 
-    public Observable<String> signUpRx(SignUpParams params) {
-        ObjectNode json = JsonNodeFactory.instance.objectNode();
-        json.put("username", params.getUsername());
-        json.put("password", params.getPassword());
-        json.put("email", params.getEmail());
-        json.put("recaptcha2-response", params.getCaptcha());
-        json.put("activationURL", params.getPath());
-        ArrayNode aux = JsonNodeFactory.instance.arrayNode();
-        aux.add("orcid:" + (params.hasOrcid() ? params.getOrcid() : ""));
-        json.set("aux", aux);
-        return bsclient.signUpRx(json.toString());
+    public Observable<String> signUpRx(SignUpParams params) throws JsonProcessingException {
+        // json.put("activationURL", params.getPath());
+        return bsclient.signUpRx(objectMapper().writerWithView(SignUpParams.class).writeValueAsString(params));
     }
 
     public Observable<String> passwordResetRequestRx(EmailPathCaptchaParams params) {
@@ -178,10 +171,6 @@ public class SubmissionService {
         json.put("recaptcha2-response", params.getCaptcha());
         json.put("activationURL", params.getPath());
         return bsclient.resendActivationLinkRx(json.toString());
-    }
-
-    public Observable<String> activateRx(String key) {
-        return bsclient.activateRx(key);
     }
 
     public Observable<String> pubMedSearchRx(String id) {

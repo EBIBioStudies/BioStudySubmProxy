@@ -172,30 +172,12 @@ public class RESTService {
     }
 
     @POST
-    @Path("/auth/password/reset")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void passwordReset(KeyPasswordCaptchaParams par,
-            @Suspended AsyncResponse async) {
-        service.passwordResetRx(par).subscribe(async::resume, async::resume);
-    }
-
-    @POST
     @Path("/auth/activation/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void resendActivationLink(EmailPathCaptchaParams par,
             @Suspended AsyncResponse async) throws IOException {
         service.resendActivationLinkRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
-    }
-
-    @POST
-    @Path("/auth/activation/check/{key}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void activate(@PathParam("key") String key,
-            @Suspended AsyncResponse async) {
-        service.activateRx(key).subscribe(async::resume, async::resume);
     }
 
     private String getApplUrl(String path) throws IOException {
