@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.MappingJsonFactory;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
 import java.util.Optional;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.*;
@@ -98,23 +97,8 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> createPendingSubmissionRx(String pageTab, String sessionId) {
-        return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending"), pageTab);
-    }
-
-    @Override
     public Observable<String> getPendingSubmissionRx(String acc, String sessionId) {
         return req(sessionId).getRx(baseTarget.path("/submissions/pending/" + acc));
-    }
-
-    @Override
-    public Observable<String> savePendingSubmissionRx(String obj, String acc, String sessionId) {
-        return req(sessionId).putJSONRx(baseTarget.path("/submissions/pending/" + acc), obj);
-    }
-
-    @Override
-    public Observable<String> submitPendingSubmissionRx(String obj, String acc, String sessionId) {
-        return req(sessionId).postJSONRx(baseTarget.path("/submissions/pending/" + acc + "/submit"), obj);
     }
 
     @Override

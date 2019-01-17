@@ -78,21 +78,6 @@ public class SubmissionService {
         return bsclient.getSubmissionRx(accno, session.id());
     }
 
-    public Observable<String> createPendingSubmissionRx(String pageTab, UserSession session) {
-        return bsclient.createPendingSubmissionRx(pageTab, session.id());
-    }
-
-    public Observable<String> savePendingSubmissionRx(String pageTab, String accno, UserSession session) {
-        return bsclient.getPendingSubmissionRx(accno, session.id())
-                .onErrorResumeNext(
-                        bsclient.createPendingSubmissionRx(pageTab, session.id())
-                ).switchMap(s -> bsclient.savePendingSubmissionRx(pageTab, accno, session.id()));
-    }
-
-    public Observable<String> submitPendingSubmissionRx(String pageTab, String accno, UserSession session) {
-        return bsclient.submitPendingSubmissionRx(pageTab, accno, session.id());
-    }
-
     public Observable<String> directSubmitRx(boolean create, String pageTab, UserSession session) {
         return bsclient.directSubmitRx(create, pageTab, session.id());
     }

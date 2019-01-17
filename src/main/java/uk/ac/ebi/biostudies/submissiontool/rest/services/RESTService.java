@@ -70,35 +70,6 @@ public class RESTService {
 
     @RolesAllowed("AUTHENTICATED")
     @POST
-    @Path("/submissions/pending/{accno}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void savePendingSubmission(@Context UserSession session, @PathParam("accno") String accno,
-            String pageTab, @Suspended AsyncResponse async) {
-        service.savePendingSubmissionRx(pageTab, accno, session).subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @POST
-    @Path("/submissions/pending")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void createPendingSubmission(@Context UserSession session, String pageTab, @Suspended AsyncResponse async) {
-        service.createPendingSubmissionRx(pageTab, session).subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @POST
-    @Path("/submissions/pending/{accno}/submit")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void submitPendingSubmission(@Context UserSession session, @PathParam("accno") String accno,
-            String pageTab, @Suspended AsyncResponse async) {
-        service.submitPendingSubmissionRx(pageTab, accno, session).subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @POST
     @Path("/submissions/origin/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
