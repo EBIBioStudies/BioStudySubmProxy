@@ -19,7 +19,6 @@ import static uk.ac.ebi.biostudies.submissiontool.rest.data.Json.objectMapper;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
@@ -34,9 +33,7 @@ import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePMCClient;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.PendingSubmission;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SubmissionListFilterParams;
 
 public class SubmissionService {
 
@@ -104,7 +101,7 @@ public class SubmissionService {
         return getPendingSubmissionRx(accno, session)
                 .onErrorResumeNext(Observable.just(""))
                 .flatMap(resp -> resp.isEmpty() ?
-                        deleteOriginalRx(accno, session) : deleteModifiedRx(accno, session)
+                        deleteOriginalRx(accno, session) : deletePendingRx(accno, session)
                 );
     }
 
@@ -122,20 +119,8 @@ public class SubmissionService {
                 });
     }
 
-    private Observable<Boolean> deleteModifiedRx(String accno, UserSession session) {
+    private Observable<Boolean> deletePendingRx(String accno, UserSession session) {
         return bsclient.deletePendingSubmissionRx(accno, session.id()).map(resp -> true);
-    }
-
-    public Observable<String> getSubmittedSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
-        return bsclient.getSubmissionsRx(session.id(), filterParams.asMap());
-    }
-
-    public Observable<String> getPendingSubmissionsRx(SubmissionListFilterParams filterParams, UserSession session) {
-        return bsclient.getPendingSubmissionsRx(session.id(), filterParams.asMap());
-    }
-
-    public Observable<String> getProjectsRx(UserSession session) {
-        return bsclient.getProjectsRx(session.id());
     }
 
     public Observable<String> signOutRx(UserSession session) {

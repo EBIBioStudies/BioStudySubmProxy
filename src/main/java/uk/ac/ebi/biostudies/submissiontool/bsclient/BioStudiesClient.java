@@ -26,15 +26,11 @@ public interface BioStudiesClient extends Closeable {
 
     String signIn(String obj) throws BioStudiesClientException, IOException;
 
-    Observable<String> getSubmissionsRx(String sessid, Map<String, String> paramMap);
-
     Observable<String> getSubmissionRx(String accno, String sessid);
 
     Observable<String> deleteSubmissionRx(String acc, String sessid);
 
     Observable<String> createPendingSubmissionRx(String pageTab, String sessid);
-
-    Observable<String> getPendingSubmissionsRx(String sessid, Map<String, String> paramMap);
 
     Observable<String> getPendingSubmissionRx(String accno, String sessid);
 
@@ -46,13 +42,9 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> directSubmitRx(boolean create, String pageTab, String id);
 
-    Observable<String> getProjectsRx(String sessid);
-
     Observable<String> signUpRx(String obj);
 
     Observable<String> passwordResetRequestRx(String obj);
-
-    Observable<String> passwordResetRx(String obj);
 
     Observable<String> resendActivationLinkRx(String obj);
 

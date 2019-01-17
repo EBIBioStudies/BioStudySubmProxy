@@ -28,14 +28,11 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.http.client.utils.URIBuilder;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.PendingSubmission;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.KeyPasswordCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SubmissionListFilterParams;
 
 /**
  * @author Olga Melnichuk
@@ -50,26 +47,10 @@ public class RESTService {
     private SubmissionService service;
 
     @RolesAllowed("AUTHENTICATED")
-    @GET
-    @Path("/submissions")
-    @Produces(MediaType.APPLICATION_JSON)
-    @CacheControl("no-cache")
-    public void getSubmissions(@QueryParam("submitted") boolean submitted,
-            @BeanParam SubmissionListFilterParams filterParams,
-            @Context UserSession session,
-            @Suspended AsyncResponse async) {
-        (submitted ?
-                service.getSubmittedSubmissionsRx(filterParams, session) :
-                service.getPendingSubmissionsRx(filterParams, session))
-                .subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
     @DELETE
     @Path("/submissions/{accno}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubmission(@Context UserSession session,
-            @PathParam("accno") String accno,
+    public void deleteSubmission(@Context UserSession session, @PathParam("accno") String accno,
             @Suspended AsyncResponse async) {
         service.deleteSubmissionRx(accno, session).map(resp -> "{}")
                 .subscribe(async::resume, async::resume);
@@ -121,30 +102,17 @@ public class RESTService {
     @Path("/submissions/origin/submit")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void directSubmitOld(@Context UserSession session,
-            @QueryParam("create") Boolean create,
-            String pageTab,
-            @Suspended AsyncResponse async) {
+    public void directSubmitOld(@Context UserSession session, @QueryParam("create") Boolean create,
+            String pageTab, @Suspended AsyncResponse async) {
         service.directSubmitRx(create != null && create, pageTab, session)
                 .subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @GET
-    @Path("/projects")
-    @Produces(MediaType.APPLICATION_JSON)
-    @CacheControl("no-cache")
-    public void getProjects(@Context UserSession session,
-            @Suspended AsyncResponse async) {
-        service.getProjectsRx(session).subscribe(async::resume, async::resume);
     }
 
     @RolesAllowed("AUTHENTICATED")
     @POST
     @Path("/auth/signout")
     @Produces(MediaType.APPLICATION_JSON)
-    public void signout(@Context UserSession session,
-            @Suspended AsyncResponse async) {
+    public void signout(@Context UserSession session, @Suspended AsyncResponse async) {
         service.signOutRx(session)
                 .map(resp -> {
                     request.getSession(false).invalidate();
@@ -157,8 +125,7 @@ public class RESTService {
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void signup(SignUpParams par,
-            @Suspended AsyncResponse async) throws IOException {
+    public void signup(SignUpParams par, @Suspended AsyncResponse async) throws IOException {
         service.signUpRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
     }
 
@@ -166,8 +133,7 @@ public class RESTService {
     @Path("/auth/password/reset_request")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void passwordResetRequest(EmailPathCaptchaParams par,
-            @Suspended AsyncResponse async) throws IOException {
+    public void passwordResetRequest(EmailPathCaptchaParams par, @Suspended AsyncResponse async) throws IOException {
         service.passwordResetRequestRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
     }
 
@@ -175,8 +141,7 @@ public class RESTService {
     @Path("/auth/activation/link")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void resendActivationLink(EmailPathCaptchaParams par,
-            @Suspended AsyncResponse async) throws IOException {
+    public void resendActivationLink(EmailPathCaptchaParams par, @Suspended AsyncResponse async) throws IOException {
         service.resendActivationLinkRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
     }
 

@@ -65,23 +65,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> getSubmissionsRx(String sessionId, Map<String, String> params) {
-        WebTarget t = baseTarget.path("/sbmlist");
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            t = t.queryParam(entry.getKey(), entry.getValue());
-        }
-        return req(sessionId).getRx(t);
-    }
-
-    @Override
-    public Observable<String> getProjectsRx(String sessionId) {
-        return req(sessionId).getRx(
-                baseTarget.path("/atthost")
-                        .queryParam("type", "Project")
-                        .queryParam("format", "json"));
-    }
-
-    @Override
     public Observable<String> deleteSubmissionRx(String acc, String sessionId) {
         // WTF: why it is GET?
         return req(sessionId).getRx(
@@ -102,11 +85,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     @Override
     public Observable<String> passwordResetRequestRx(String obj) {
         return req().postJSONRx(baseTarget.path("/auth/passrstreq"), obj);
-    }
-
-    @Override
-    public Observable<String> passwordResetRx(String obj) {
-        return req().postJSONRx(baseTarget.path("/auth/passreset"), obj);
     }
 
     @Override
@@ -148,15 +126,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     @Override
     public Observable<String> deletePendingSubmissionRx(String acc, String sessionId) {
         return req(sessionId).deleteRx(baseTarget.path("/submissions/pending/" + acc));
-    }
-
-    @Override
-    public Observable<String> getPendingSubmissionsRx(String sessionId, Map<String, String> params) {
-        WebTarget t = baseTarget.path("/submissions/pending");
-        for (Map.Entry<String, String> entry : params.entrySet()) {
-            t = t.queryParam(entry.getKey(), entry.getValue());
-        }
-        return req(sessionId).getRx(t);
     }
 
     private static BioStudiesRequest req(String sessionId) {
