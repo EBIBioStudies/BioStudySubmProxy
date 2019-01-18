@@ -79,19 +79,6 @@ public class RESTService {
                 .subscribe(async::resume, async::resume);
     }
 
-    @RolesAllowed("AUTHENTICATED")
-    @POST
-    @Path("/auth/signout")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void signout(@Context UserSession session, @Suspended AsyncResponse async) {
-        service.signOutRx(session)
-                .map(resp -> {
-                    request.getSession(false).invalidate();
-                    return resp;
-                })
-                .subscribe(async::resume, async::resume);
-    }
-
     @POST
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)

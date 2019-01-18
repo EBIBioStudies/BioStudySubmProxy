@@ -72,11 +72,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> signOutRx(String obj, String sessionId) {
-        return req(sessionId).postJSONRx(baseTarget.path("/auth/signout"), obj);
-    }
-
-    @Override
     public Observable<String> signUpRx(String obj) {
         return req().postJSONRx(baseTarget.path("/auth/signup"), obj);
     }

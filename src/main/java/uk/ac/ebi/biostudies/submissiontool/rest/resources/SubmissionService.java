@@ -108,12 +108,6 @@ public class SubmissionService {
         return bsclient.deletePendingSubmissionRx(accno, session.id()).map(resp -> true);
     }
 
-    public Observable<String> signOutRx(UserSession session) {
-        ObjectNode obj = JsonNodeFactory.instance.objectNode();
-        obj.put("sessid", session.id());
-        return bsclient.signOutRx(obj.toString(), session.id());
-    }
-
     public Observable<String> signUpRx(SignUpParams params) throws JsonProcessingException {
         return bsclient.signUpRx(objectMapper().writerWithView(SignUpParams.class).writeValueAsString(params));
     }
