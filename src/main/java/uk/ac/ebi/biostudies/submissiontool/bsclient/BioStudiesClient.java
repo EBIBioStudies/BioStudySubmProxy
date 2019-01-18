@@ -34,8 +34,6 @@ public interface BioStudiesClient extends Closeable {
 
     Observable<String> deletePendingSubmissionRx(String acc, String sessid);
 
-    Observable<String> directSubmitRx(boolean create, String pageTab, String id);
-
     Observable<String> signUpRx(String obj);
 
     Observable<String> passwordResetRequestRx(String obj);

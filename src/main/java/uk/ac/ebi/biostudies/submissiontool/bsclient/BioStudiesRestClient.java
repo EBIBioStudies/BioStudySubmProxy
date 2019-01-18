@@ -97,12 +97,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> directSubmitRx(boolean create, String obj, String sessionId) {
-        String operation = create ? "CREATE" : "CREATE_OR_UPDATE";
-        return req(sessionId).postJSONRx(baseTarget.path("/submissions/submit/" + operation), obj);
-    }
-
-    @Override
     public Observable<String> deletePendingSubmissionRx(String acc, String sessionId) {
         return req(sessionId).deleteRx(baseTarget.path("/submissions/pending/" + acc));
     }

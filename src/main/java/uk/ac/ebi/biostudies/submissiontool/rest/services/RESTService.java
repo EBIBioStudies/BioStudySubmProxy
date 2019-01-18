@@ -68,17 +68,6 @@ public class RESTService {
                 .subscribe(async::resume, async::resume);
     }
 
-    @RolesAllowed("AUTHENTICATED")
-    @POST
-    @Path("/submissions/origin/submit")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void directSubmitOld(@Context UserSession session, @QueryParam("create") Boolean create,
-            String pageTab, @Suspended AsyncResponse async) {
-        service.directSubmitRx(create != null && create, pageTab, session)
-                .subscribe(async::resume, async::resume);
-    }
-
     @POST
     @Path("/auth/signup")
     @Consumes(MediaType.APPLICATION_JSON)

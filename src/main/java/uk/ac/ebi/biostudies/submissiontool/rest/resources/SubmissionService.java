@@ -78,10 +78,6 @@ public class SubmissionService {
         return bsclient.getSubmissionRx(accno, session.id());
     }
 
-    public Observable<String> directSubmitRx(boolean create, String pageTab, UserSession session) {
-        return bsclient.directSubmitRx(create, pageTab, session.id());
-    }
-
     public Observable<Boolean> deleteSubmissionRx(String accno, UserSession session) {
         return getPendingSubmissionRx(accno, session)
                 .onErrorResumeNext(Observable.just(""))
