@@ -18,10 +18,6 @@ package uk.ac.ebi.biostudies.submissiontool.bsclient;
 
 import static java.util.Collections.singletonList;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.databind.MappingJsonFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Optional;
@@ -59,19 +55,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
     }
 
     @Override
-    public Observable<String> getSubmissionRx(String acc, String sessionId) {
-        return req(sessionId).getRx(baseTarget.path("/submission/" + acc));
-    }
-
-    @Override
-    public Observable<String> deleteSubmissionRx(String acc, String sessionId) {
-        // WTF: why it is GET?
-        return req(sessionId).getRx(
-                baseTarget.path("/submit/delete")
-                        .queryParam("id", acc));
-    }
-
-    @Override
     public Observable<String> signUpRx(String obj) {
         return req().postJSONRx(baseTarget.path("/auth/signup"), obj);
     }
@@ -91,20 +74,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
         return req().postJSON(baseTarget.path("/auth/signin"), obj);
     }
 
-    @Override
-    public Observable<String> getPendingSubmissionRx(String acc, String sessionId) {
-        return req(sessionId).getRx(baseTarget.path("/submissions/pending/" + acc));
-    }
-
-    @Override
-    public Observable<String> deletePendingSubmissionRx(String acc, String sessionId) {
-        return req(sessionId).deleteRx(baseTarget.path("/submissions/pending/" + acc));
-    }
-
-    private static BioStudiesRequest req(String sessionId) {
-        return new BioStudiesRequest(sessionId);
-    }
-
     private static BioStudiesRequest req() {
         return new BioStudiesRequest();
     }
@@ -114,10 +83,6 @@ public class BioStudiesRestClient implements BioStudiesClient {
 
         private BioStudiesRequest() {
             this.sessionId = null;
-        }
-
-        private BioStudiesRequest(String sessionId) {
-            this.sessionId = sessionId;
         }
 
         private MultivaluedHashMap<String, Object> headers() {
@@ -151,43 +116,12 @@ public class BioStudiesRestClient implements BioStudiesClient {
             return postRx(target, Entity.json(data));
         }
 
-        private Observable<String> putJSONRx(WebTarget target, String data) {
-            return putRx(target, Entity.json(data));
-        }
-
         private Observable<String> postRx(WebTarget target, Entity entity) {
             return RxObservable.from(target)
                     .request()
                     .headers(headers())
                     .rx()
                     .post(entity)
-                    .switchMap(BioStudiesRequest::readResponse);
-        }
-
-        private Observable<String> putRx(WebTarget target, Entity entity) {
-            return RxObservable.from(target)
-                    .request()
-                    .headers(headers())
-                    .rx()
-                    .put(entity)
-                    .switchMap(BioStudiesRequest::readResponse);
-        }
-
-        private Observable<String> getRx(WebTarget target) {
-            return RxObservable.from(target)
-                    .request()
-                    .headers(headers())
-                    .rx()
-                    .get()
-                    .switchMap(BioStudiesRequest::readResponse);
-        }
-
-        private Observable<String> deleteRx(WebTarget target) {
-            return RxObservable.from(target)
-                    .request()
-                    .headers(headers())
-                    .rx()
-                    .delete()
                     .switchMap(BioStudiesRequest::readResponse);
         }
 
@@ -201,37 +135,11 @@ public class BioStudiesRestClient implements BioStudiesClient {
                 logger.warn("Server responded with NULL content-type: " + resp.getLocation());
             }
 
-            // should not be needed any more (but fix direct submit in UI first)
-            //if (statusCode == 200 && !getStatus(body).equalsIgnoreCase("ok")) {
-            //    statusCode = 422;
-            //}
             return new BioStudiesResponse(body, statusCode, mediaType);
         }
 
         private static Observable<String> readResponse(Response resp) {
             return readResponsePlain(resp).asObservable();
-        }
-
-        private static String getStatus(String body) {
-            JsonFactory f = new MappingJsonFactory();
-            try (JsonParser jp = f.createParser(body)) {
-                while (hasNextJsonToken(jp.nextToken())) {
-                    String fieldName = jp.getCurrentName();
-                    if (fieldName != null && fieldName.equalsIgnoreCase("status")) {
-                        jp.nextToken();
-                        String value = jp.getText();
-                        return value == null ? "" : value.toLowerCase();
-                    }
-                }
-                // no field status
-                return "ok";
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
-        }
-
-        private static boolean hasNextJsonToken(JsonToken token) {
-            return token != null && token != JsonToken.END_OBJECT;
         }
     }
 

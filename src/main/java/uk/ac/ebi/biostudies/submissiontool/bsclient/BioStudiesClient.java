@@ -26,14 +26,6 @@ public interface BioStudiesClient extends Closeable {
 
     String signIn(String obj) throws BioStudiesClientException, IOException;
 
-    Observable<String> getSubmissionRx(String accno, String sessid);
-
-    Observable<String> deleteSubmissionRx(String acc, String sessid);
-
-    Observable<String> getPendingSubmissionRx(String accno, String sessid);
-
-    Observable<String> deletePendingSubmissionRx(String acc, String sessid);
-
     Observable<String> signUpRx(String obj);
 
     Observable<String> passwordResetRequestRx(String obj);

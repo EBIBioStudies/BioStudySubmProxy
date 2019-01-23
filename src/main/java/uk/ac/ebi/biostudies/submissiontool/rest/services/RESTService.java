@@ -29,7 +29,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import org.apache.http.client.utils.URIBuilder;
 import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
-import uk.ac.ebi.biostudies.submissiontool.rest.providers.CacheControl;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
@@ -46,27 +45,6 @@ public class RESTService {
     @Inject
     private SubmissionService service;
 
-    @RolesAllowed("AUTHENTICATED")
-    @DELETE
-    @Path("/submissions/{accno}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deleteSubmission(@Context UserSession session, @PathParam("accno") String accno,
-            @Suspended AsyncResponse async) {
-        service.deleteSubmissionRx(accno, session).map(resp -> "{}")
-                .subscribe(async::resume, async::resume);
-    }
-
-    @RolesAllowed("AUTHENTICATED")
-    @GET
-    @Path("/submissions/pending/{accno}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @CacheControl("no-cache")
-    public void getSubmission(@Context UserSession session, @PathParam("accno") String accno,
-            @Suspended AsyncResponse async) {
-        service.getPendingSubmissionRx(accno, session)
-                .onErrorResumeNext(service.getOriginalSubmissionRx(accno, session))
-                .subscribe(async::resume, async::resume);
-    }
 
     @POST
     @Path("/auth/signup")

@@ -30,8 +30,6 @@ import rx.Observable;
 import rx.exceptions.Exceptions;
 import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
 import uk.ac.ebi.biostudies.submissiontool.europepmc.EuropePMCClient;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.PendingSubmission;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
 
@@ -57,51 +55,6 @@ public class SubmissionService {
     public SubmissionService(BioStudiesClient bsclient) {
         this.bsclient = bsclient;
         this.europePmc = new EuropePMCClient();
-    }
-
-    public Observable<String> getOriginalSubmissionRx(String accno, UserSession session) {
-        return getSubmissionRx(accno, session)
-                .map(resp -> {
-                    try {
-                        return PendingSubmission.wrap(resp).json().toString();
-                    } catch (IOException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                });
-    }
-
-    public Observable<String> getPendingSubmissionRx(String accno, UserSession session) {
-        return bsclient.getPendingSubmissionRx(accno, session.id());
-    }
-
-    public Observable<String> getSubmissionRx(String accno, UserSession session) {
-        return bsclient.getSubmissionRx(accno, session.id());
-    }
-
-    public Observable<Boolean> deleteSubmissionRx(String accno, UserSession session) {
-        return getPendingSubmissionRx(accno, session)
-                .onErrorResumeNext(Observable.just(""))
-                .flatMap(resp -> resp.isEmpty() ?
-                        deleteOriginalRx(accno, session) : deletePendingRx(accno, session)
-                );
-    }
-
-    private Observable<Boolean> deleteOriginalRx(String accno, UserSession session) {
-        return bsclient.deleteSubmissionRx(accno, session.id())
-                .map(resp -> {
-                    try {
-                        JsonNode json = objectMapper().readTree(resp);
-                        String level = json.get("level").asText();
-                        return level.equalsIgnoreCase("success");
-
-                    } catch (IOException e) {
-                        throw Exceptions.propagate(e);
-                    }
-                });
-    }
-
-    private Observable<Boolean> deletePendingRx(String accno, UserSession session) {
-        return bsclient.deletePendingSubmissionRx(accno, session.id()).map(resp -> true);
     }
 
     public Observable<String> signUpRx(SignUpParams params) throws JsonProcessingException {
