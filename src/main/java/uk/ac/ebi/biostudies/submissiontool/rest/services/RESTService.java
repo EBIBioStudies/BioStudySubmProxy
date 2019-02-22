@@ -17,21 +17,12 @@
 package uk.ac.ebi.biostudies.submissiontool.rest.services;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import javax.annotation.security.RolesAllowed;
 import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.container.AsyncResponse;
 import javax.ws.rs.container.Suspended;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import org.apache.http.client.utils.URIBuilder;
-import uk.ac.ebi.biostudies.submissiontool.rest.data.UserSession;
 import uk.ac.ebi.biostudies.submissiontool.rest.resources.SubmissionService;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.EmailPathCaptchaParams;
-import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
 
 /**
  * @author Olga Melnichuk
@@ -39,69 +30,15 @@ import uk.ac.ebi.biostudies.submissiontool.rest.resources.params.SignUpParams;
 @Path("/")
 public class RESTService {
 
-    @Context
-    private HttpServletRequest request;
-
     @Inject
     private SubmissionService service;
 
-
-    @POST
-    @Path("/auth/signup")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void signup(SignUpParams par, @Suspended AsyncResponse async) throws IOException {
-        service.signUpRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
-    }
-
-    @POST
-    @Path("/auth/password/reset_request")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void passwordResetRequest(EmailPathCaptchaParams par, @Suspended AsyncResponse async) throws IOException {
-        service.passwordResetRequestRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
-    }
-
-    @POST
-    @Path("/auth/activation/link")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void resendActivationLink(EmailPathCaptchaParams par, @Suspended AsyncResponse async) throws IOException {
-        service.resendActivationLinkRx(par.withPath(getApplUrl(par.getPath()))).subscribe(async::resume, async::resume);
-    }
-
-    private String getApplUrl(String path) throws IOException {
-        return buildApplUrl(path) + "/{KEY}";
-    }
-
-    private String buildApplUrl(String stringPath) throws IOException {
-        try {
-            URI path = new URI(stringPath);
-            URI uri = new URI(request.getRequestURL().toString());
-            URIBuilder uriBuilder = new URIBuilder()
-                    .setScheme(uri.getScheme())
-                    .setHost(uri.getHost())
-                    .setPath(path.getPath())
-                    .setFragment(path.getFragment());
-
-            int port = uri.getPort();
-            if (port > 0 && port != 80 && port != 443) {
-                uriBuilder.setPort(port);
-            }
-            return uriBuilder.build().toString();
-        } catch (URISyntaxException e) {
-            throw new IOException("Bad url syntax");
-        }
-    }
-
-
-    @RolesAllowed("AUTHENTICATED")
+    //@RolesAllowed("AUTHENTICATED")
     @GET
-    @Path("/pubMedSearch/{id}")
+    @Path("/hello/{name}")
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void pubMedSearch(@Context UserSession session,
-            @PathParam("id") String id,
-            @Suspended AsyncResponse async) {
-        service.pubMedSearchRx(id).subscribe(async::resume, async::resume);
+    public void signup(@PathParam("name") String name, @Suspended AsyncResponse async) throws IOException {
+        service.helloRx(name).subscribe(async::resume, async::resume);
     }
 }

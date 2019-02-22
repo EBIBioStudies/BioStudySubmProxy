@@ -35,7 +35,6 @@ public class RESTApp extends ResourceConfig {
         packages("uk.ac.ebi.biostudies.submissiontool.rest");
         register(LoggingFeature.class);
         register(AuthenticationFilter.class);
-        register(BioStudiesClientExceptionMapper.class);
         register(ExceptionLogger.class);
         register(MultiPartFeature.class);
         register(new AbstractBinder() {

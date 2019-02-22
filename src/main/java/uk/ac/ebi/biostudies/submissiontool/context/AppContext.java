@@ -16,14 +16,12 @@
 
 package uk.ac.ebi.biostudies.submissiontool.context;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+import javax.servlet.ServletContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.schedulers.Schedulers;
-import uk.ac.ebi.biostudies.submissiontool.bsclient.BioStudiesClient;
-
-import javax.servlet.ServletContext;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * @author Olga Melnichuk
@@ -33,13 +31,11 @@ public class AppContext {
     private static final Logger logger = LoggerFactory.getLogger(AppContext.class);
 
     private static String CONFIG = "config";
-    private static String BS_CLIENT = "bs_client";
 
     private final Map<String, Factory<?>> factories = new LinkedHashMap<>();
 
     {
         factories.put(CONFIG, new AppConfigFactory());
-        factories.put(BS_CLIENT, new BioStudiesClientFactory());
     }
 
     public AppContext(ServletContext context) {
@@ -66,7 +62,4 @@ public class AppContext {
         return (AppConfig) context.getAttribute(CONFIG);
     }
 
-    public static BioStudiesClient getBioStudiesClient(ServletContext context) {
-        return (BioStudiesClient) context.getAttribute(BS_CLIENT);
-    }
 }
