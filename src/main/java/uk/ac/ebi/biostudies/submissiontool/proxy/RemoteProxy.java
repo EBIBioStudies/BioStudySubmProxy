@@ -23,10 +23,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -122,17 +119,31 @@ class RemoteProxy  implements Proxy {
         this.pathFilter = pathFilter;
     }
 
+    @Override
     public void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         logger.debug("proxyGet()");
         executeMethod(this::createProxyGetReq, req, resp);
     }
 
+    @Override
     public void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         logger.debug("proxyPost()");
         executeMethod(this::createProxyPostReq, req, resp);
     }
 
-    private HttpGet createProxyGetReq(HttpServletRequest req) throws ServletException, IOException {
+    @Override
+    public void proxyDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        logger.debug("proxyDelete()");
+        executeMethod(this::createProxyDeleteReq, req, resp);
+    }
+
+    @Override
+    public void proxyPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        logger.debug("proxyPut()");
+        executeMethod(this::createProxyPutReq, req, resp);
+    }
+
+    private HttpGet createProxyGetReq(HttpServletRequest req) throws IOException {
         logger.debug("createProxyGetReq()");
         HttpGet get =  new HttpGet(getRequestUri(req));
         logger.debug("get: {}", get);
@@ -152,6 +163,24 @@ class RemoteProxy  implements Proxy {
             post.setEntity(new InputStreamEntity(req.getInputStream()));
         }
         return post;
+    }
+
+    private HttpPut createProxyPutReq(HttpServletRequest req) throws IOException {
+        logger.debug("createProxyPutReq()");
+        HttpPut put = new HttpPut(getRequestUri(req));
+        logger.debug("put: {}", put);
+        forwardRequestHeaders(req, put);
+
+        put.setEntity(new InputStreamEntity(req.getInputStream()));
+        return put;
+    }
+
+    private HttpDelete createProxyDeleteReq(HttpServletRequest req) throws IOException {
+        logger.debug("createProxyDeleteReq()");
+        HttpDelete del = new HttpDelete(getRequestUri(req));
+        logger.debug("delete: {}", del);
+        forwardRequestHeaders(req, del);
+        return del;
     }
 
     private void handleMultipartPost(HttpPost post, HttpServletRequest req) throws ServletException {

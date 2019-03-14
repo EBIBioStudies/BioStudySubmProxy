@@ -25,4 +25,8 @@ public interface Proxy {
     void proxyGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
 
     void proxyPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
+
+    void proxyDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
+
+    void proxyPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException;
 }
