@@ -68,7 +68,7 @@ war {
         filter(ReplaceTokens, tokens: ["BS_SERVER_URL": bsBackendUrl, "HTTPS_FILTER_DISABLED": httpsFilterDisabled])
     }
     webAppDirName = 'WebContent'
-    baseName = 'proxy'
+    archiveName = project.hasProperty('warName') ? project.property('warName') : 'proxy.war'
     version = ''
     from 'src/main/webapp/'
 }
@@ -82,5 +82,3 @@ gretty {
 }
 
 defaultTasks 'clean', 'build'
-
-
